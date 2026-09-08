@@ -157,6 +157,8 @@ MEDIA_ARCHIVE_DISK=…   # nagy fájlok: eredeti + letölthető változatok</pre
             <p class="mt-1 text-[11px] text-muted">
                 A kulcspárt a Cloudflare R2 → „Manage API Tokens" → „Create API Token" (Object Read &amp; Write) adja.
                 Egy account-endpoint + egy kulcspár, 3 bucket (publikus / privát / import).
+                A böngészőből közvetlen feltöltéshez az <strong class="text-content">import bucketen CORS-szabály</strong> kell
+                (<code>PUT</code> engedélyezve az oldal domainjéről) — Cloudflare → R2 → bucket → Settings → CORS Policy.
             </p>
 
             <div class="mt-4 grid gap-4 sm:grid-cols-2">

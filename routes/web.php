@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\LocationSearchController;
 use App\Http\Controllers\Admin\MailTemplateController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MediaImportController;
+use App\Http\Controllers\Admin\MediaUploadController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\OrganizerPayoutController;
@@ -316,6 +317,7 @@ Route::middleware(['auth', 'role:superadmin|admin|photographer', '2fa'])->prefix
     Route::get('/media-import/browse', [MediaImportController::class, 'browse'])->name('media-import.browse');
     Route::post('/events/{event}/import', [MediaImportController::class, 'store'])->name('events.import.store');
     Route::get('/events/{event}/import/status', [MediaImportController::class, 'status'])->name('events.import.status');
+    Route::post('/events/{event}/upload/sign', [MediaUploadController::class, 'sign'])->name('events.upload.sign');
     Route::patch('/media/{media}', [MediaController::class, 'update'])->name('media.update');
     Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
 });

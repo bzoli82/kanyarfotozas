@@ -27,3 +27,6 @@ Schedule::command('kanyarfotozas:backup')->dailyAt('03:15');
 // letoltesi tokenu rendelesek gyorsitotarat toroljuk.
 Schedule::command('kanyarfotozas:retry-order-fulfillment')->everyFifteenMinutes();
 Schedule::command('kanyarfotozas:purge-delivery-cache')->hourly();
+
+// Arva kozvetlen-feltoltes mappak (bongeszo -> R2, importra soha nem kerult).
+Schedule::command('kanyarfotozas:purge-import-uploads')->dailyAt('04:10');

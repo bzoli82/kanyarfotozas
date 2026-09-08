@@ -42,7 +42,7 @@ A kulcsokat lehet `.env`-ből VAGY a `/admin/settings/storage` oldalról megadni
 - [ ] `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`
 - [ ] `R2_PUBLIC_BUCKET`, `R2_PRIVATE_BUCKET`, `R2_PUBLIC_URL` (a publikus bucket saját domainje / CDN)
 - [ ] `MEDIA_PUBLIC_DISK=r2_public`, `MEDIA_ARCHIVE_DISK=r2_private`
-- [ ] (Tömeges importhoz) `R2_IMPORT_BUCKET` + `MEDIA_IMPORT_DISK=r2_import` — ld. deploy runbook „Tömeges import" szakasz
+- [ ] (Nagy feltöltéshez) `R2_IMPORT_BUCKET` + `MEDIA_IMPORT_DISK=r2_import` + **CORS-szabály** az import bucketen (PUT az app origin-jéről) — ld. deploy runbook „Nagy feltöltés" szakasz
 - [ ] A `.ts` HLS-szegmensekre érdemes Cloudflare CDN cache
 
 ## 4. Fizetés (`/admin/settings/critical` → titkosítva tárolva)

@@ -381,41 +381,48 @@ nézd meg a fejlécben `spf=pass` / `dkim=pass`.
 
 ---
 
-## Tömeges import (5000+ kép egy rendezvényről)
+## Nagy feltöltés (5000+ kép egy rendezvényről)
 
-A böngészős feltöltés kötegenként max 200 fájl — nagy rendezvényhez lassú.
-Helyette: a fájlokat egy **R2 „drop zone" bucketbe** töltöd, az admin egy
-kattintással az eseményhez importálja az egész mappát.
+### Egyszeri setup
 
-1. **Egyszeri setup**: `R2_IMPORT_BUCKET=kanyarfotozas-import` +
-   `MEDIA_IMPORT_DISK=r2_import` az env-ben (fent). (SFTP-szerverrel: `MEDIA_IMPORT_DISK=nas`.)
-2. **Feltöltés a gépedről** — [rclone](https://rclone.org)-nal (egyszeri config:
-   `rclone config` → új `r2` remote, „Amazon S3" / „Cloudflare R2", az R2 S3
-   kulcsokkal):
-   ```bash
-   rclone copy "D:\fotok\2026-06-hungaroring" r2:kanyarfotozas-import/2026-06-hungaroring \
-     --transfers 16 --progress
+1. `R2_IMPORT_BUCKET=kanyarfotozas-import` + `MEDIA_IMPORT_DISK=r2_import` az env-ben.
+2. **R2 CORS** az import bucketen (Cloudflare → R2 → `kanyarfotozas-import` →
+   Settings → **CORS Policy**) — enélkül a böngésző nem tölthet közvetlenül R2-be:
+   ```json
+   [{ "AllowedOrigins": ["https://kanyarfotozas.hu"],
+      "AllowedMethods": ["PUT"],
+      "AllowedHeaders": ["*"],
+      "MaxAgeSeconds": 3600 }]
    ```
-   (Preprocessed videó: a `klip.mp4` + `klip_lores.mp4` + `klip.jpg` hármast
-   ugyanabba a mappába.)
-3. **Import az adminban**: az esemény oldalán → „Beolvasás tárolóból" → megnyitod
-   a mappát → bejelölöd a mappa checkboxát (vagy „Az összes fájl ebben a mappában")
-   → Importálás. 25 fájl felett a **`imports` queue-n, háttérben** fut, az esemény
-   oldalán **folyamatjelzővel** (X / Y). A média fokozatosan `processing` →
-   `ready` lesz.
-   - **Admin**: a bucket teljes gyökerét látja, bármely fotós nevében importálhat.
-   - **Fotós**: csak a saját almappáját (`fotosok/{a-fotós-id}/…`) — ide másol
-     (`rclone copy MAPPA r2:kanyarfotozas-import/fotosok/<id>/…`), és mindig a
-     saját nevében importál. A fotós-id az admin felületén az import-panelben látszik.
-4. **Sebesség**: 1 worker ~feldolgoz pár fájl/mp-et (letöltés R2-ből + thumbnail +
-   vízjel + R2-re vissza). 5000 képhez futtass 2–3 párhuzamos workert
-   (Coolify → a worker process replikái), vagy indítsd el este.
-5. **Takarítás**: sikeres import után az `import` bucket tartalma törölhető
-   (`rclone purge r2:kanyarfotozas-import/2026-06-hungaroring`) — az eredetik már
-   az archív (`r2_private`) bucketben vannak.
 
-Finomhangolás env-ből: `MEDIA_IMPORT_CHUNK_SIZE` (alap 100),
-`MEDIA_IMPORT_INLINE_MAX` (alap 25), `MEDIA_IMPORT_HARD_CAP` (alap 20000).
+### A fotós / admin oldala (rclone NEM kell)
+
+Az esemény oldalán a **„Média hozzáadása"** blokk:
+- „Mappa kiválasztása" → a böngésző mappaválasztója (5000 fájl is), vagy fájlok
+  behúzása.
+- „Feltöltés indítása" → a böngésző **közvetlenül az R2-be** tölti a fájlokat,
+  párhuzamosan, fájlonkénti folyamatjelzővel, hibánál újrapróbálással. Nincs
+  darabszám-korlát, a szervert nem terheli.
+- Ha kész: az onnan-import **automatikusan** elindul (`imports` queue, háttérben),
+  az esemény oldalán folyamatjelzővel; a média fokozatosan `processing` → `ready`.
+- A fotós a saját, elkülönített mappájába tölt (nem látja mások anyagát); a
+  `photographer_id`-t a szerver a sajátjára állítja.
+
+### Haladó: rclone / FTP → import
+
+Ha valaki mégis rclone-nal / S3-klienssel tölt fel egy bucketbe / SFTP-re:
+az esemény oldalán a **„Haladó — import meglévő tárolóból"** panel (`<details>`)
+böngészi a tárolót és importál. Fotós: `r2:kanyarfotozas-import/fotosok/<id>/…`.
+
+### Sebesség + takarítás
+
+- 1 worker ~pár fájl/mp (R2-letöltés + thumbnail + vízjel + R2-vissza).
+  5000 képhez 2–3 párhuzamos worker (Coolify process-replikák), vagy este indítva.
+- Az ideiglenes `_upload/` mappát az import maga törli; a `kanyarfotozas:purge-import-uploads`
+  (napi cron) az árvákat söpri.
+
+Finomhangolás env-ből: `MEDIA_IMPORT_CHUNK_SIZE` (100), `MEDIA_IMPORT_INLINE_MAX` (25),
+`MEDIA_IMPORT_HARD_CAP` (20000), `MEDIA_IMPORT_PHOTOGRAPHER_FOLDER` (`fotosok`).
 
 ---
 

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Event;
 use App\Models\Media;
+use App\Models\User;
 use App\Support\PreprocessedVideoGrouper;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -32,6 +33,9 @@ class FtpImport
     /** A `paths[]` nyers tömb hossz-korlátja (mappákkal együtt — nem a fájlszám). */
     public const MAX_PER_IMPORT = 500;
 
+    /** A böngészőből közvetlenül R2-be feltöltött fájlok ideiglenes mappa-prefixe. */
+    public const UPLOAD_PREFIX = '_upload';
+
     private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 
     private const VIDEO_EXTENSIONS = ['mp4', 'mov', 'avi'];
@@ -42,6 +46,19 @@ class FtpImport
     public static function disk(): string
     {
         return (string) config('media.import_disk', 'nas');
+    }
+
+    /**
+     * A böngésző-gyökér a felhasználóhoz: admin → a tároló gyökere (`''`),
+     * fotós → a saját, elkülönített almappája (`{folder}/{id}`).
+     */
+    public static function scopeForUser(User $user): string
+    {
+        if ($user->isAdmin()) {
+            return '';
+        }
+
+        return trim((string) config('media.import_photographer_folder', 'fotosok'), '/')."/{$user->id}";
     }
 
     public function isAvailable(): bool
@@ -70,6 +87,39 @@ class FtpImport
         if (self::disk() === 'nas') {
             $this->nas->applyRuntimeConfig();
         }
+    }
+
+    /**
+     * Támogatja-e a forrás-disk a böngészőből közvetlen feltöltést (S3 presigned PUT).
+     * Igen esetén a fotós/admin a UI-ból a fájlokat egyből az R2-be tölti (rclone nélkül),
+     * majd az onnan-import lefut. Nem (SFTP / helyi disk): marad a webes feltöltés.
+     */
+    public function providesDirectUpload(): bool
+    {
+        return rescue(fn (): bool => Storage::disk(self::disk())->providesTemporaryUploadUrls(), false, false);
+    }
+
+    /**
+     * Aláírt (presigned) feltöltő URL egy relatív kulcshoz (a scope elé fűzve).
+     *
+     * @return array{url: string, headers: array<string, string>}
+     */
+    public function signUpload(string $relativeKey, string $scope = '', int $minutes = 120): array
+    {
+        $key = $this->joinScope($this->normalize($scope), $this->normalize($relativeKey));
+        $this->applyRuntimeConfigIfNeeded();
+
+        $signed = Storage::disk(self::disk())->temporaryUploadUrl($key, now()->addMinutes($minutes));
+
+        return ['url' => $signed['url'], 'headers' => $signed['headers'] ?? []];
+    }
+
+    /** Egy ideiglenes feltöltő-mappa törlése a tárolóból (az import után / takarításkor). */
+    public function purgeUploadSession(string $relativeDir, string $scope = ''): void
+    {
+        $dir = $this->joinScope($this->normalize($scope), $this->normalize($relativeDir));
+
+        rescue(fn () => Storage::disk(self::disk())->deleteDirectory($dir), null, false);
     }
 
     /** Elő-feldolgozott videó-mód: a böngésző videókat is mutat, az import párosít. */

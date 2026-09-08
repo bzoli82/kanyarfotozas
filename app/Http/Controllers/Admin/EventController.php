@@ -115,11 +115,12 @@ class EventController extends Controller
             return null;
         }
 
+        $import = app(FtpImport::class);
+
         return [
-            'available' => app(FtpImport::class)->isAvailable(),
-            'scope' => $user->isAdmin()
-                ? null
-                : trim((string) config('media.import_photographer_folder', 'fotosok'), '/')."/{$user->id}",
+            'available' => $import->isAvailable(),
+            'direct_upload' => $import->providesDirectUpload(),
+            'scope' => $user->isAdmin() ? null : FtpImport::scopeForUser($user),
         ];
     }
 
@@ -144,9 +145,7 @@ class EventController extends Controller
         // Admin barmely fotos neveben, a tarolo gyokerebol; aktiv fotos a sajat
         // neveben, a sajat almappajabol (scope).
         $importPhotographerId = $user->isAdmin() ? ($data['import_photographer_id'] ?? null) : $user->id;
-        $importScope = $user->isAdmin()
-            ? ''
-            : trim((string) config('media.import_photographer_folder', 'fotosok'), '/')."/{$user->id}";
+        $importScope = FtpImport::scopeForUser($user);
 
         if (! empty($data['import_paths']) && filled($importPhotographerId)) {
             if ($ftpImport->isAvailable()) {

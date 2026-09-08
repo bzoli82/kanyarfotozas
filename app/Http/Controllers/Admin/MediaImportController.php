@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 /**
@@ -42,7 +43,7 @@ class MediaImportController extends Controller
         }
 
         try {
-            $listing = $this->import->browse($request->string('path')->value(), $this->scopeFor($user));
+            $listing = $this->import->browse($request->string('path')->value(), FtpImport::scopeForUser($user));
         } catch (\InvalidArgumentException $e) {
             return response()->json(['available' => true, 'error' => $e->getMessage()], 422);
         } catch (\Throwable $e) {
@@ -59,14 +60,19 @@ class MediaImportController extends Controller
         $user = $this->authorizeImport($request);
 
         $data = $request->validate([
-            'photographer_id' => [Rule::requiredIf($user->isAdmin()), 'uuid', Rule::exists('users', 'id')->where('role', User::ROLE_PHOTOGRAPHER)],
+            'photographer_id' => ['nullable', Rule::requiredIf($user->isAdmin()), 'uuid', Rule::exists('users', 'id')->where('role', User::ROLE_PHOTOGRAPHER)],
             'paths' => ['required', 'array', 'min:1', 'max:'.FtpImport::MAX_PER_IMPORT],
             'paths.*' => ['required', 'string', 'max:1024'],
         ]);
 
         // Fotós: mindig a saját nevében, a saját mappájából.
         $photographerId = $user->isAdmin() ? $data['photographer_id'] : $user->id;
-        $scope = $this->scopeFor($user);
+        $scope = FtpImport::scopeForUser($user);
+        // A böngészőből közvetlenül feltöltött (`_upload/…`) mappát import után töröljük.
+        $uploadDirs = collect($data['paths'])
+            ->filter(fn (string $p): bool => str_starts_with(ltrim($p, '/'), FtpImport::UPLOAD_PREFIX.'/'))
+            ->values()
+            ->all();
 
         if (! $this->import->isAvailable()) {
             return back()->with('error', 'A tömeges import forrás-tároló még nincs beállítva.');
@@ -109,6 +115,8 @@ class MediaImportController extends Controller
                 };
             }
 
+            $this->purgeUploadDirs($uploadDirs, $scope);
+
             activity()->performedOn($event)->causedBy($user)
                 ->log("Import: {$imported} média".($skipped ? ", {$skipped} kihagyva" : '').($failed ? ", {$failed} hiba" : ''));
 
@@ -130,11 +138,23 @@ class MediaImportController extends Controller
             ->map(fn ($chunk) => new ImportMediaChunk($event->id, $photographerId, $chunk->values()->all()))
             ->all();
 
-        $batch = Bus::batch($jobs)
+        $pendingBatch = Bus::batch($jobs)
             ->name(MediaImportProgress::batchName($event->id))
             ->onQueue('imports')
-            ->allowFailures()
-            ->dispatch();
+            ->allowFailures();
+
+        // A közvetlen-feltöltés ideiglenes mappáját a batch végén (sikeres VAGY sem) töröljük.
+        if ($uploadDirs !== []) {
+            $disk = FtpImport::disk();
+            $absoluteDirs = array_map(fn (string $d): string => trim($scope === '' ? $d : "{$scope}/{$d}", '/'), $uploadDirs);
+            $pendingBatch->finally(function () use ($disk, $absoluteDirs): void {
+                foreach ($absoluteDirs as $dir) {
+                    rescue(fn () => Storage::disk($disk)->deleteDirectory($dir), null, false);
+                }
+            });
+        }
+
+        $batch = $pendingBatch->dispatch();
 
         $progress->start($batch->id, $total);
 
@@ -151,6 +171,18 @@ class MediaImportController extends Controller
         return response()->json($progress->forEvent($event->id) ?? ['running' => false, 'finished' => true, 'total' => 0]);
     }
 
+    /**
+     * A közvetlen-feltöltés ideiglenes mappáit törli a forrás-tárolóból (a scope-hoz relatívan).
+     *
+     * @param  list<string>  $relativeDirs
+     */
+    private function purgeUploadDirs(array $relativeDirs, string $scope): void
+    {
+        foreach ($relativeDirs as $dir) {
+            $this->import->purgeUploadSession($dir, $scope);
+        }
+    }
+
     /** Az importra jogosult felhasználó (admin VAGY aktív fotós). */
     private function authorizeImport(Request $request): User
     {
@@ -159,15 +191,5 @@ class MediaImportController extends Controller
         abort_unless($user && ($user->isAdmin() || ($user->isPhotographer() && $user->is_active)), 403);
 
         return $user;
-    }
-
-    /** A böngésző-gyökér: admin → a tároló gyökere; fotós → a saját almappája. */
-    private function scopeFor(User $user): string
-    {
-        if ($user->isAdmin()) {
-            return '';
-        }
-
-        return trim((string) config('media.import_photographer_folder', 'fotosok'), '/')."/{$user->id}";
     }
 }

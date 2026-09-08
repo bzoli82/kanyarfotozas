@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import FtpImportBrowser from '@/Components/FtpImportBrowser.vue';
+import MediaUploader from '@/Components/MediaUploader.vue';
 import { useMediaUrl } from '@/Composables/useMediaUrl';
 
 const { mediaUrl } = useMediaUrl();
@@ -69,27 +70,19 @@ function destroyEvent() {
     router.delete(`/admin/events/${props.event.id}`);
 }
 
-// --- Batch feltoltes ---
-const fileInput = ref(null);
-const uploadForm = useForm({
-    photographer_id: props.photographers?.[0]?.id ?? '',
-    files: [],
-});
-
-function onFilesSelected(e) {
-    uploadForm.files = Array.from(e.target.files ?? []);
+// --- Média hozzáadása (MediaUploader komponens) ---
+function onUploaderImport({ photographerId, paths }) {
+    const payload = { paths };
+    if (photographerId) payload.photographer_id = photographerId;
+    router.post(`/admin/events/${props.event.id}/import`, payload, {
+        preserveScroll: true,
+        preserveState: true,
+        onFinish: () => setTimeout(pollImportStatus, 600),
+    });
 }
 
-function submitUpload() {
-    if (uploadForm.files.length === 0) return;
-
-    uploadForm.post(`/admin/events/${props.event.id}/media`, {
-        forceFormData: true,
-        onSuccess: () => {
-            uploadForm.reset('files');
-            if (fileInput.value) fileInput.value.value = '';
-        },
-    });
+function onUploaderRefresh() {
+    router.reload({ only: ['media'] });
 }
 
 // --- Media soronkenti muveletek (lathatosag, torles) — az ar esemeny-szintu ---
@@ -381,83 +374,59 @@ onBeforeUnmount(() => importPollTimer && clearTimeout(importPollTimer));
             </div>
         </div>
 
-        <!-- 2. Batch media feltoltes -->
-        <div class="mt-8 rounded-[var(--radius-base)] border border-border bg-surface-1 p-5">
-            <h2 class="text-sm font-semibold uppercase tracking-wide text-content">Média feltöltése</h2>
-            <p class="mt-1 text-xs text-muted">
-                JPEG/PNG képek és MP4/MOV/AVI videók, max. 200 fájl egyszerre. A feldolgozás (WebP, vízjel, sprite) a háttérben készül el — addig a feltöltött média „Feldolgozás alatt” státuszban marad.
-            </p>
-
-            <div v-if="preprocessedVideo" class="mt-3 rounded-[var(--radius-base)] border border-border bg-surface-2 p-3 text-xs text-muted">
-                <p class="font-semibold text-content">Elő-feldolgozott videó mód</p>
-                <p class="mt-1">
-                    A szerver NEM kódol videót. Minden videóhoz tölts fel egy fájl-hármast közös alapnévvel:
-                </p>
-                <ul class="mt-1 list-disc space-y-0.5 pl-5">
-                    <li><code>klip.mp4</code> — teljes felbontású eredeti (ezt kapja meg a vásárló)</li>
-                    <li><code>klip_lores.mp4</code> — kis felbontású, vízjelezett előnézet (kötelező)</li>
-                    <li><code>klip.jpg</code> — állókép poszter (opcionális)</li>
-                </ul>
-                <p class="mt-2">Előnézet készítése helyben (a vízjel-szöveg az aktuális beállításból):</p>
-                <pre class="mt-1 overflow-x-auto rounded bg-black/40 p-2 text-[11px] text-content">{{ ffmpegHint }}</pre>
-            </div>
-
-            <form class="mt-4 flex flex-wrap items-end gap-3" @submit.prevent="submitUpload">
-                <label v-if="isAdmin" class="block">
-                    <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">Fotós</span>
-                    <select v-model="uploadForm.photographer_id" class="rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none">
-                        <option v-for="p in photographers" :key="p.id" :value="p.id">{{ p.name }}</option>
-                    </select>
-                </label>
-
-                <label class="block flex-1">
-                    <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">Fájlok</span>
-                    <input
-                        ref="fileInput"
-                        type="file"
-                        multiple
-                        accept="image/jpeg,image/png,video/mp4,video/quicktime,.mov,.avi"
-                        class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content file:mr-3 file:rounded file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-xs file:font-semibold file:uppercase file:text-white"
-                        @change="onFilesSelected"
-                    />
-                </label>
-
-                <button
-                    type="submit"
-                    :disabled="uploadForm.processing || uploadForm.files.length === 0"
-                    class="rounded-lg bg-accent px-6 py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover disabled:opacity-60"
-                >
-                    {{ uploadForm.processing ? 'Feltöltés…' : `Feltöltés (${uploadForm.files.length})` }}
-                </button>
-            </form>
-            <p v-if="uploadForm.errors.files" class="mt-2 text-xs text-accent">{{ uploadForm.errors.files }}</p>
+        <!-- 2. Média hozzáadása -->
+        <div v-if="preprocessedVideo" class="mt-8 rounded-[var(--radius-base)] border border-border bg-surface-2 p-3 text-xs text-muted">
+            <p class="font-semibold text-content">Elő-feldolgozott videó mód</p>
+            <p class="mt-1">A szerver NEM kódol videót. Minden videóhoz tölts fel egy fájl-hármast közös alapnévvel:</p>
+            <ul class="mt-1 list-disc space-y-0.5 pl-5">
+                <li><code>klip.mp4</code> — teljes felbontású eredeti (ezt kapja meg a vásárló)</li>
+                <li><code>klip_lores.mp4</code> — kis felbontású, vízjelezett előnézet (kötelező)</li>
+                <li><code>klip.jpg</code> — állókép poszter (opcionális)</li>
+            </ul>
+            <p class="mt-2">Előnézet készítése helyben (a vízjel-szöveg az aktuális beállításból):</p>
+            <pre class="mt-1 overflow-x-auto rounded bg-black/40 p-2 text-[11px] text-content">{{ ffmpegHint }}</pre>
         </div>
 
-        <!-- 3. Beolvasas FTP-rol -->
-        <FtpImportBrowser
-            v-if="ftpImport"
+        <MediaUploader
             class="mt-6"
-            :available="ftpImport.available"
-            :scope="ftpImport.scope"
+            :event-id="event.id"
+            :is-admin="isAdmin"
             :photographers="photographers"
-            v-model:paths="importForm.paths"
-            v-model:photographer-id="importForm.photographer_id"
-        >
-            <template #action="{ count }">
-                <div class="mt-3">
-                    <button
-                        type="button"
-                        :disabled="importForm.processing || count === 0"
-                        class="rounded-lg bg-accent px-6 py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover disabled:opacity-60"
-                        @click="runImport"
-                    >
-                        {{ importForm.processing ? 'Importálás…' : `Importálás (${count})` }}
-                    </button>
-                    <p v-if="importForm.errors.paths" class="mt-2 text-xs text-accent">{{ importForm.errors.paths }}</p>
-                    <p v-if="importForm.errors.photographer_id" class="mt-2 text-xs text-accent">{{ importForm.errors.photographer_id }}</p>
-                </div>
-            </template>
-        </FtpImportBrowser>
+            :scope="ftpImport?.scope ?? null"
+            :direct-upload="!!ftpImport?.direct_upload"
+            @import="onUploaderImport"
+            @refresh="onUploaderRefresh"
+        />
+
+        <!-- 3. Haladó: import meglévő tárolóból (rclone / FTP) -->
+        <details v-if="ftpImport" class="mt-4 rounded-[var(--radius-base)] border border-border bg-surface-1 [&[open]]:pb-2">
+            <summary class="cursor-pointer px-5 py-3 text-xs font-semibold uppercase tracking-wide text-muted hover:text-content">
+                Haladó — import meglévő tárolóból (rclone / FTP)
+            </summary>
+            <FtpImportBrowser
+                class="mx-2 mb-2 border-0 !bg-transparent p-0"
+                :available="ftpImport.available"
+                :scope="ftpImport.scope"
+                :photographers="photographers"
+                v-model:paths="importForm.paths"
+                v-model:photographer-id="importForm.photographer_id"
+            >
+                <template #action="{ count }">
+                    <div class="mt-3">
+                        <button
+                            type="button"
+                            :disabled="importForm.processing || count === 0"
+                            class="rounded-lg bg-accent px-6 py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover disabled:opacity-60"
+                            @click="runImport"
+                        >
+                            {{ importForm.processing ? 'Importálás…' : `Importálás (${count})` }}
+                        </button>
+                        <p v-if="importForm.errors.paths" class="mt-2 text-xs text-accent">{{ importForm.errors.paths }}</p>
+                        <p v-if="importForm.errors.photographer_id" class="mt-2 text-xs text-accent">{{ importForm.errors.photographer_id }}</p>
+                    </div>
+                </template>
+            </FtpImportBrowser>
+        </details>
 
         <!-- Hatter-import folyamatjelzo -->
         <div v-if="importStatus" class="mt-4 rounded-[var(--radius-base)] border border-accent/40 bg-accent/5 p-4">
