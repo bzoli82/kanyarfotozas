@@ -133,9 +133,14 @@ class SystemReadiness
         $items[] = $this->item('public_disk', 'Publikus fájl disk', self::OK,
             "Aktív: {$publicDisk} (thumbnail / vízjeles előnézet / HLS / hero).");
 
-        // public/storage symlink csak a lokalis 'public' disknel szamit
+        // public/storage symlink csak a lokalis 'public' disknel szamit.
+        // A realpath-egyezes a legmegbizhatobb ellenorzes (a Windows + git-bash
+        // symlinket a PHP is_link()/is_dir() nem mindig ismeri fel, de a link jo).
         if ($publicDisk === 'public') {
-            $linked = is_link(public_path('storage')) || is_dir(public_path('storage'));
+            $link = public_path('storage');
+            $linked = @realpath($link) === @realpath(storage_path('app/public'))
+                || is_dir($link)
+                || is_link($link);
             $items[] = $this->item('storage_link', 'public/storage symlink', $linked ? self::OK : self::CRITICAL,
                 $linked ? 'Létezik.' : 'Hiányzik — futtasd: php artisan storage:link (különben a képek 404-esek).');
         }
