@@ -249,20 +249,64 @@ function applyIdentity() {
                 Deploy-emlékeztetők
             </summary>
 
-            <div class="mt-3 text-sm text-muted">
-                <p class="font-semibold text-content">Cloudflare R2 — CORS az „import" bucketen</p>
-                <p class="mt-1">
-                    A böngészőből közvetlen feltöltéshez (Média hozzáadása → nagy köteg) az
-                    <code>{{ deployReminders.cors_origin ? deployReminders.cors_origin.replace('https://', '') : '' }}</code>
-                    domainnek engednie kell a <code>PUT</code>-ot. Cloudflare → R2 → <code>kanyarfotozas-import</code> bucket
-                    → Settings → <strong class="text-content">CORS Policy</strong>. Ez az érték az „Oldal neve" fülön
-                    történő domain-váltáskor automatikusan frissül itt:
-                </p>
-                <div class="mt-2 flex items-start gap-2">
-                    <pre class="flex-1 overflow-x-auto rounded-lg bg-surface-2 p-3 text-xs text-content">{{ corsPolicy }}</pre>
-                    <button type="button" class="shrink-0 rounded-lg border border-border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted hover:text-content" @click="copyCors">
-                        {{ corsCopied ? 'Másolva ✓' : 'Másolás' }}
-                    </button>
+            <div class="mt-3 space-y-5 text-sm text-muted">
+                <div>
+                    <p class="font-semibold text-content">1. Ütemező (cron) — <span class="font-normal">a szerveren, egyszer</span></p>
+                    <p class="mt-1">
+                        A rendszernek van kb. 9 időzített feladata (napi mentés, letöltési emlékeztetők,
+                        riasztás-e-mailek, gyorsítótár-takarítás, fotós riportok…). Ezeket a Laravel
+                        <strong class="text-content">egyetlen</strong> percenként futó parancs vezérli — neked ezt az egyet kell
+                        beállítanod a szerveren, és az összes többi magától megy.
+                    </p>
+                    <ul class="mt-2 list-disc space-y-1 pl-5">
+                        <li><strong class="text-content">Coolify:</strong> az alkalmazásnál → „Scheduled Tasks" → új: parancs
+                            <code>php artisan schedule:run</code>, gyakoriság <code>* * * * *</code> (= percenként).</li>
+                        <li><strong class="text-content">Sima szerver (cron):</strong> <code>crontab -e</code>, majd egy sor:
+                            <code>* * * * * cd /az/projekt/útvonala &amp;&amp; php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1</code></li>
+                        <li><strong class="text-content">Helyben (fejlesztés):</strong> nem kell — vagy egy külön terminálban
+                            <code>php artisan schedule:work</code> (fut, amíg nyitva van).</li>
+                    </ul>
+                    <p class="mt-1 text-[12px]">
+                        A <code>* * * * *</code> öt csillag cron-szintaxis: „minden percben, minden órában, minden nap".
+                        Ha ez nincs beállítva: nincs mentés, nem mennek ki az emlékeztető/riasztó e-mailek, a
+                        gyorsítótárak nem tisztulnak. A fenti zöld/piros jelzés 5–20 percen belül vált, ha működik.
+                    </p>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-content">2. Cloudflare R2 — CORS az „import" bucketen</p>
+                    <p class="mt-1">
+                        A böngészőből közvetlen feltöltéshez (Média hozzáadása → nagy köteg) az
+                        <code>{{ deployReminders.cors_origin ? deployReminders.cors_origin.replace('https://', '') : '' }}</code>
+                        domainnek engednie kell a <code>PUT</code>-ot. Cloudflare → R2 → <code>kanyarfotozas-import</code> bucket
+                        → Settings → <strong class="text-content">CORS Policy</strong>. Ez az érték az „Oldal neve" fülön
+                        történő domain-váltáskor automatikusan frissül itt:
+                    </p>
+                    <div class="mt-2 flex items-start gap-2">
+                        <pre class="flex-1 overflow-x-auto rounded-lg bg-surface-2 p-3 text-xs text-content">{{ corsPolicy }}</pre>
+                        <button type="button" class="shrink-0 rounded-lg border border-border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted hover:text-content" @click="copyCors">
+                            {{ corsCopied ? 'Másolva ✓' : 'Másolás' }}
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-content">3. Várólista-feldolgozó (queue worker) — <span class="font-normal">folyamatosan fusson</span></p>
+                    <p class="mt-1">
+                        A képek/videók feldolgozása, a tömeges import, az e-mail-küldés a háttérben, egy
+                        <strong class="text-content">mindig futó</strong> folyamatban történik. Coolify: külön
+                        „worker" process; sima szerveren supervisor / systemd. Parancs:
+                        <code>php artisan queue:work --queue=videos,imports,default</code>
+                        (nagy importhoz 2–3 példány).
+                    </p>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-content">4. Egyszeri parancsok a szerveren</p>
+                    <ul class="mt-1 list-disc space-y-1 pl-5">
+                        <li><code>php artisan storage:link</code> — csak ha a publikus disk lokális (R2-nél nem kell)</li>
+                        <li><code>php artisan migrate --force</code> — az adatbázis-séma frissítése deploykor</li>
+                    </ul>
                 </div>
             </div>
         </details>
