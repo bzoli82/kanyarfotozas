@@ -16,6 +16,12 @@ Becsült teljes havidíj: **~€4–5 + a domain**.
 > `ELES-INDULAS-CHECKLIST.md` a magas szintű pipálós lista; ez a fájl a
 > lépésről lépésre szóló szerver-setup.
 
+> **Ha a tartalmat (események, oldalszövegek, GYIK, árak, fotósok, képek) HELYBEN
+> töltöd fel és 1:1-ben akarod élesre vinni** — úgy, hogy amit a gépeden látsz,
+> azt lásd élesen is —: ugord át előbb a **„Tartalom helyben → élesre"**
+> szakaszt (a Hibaelhárítás előtt), az megmondja a sorrendet (APP_KEY rögzítése,
+> R2-re állás, adatbázis-átvitel).
+
 ---
 
 ## 0. Előfeltételek (a gépeden)
@@ -359,6 +365,137 @@ nézd meg a fejlécben `spf=pass` / `dkim=pass`.
 | **Managed Postgres** | `DB_*` átirányítása (pl. Neon — támogat PostGIS-t is); Coolify csak az appot futtatja. |
 | **Külön worker/DB gép** | Coolify multi-server (több szerver egy instance alatt), vagy load balancer + több app-node. |
 | **Váltás Forge / Laravel Cloud** | Semmi Coolify-specifikus a kódban — sima Laravel app. `git remote` marad, új platform, env átmásol. |
+
+---
+
+## Tartalom helyben → élesre (indulás előtt, 1:1)
+
+Cél: helyben feltöltöd az igazi tartalmat (események, oldalszövegek, GYIK, árak,
+fotósok, hero-képek, minta-galériák), teszteled, majd **ugyanazt** átviszed
+élesre — adatostul, képestül.
+
+**Alapelv:** indulás ELŐTT a helyi gép a „mester". Az élesre vitel = a helyi
+**adatbázis** + a helyi **média** átmásolása. Ezt akárhányszor megismételheted,
+amíg élesbe nem állsz. **Élesítés (első valódi rendelés) UTÁN** ez megfordul: az
+éles admin lesz a mester, és egy újabb „helyi → éles" felülírná a valódi
+rendeléseket. Onnantól a tartalmat közvetlenül az éles adminban szerkeszted.
+
+### 1. Rögzítsd az `APP_KEY`-t — MOST, mindkét helyre ugyanazt
+
+A `site_settings` titkosított mezői (fizetési kulcsok, SMTP-jelszó, webhook-URL,
+2FA-titkok, a superadminod 2FA-ja) az `APP_KEY`-jel vannak titkosítva. Ha helyben
+X kulccsal titkosítod és élesen más a kulcs, ezek **olvashatatlanná válnak**
+(a rendszer nem omlik össze, csak „nincs beállítva"-ként viselkedik).
+
+```bash
+# helyi gépen, a projektben:
+php artisan key:generate --show      # base64:....
+```
+
+- Írd be a **helyi** `.env`-be `APP_KEY=base64:...`.
+- Ugyanezt az értéket add meg élesen a Coolify env-ben (6/b–6/c pont).
+- **Soha ne cseréld** egyik helyen sem.
+
+### 2. Tiszta kiindulás helyben (demo-adat nélkül)
+
+Ha korábban `migrate:fresh --seed`-et futtattál, a DB tele van **demo** eseményekkel,
+fotósokkal, placeholder-képekkel (`@example.test` e-mailek). Ezek NEM kellenek élesre.
+Indíts tisztán, csak a valódi alapadatokkal:
+
+```bash
+php artisan migrate:fresh
+php artisan db:seed --class=CountrySeeder          # országlista
+php artisan db:seed --class=RolePermissionSeeder   # szerepkörök
+php artisan db:seed --class=LandingSectionSeeder   # főoldal-blokkok
+php artisan db:seed --class=SiteSettingSeeder      # alapbeállítások
+php artisan db:seed --class=FaqItemSeeder          # GYIK alaptartalom
+```
+(Ez a `DatabaseSeeder`, csak a `DemoDataSeeder` nélkül.)
+
+Majd hozz létre egy **valódi** superadmint (nem `password123`):
+
+```bash
+php artisan tinker --execute "App\Models\User::create(['name'=>'Zoli','email'=>'bzoli82@gmail.com','password'=>bcrypt('<ERŐS_JELSZÓ>'),'role'=>'superadmin','is_active'=>true]);"
+```
+
+### 3. Állítsd a helyi médiát R2-re (hogy oda kerüljön, ahonnan az éles olvas)
+
+Így minden feltöltésed egyből az R2-be megy, és élesen nincs mit másolni —
+csak a DB-t.
+
+- Helyi `.env` (a 4. szakasz R2-kulcsaival):
+  ```dotenv
+  MEDIA_PUBLIC_DISK=r2_public
+  MEDIA_ARCHIVE_DISK=r2_private
+  MEDIA_DELIVERY_DISK=delivery          # marad lokális — csak gyorsítótár
+  R2_ACCESS_KEY_ID=...
+  R2_SECRET_ACCESS_KEY=...
+  R2_DEFAULT_REGION=auto
+  R2_ENDPOINT=https://<accountid>.r2.cloudflarestorage.com
+  R2_PUBLIC_BUCKET=kanyarfotozas-public
+  R2_PRIVATE_BUCKET=kanyarfotozas-private
+  R2_PUBLIC_URL=https://media.kanyarfotozas.hu
+  ```
+  ```bash
+  php artisan config:clear
+  ```
+- **Ha már van feltöltött médiád lokálisan**, told fel egyszer:
+  ```bash
+  php artisan kanyarfotozas:sync-media-storage --from-public=public --from-archive=local --dry-run
+  php artisan kanyarfotozas:sync-media-storage --from-public=public --from-archive=local
+  ```
+  Ez a `Media` fájljait viszi. A többi publikus fájlt (hero-képek, fotós
+  profilképek, SEO OG-kép) egy sima tükrözéssel:
+  ```bash
+  # rclone-nal (állítsd be egy `r2` remote-ot az R2 S3 kulcsokkal):
+  rclone copy storage/app/public r2:kanyarfotozas-public --exclude "thumbnails/**" --exclude "watermarked/**" --exclude "sprites/**" --exclude "hls/**"
+  ```
+  > A legegyszerűbb viszont: **a 3. lépést a tartalomfeltöltés ELŐTT** csináld meg —
+  > akkor minden egyből R2-re kerül, és ez a felfele-tükrözés kimarad.
+
+### 4. Vidd át az adatbázist élesre
+
+Miután a Coolify Postgres létezik (5. szakasz) és a kód deployolva van (9.):
+
+```bash
+# HELYBEN — dump (adat + séma + migrations tábla):
+pg_dump --no-owner --no-privileges \
+  --exclude-table-data=sessions --exclude-table-data=cache \
+  --exclude-table-data=cache_locks --exclude-table-data=jobs \
+  -h 127.0.0.1 -U <helyi_user> kanyarfotozas > kf-content.sql
+```
+
+Töltsd fel a `kf-content.sql`-t a szerverre (`scp kf-content.sql root@<IP>:/root/`),
+majd a Coolify Postgres konténerébe:
+
+```bash
+# a szerveren — ürítsd a friss (üres/migrált) éles DB-t, majd töltsd be a dumpot:
+docker exec -i <coolify_pg_konténer> psql -U <db_user> -d <db_név> -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+docker exec -i <coolify_pg_konténer> psql -U <db_user> -d <db_név> < /root/kf-content.sql
+```
+
+Majd a Coolify App **Terminal**-jából:
+
+```bash
+php artisan migrate:status     # minden „Ran" — a kód és a DB azonos verzión
+php artisan config:cache
+php artisan queue:restart
+```
+
+### 5. Ellenőrzés
+
+- `https://kanyarfotozas.hu` — a főoldal a helyi tartalommal jön (hero, statisztika).
+- Belépés a **helyi** superadmin-jelszavaddal (a user átjött a dumpban).
+  A 2FA is működik, ha az `APP_KEY` egyezik (1. pont).
+- Egy esemény galériája: a képek betöltenek (az R2 `media.` domainről).
+- `/admin/settings/critical` — a titkosított mezők (ha adtál meg ilyet helyben)
+  olvashatók → az `APP_KEY` egyezik.
+
+### 6. Ismételhető, amíg nem élesedsz
+
+Amíg nincs valódi rendelés, a 4. lépés (dump → drop schema → restore) akárhányszor
+megismételhető: dolgozol helyben, újra kiviszed. **Az első éles rendelés után
+ne** — onnantól az éles az igazság forrása.
 
 ---
 
