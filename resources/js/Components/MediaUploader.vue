@@ -25,10 +25,8 @@ const result = ref(null);
 const totalBytes = computed(() => jobs.reduce((s, j) => s + j.size, 0));
 const doneCount = computed(() => jobs.filter((j) => j.status === 'done').length);
 const errorCount = computed(() => jobs.filter((j) => j.status === 'error').length);
-const overallProgress = computed(() => {
-    if (!jobs.length) return 0;
-    return Math.round((jobs.reduce((s, j) => s + (j.status === 'done' ? 1 : j.progress), 0) / jobs.length) * 100);
-});
+// Fájl-granularitású (nem bájt) — több ezer fájlnál is olcsó.
+const overallProgress = computed(() => (jobs.length ? Math.round(((doneCount.value + errorCount.value) / jobs.length) * 100) : 0));
 
 function humanSize(bytes) {
     if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
@@ -76,10 +74,10 @@ defineExpose({ clearAll });
     <div class="rounded-[var(--radius-base)] border border-border bg-surface-1 p-5">
         <h2 class="text-sm font-semibold uppercase tracking-wide text-content">Média hozzáadása</h2>
         <p class="mt-1 text-xs text-muted">
-            JPEG/PNG képek és MP4/MOV/AVI videók.
-            <template v-if="directUpload">Nagy köteg (akár több ezer fájl) esetén a böngésző közvetlenül a felhőtárba tölt — nincs darabszám-korlát.</template>
-            <template v-else>Kötegenként max. 200 fájl.</template>
-            A feldolgozás (thumbnail, vízjel) a háttérben készül el.
+            JPEG/PNG képek és MP4/MOV/AVI videók — <strong class="text-content">akár több ezer egyszerre</strong>
+            (jelöld ki mindet, vagy válassz egy mappát). A feltöltés a háttérben, folytatható módon megy;
+            a feldolgozás (thumbnail, vízjel) utána automatikusan elkészül.
+            <template v-if="directUpload">A böngésző közvetlenül a felhőtárba tölt, ezért a szervert nem terheli.</template>
         </p>
 
         <label v-if="isAdmin" class="mt-4 block">

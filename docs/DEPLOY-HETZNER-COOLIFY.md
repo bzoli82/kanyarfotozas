@@ -387,7 +387,10 @@ nézd meg a fejlécben `spf=pass` / `dkim=pass`.
 
 1. `R2_IMPORT_BUCKET=kanyarfotozas-import` + `MEDIA_IMPORT_DISK=r2_import` az env-ben.
 2. **R2 CORS** az import bucketen (Cloudflare → R2 → `kanyarfotozas-import` →
-   Settings → **CORS Policy**) — enélkül a böngésző nem tölthet közvetlenül R2-be:
+   Settings → **CORS Policy**) — enélkül a böngésző nem tölthet közvetlenül R2-be.
+   A **pontos JSON-t** (a mindenkori domainnel) az admin
+   `/admin/settings/critical` → „Deploy-emlékeztetők" blokk mutatja, másolás gombbal;
+   ez a domain-váltáskor („Oldal neve" fül) automatikusan frissül. Minta:
    ```json
    [{ "AllowedOrigins": ["https://kanyarfotozas.hu"],
       "AllowedMethods": ["PUT"],

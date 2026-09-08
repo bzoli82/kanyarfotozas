@@ -47,6 +47,15 @@ class CriticalSettingsTest extends TestCase
         $this->assertArrayNotHasKey('stripe_secret', $props['payments']);
     }
 
+    public function test_deploy_reminder_cors_origin_follows_the_site_domain(): void
+    {
+        SiteSetting::set('site_domain', 'ujdomain.hu');
+
+        $props = $this->actingAs($this->superadmin())->get('/admin/settings/critical')->viewData('page')['props'];
+
+        $this->assertSame('https://ujdomain.hu', $props['deployReminders']['cors_origin']);
+    }
+
     public function test_saving_payment_credentials_encrypts_them(): void
     {
         $this->actingAs($this->superadmin())->put('/admin/settings/critical/payments', [

@@ -11,7 +11,23 @@ const props = defineProps({
     invoicing: { type: Object, required: true },
     monitoring: { type: Object, required: true },
     identity: { type: Object, required: true },
+    deployReminders: { type: Object, default: () => ({ cors_origin: '' }) },
 });
+
+const corsPolicy = computed(() => JSON.stringify([{
+    AllowedOrigins: [props.deployReminders.cors_origin],
+    AllowedMethods: ['PUT'],
+    AllowedHeaders: ['*'],
+    MaxAgeSeconds: 3600,
+}], null, 2));
+
+const corsCopied = ref(false);
+function copyCors() {
+    navigator.clipboard?.writeText(corsPolicy.value).then(() => {
+        corsCopied.value = true;
+        setTimeout(() => { corsCopied.value = false; }, 2000);
+    });
+}
 
 const overall = computed(() => {
     const s = props.groups.map((g) => g.summary);
@@ -226,6 +242,30 @@ function applyIdentity() {
             Az oldal működéséhez elengedhetetlen beállítások egy helyen: fizetés, tárhely, e-mail, ütemező,
             médiafeldolgozás és a végleges domain. A fizetési kulcsok itt szerkeszthetők (titkosítva tárolva).
         </p>
+
+        <!-- Deploy-emlékeztetők (nem automatizálható szerver-oldali lépések) -->
+        <details class="mt-6 rounded-[var(--radius-base)] border border-border bg-surface-1 p-5">
+            <summary class="cursor-pointer text-sm font-semibold uppercase tracking-wide text-content">
+                Deploy-emlékeztetők
+            </summary>
+
+            <div class="mt-3 text-sm text-muted">
+                <p class="font-semibold text-content">Cloudflare R2 — CORS az „import" bucketen</p>
+                <p class="mt-1">
+                    A böngészőből közvetlen feltöltéshez (Média hozzáadása → nagy köteg) az
+                    <code>{{ deployReminders.cors_origin ? deployReminders.cors_origin.replace('https://', '') : '' }}</code>
+                    domainnek engednie kell a <code>PUT</code>-ot. Cloudflare → R2 → <code>kanyarfotozas-import</code> bucket
+                    → Settings → <strong class="text-content">CORS Policy</strong>. Ez az érték az „Oldal neve" fülön
+                    történő domain-váltáskor automatikusan frissül itt:
+                </p>
+                <div class="mt-2 flex items-start gap-2">
+                    <pre class="flex-1 overflow-x-auto rounded-lg bg-surface-2 p-3 text-xs text-content">{{ corsPolicy }}</pre>
+                    <button type="button" class="shrink-0 rounded-lg border border-border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted hover:text-content" @click="copyCors">
+                        {{ corsCopied ? 'Másolva ✓' : 'Másolás' }}
+                    </button>
+                </div>
+            </div>
+        </details>
 
         <!-- Állapot-áttekintő -->
         <div class="mt-6 grid gap-4 lg:grid-cols-2">

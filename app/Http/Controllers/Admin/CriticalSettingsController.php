@@ -56,6 +56,11 @@ class CriticalSettingsController extends Controller
                 'stripe_webhook_url' => url('/api/stripe/webhook'),
                 'barion_callback_url' => url('/api/barion/callback'),
             ],
+            'deployReminders' => [
+                // A böngésző→R2 közvetlen feltöltés CORS-origin-je — az „Oldal neve"
+                // fülön történő domain-váltáskor automatikusan frissül.
+                'cors_origin' => 'https://'.$branding->domain(),
+            ],
         ]);
     }
 

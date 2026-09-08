@@ -35,11 +35,13 @@ function putToR2(url, headers, file, onProgress) {
     });
 }
 
-/** POST egy fájl az appnak (feldolgozás szerver-oldalon). */
-function postToApp(eventId, photographerId, file, name, onProgress) {
+const APP_BATCH = 20; // fájl / kérés az appon-át módban (a preprocessed hármas mindig együtt marad)
+
+/** POST egy köteg fájl az appnak egy kérésben (feldolgozás szerver-oldalon). */
+function postBatchToApp(eventId, photographerId, jobs, onProgress) {
     return new Promise((resolve, reject) => {
         const form = new FormData();
-        form.append('files[]', file, name);
+        for (const j of jobs) form.append('files[]', j.file, j.name);
         if (photographerId) form.append('photographer_id', photographerId);
 
         const xhr = new XMLHttpRequest();
@@ -49,10 +51,38 @@ function postToApp(eventId, photographerId, file, name, onProgress) {
         xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
         xhr.onload = () => (xhr.status >= 200 && xhr.status < 300
             ? resolve()
-            : reject(new Error(xhr.status === 422 ? 'A fájl nem felel meg (formátum/méret).' : `Hiba (${xhr.status}).`)));
+            : reject(new Error(xhr.status === 422 ? 'A fájl(ok) nem felelnek meg (formátum/méret).' : `Hiba (${xhr.status}).`)));
         xhr.onerror = () => reject(new Error('network'));
         xhr.send(form);
     });
+}
+
+/** Fájl-törzs (kiterjesztés és `_lores` utótag nélkül) — a preprocessed hármas összetartásához. */
+function stemOf(name) {
+    let stem = name.replace(/\.[^.]+$/, '');
+    if (stem.endsWith('_lores')) stem = stem.slice(0, -6);
+    return stem.toLowerCase();
+}
+
+/** Kötegekre bont ~APP_BATCH-esével, de azonos törzsű fájlokat sose vág szét. */
+function batchJobs(jobs) {
+    const byStem = new Map();
+    for (const j of jobs) {
+        const s = stemOf(j.name);
+        if (!byStem.has(s)) byStem.set(s, []);
+        byStem.get(s).push(j);
+    }
+    const batches = [];
+    let current = [];
+    for (const group of byStem.values()) {
+        if (current.length && current.length + group.length > APP_BATCH) {
+            batches.push(current);
+            current = [];
+        }
+        current.push(...group);
+    }
+    if (current.length) batches.push(current);
+    return batches;
 }
 
 /** Párhuzamos futtató, `limit` egyidejű feladattal. */
@@ -167,20 +197,19 @@ export function useMediaUpload() {
             return { mode: 'direct', importPath: importPath.value, uploaded, failed };
         }
 
-        // 2b. fallback: appon át, fájlonként
+        // 2b. fallback: appon át, kötegelve (a preprocessed hármas egyben marad)
         let uploaded = 0;
         let failed = 0;
-        await pool(pending, 3, async (job) => {
-            job.status = 'uploading';
+        const batches = batchJobs(pending);
+        await pool(batches, 3, async (batch) => {
+            batch.forEach((j) => { j.status = 'uploading'; });
             try {
-                await retry(() => postToApp(eventId, photographerId, job.file, job.name, (p) => { job.progress = p; }), 2);
-                job.progress = 1;
-                job.status = 'done';
-                uploaded++;
+                await retry(() => postBatchToApp(eventId, photographerId, batch, (p) => { batch.forEach((j) => { j.progress = p; }); }), 2);
+                batch.forEach((j) => { j.progress = 1; j.status = 'done'; });
+                uploaded += batch.length;
             } catch (e) {
-                job.status = 'error';
-                job.error = e.message === 'network' ? 'Hálózati hiba' : e.message;
-                failed++;
+                batch.forEach((j) => { j.status = 'error'; j.error = e.message === 'network' ? 'Hálózati hiba' : e.message; });
+                failed += batch.length;
             }
         });
         phase.value = failed && !uploaded ? 'error' : 'done';
