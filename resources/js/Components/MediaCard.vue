@@ -21,6 +21,10 @@ const isHovering = ref(false);
 const videoEl = ref(null);
 const scrubHover = ref(null); // { x, time, frameStyle } | null
 
+// Elő-feldolgozott videó (nincs scrub sprite) → statikus poszter + lejátszás-ikon,
+// nincs hover-lejátszás. A lejátszás a lightboxban indul kattintásra.
+const canHoverPreview = computed(() => !!props.media.preview_sprite_s3_key);
+
 const totalFrames = computed(() => {
     if (!props.media.preview_sprite_interval || !props.media.duration_seconds) return 0;
     return Math.max(1, Math.ceil(props.media.duration_seconds / props.media.preview_sprite_interval));
@@ -35,6 +39,7 @@ function formatTime(seconds) {
 
 function onEnterCard() {
     isHovering.value = true;
+    if (!canHoverPreview.value) return;
     if (videoEl.value) {
         videoEl.value.currentTime = 0;
         videoEl.value.play().catch(() => {});
@@ -122,14 +127,14 @@ function toggleCollection() {
                     v-if="media.thumbnail_s3_key"
                     :src="mediaUrl(media.thumbnail_s3_key)"
                     class="h-full w-full object-cover"
-                    :class="{ invisible: isHovering && media.type === 'video' }"
+                    :class="{ invisible: isHovering && media.type === 'video' && canHoverPreview }"
                     loading="lazy"
                     decoding="async"
                     alt=""
                 />
 
                 <video
-                    v-if="media.type === 'video' && media.watermarked_s3_key"
+                    v-if="media.type === 'video' && media.watermarked_s3_key && canHoverPreview"
                     ref="videoEl"
                     :src="mediaUrl(media.watermarked_s3_key)"
                     class="absolute inset-0 h-full w-full object-cover"
@@ -140,7 +145,7 @@ function toggleCollection() {
                     preload="none"
                 />
 
-                <div v-if="media.type === 'video'" class="absolute inset-0 flex items-center justify-center" :class="{ 'opacity-0': isHovering }">
+                <div v-if="media.type === 'video'" class="absolute inset-0 flex items-center justify-center" :class="{ 'opacity-0': isHovering && canHoverPreview }">
                     <span class="grid h-10 w-10 place-items-center rounded-full bg-black/50 text-white">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
                     </span>

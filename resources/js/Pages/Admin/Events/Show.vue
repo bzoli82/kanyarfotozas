@@ -17,7 +17,13 @@ const props = defineProps({
     isAdmin: Boolean,
     canEditEvent: Boolean,
     ftpImport: { type: Object, default: null },
+    videoMode: { type: String, default: 'pipeline' },
+    watermarkText: { type: String, default: '' },
 });
+
+const preprocessedVideo = props.videoMode === 'preprocessed';
+
+const ffmpegHint = `ffmpeg -i BEMENET.mp4 -vf "scale=-2:480,drawtext=text='${props.watermarkText}':fontcolor=white@0.5:fontsize=h/18:x=(w-tw)/2:y=(h-th)/2" -c:v libx264 -crf 30 -preset veryfast -c:a aac -b:a 96k BEMENET_lores.mp4`;
 
 function huf(cents) {
     return new Intl.NumberFormat('hu-HU').format(cents ?? 0) + ' Ft';
@@ -353,6 +359,20 @@ function runImport() {
             <p class="mt-1 text-xs text-muted">
                 JPEG/PNG képek és MP4/MOV/AVI videók, max. 200 fájl egyszerre. A feldolgozás (WebP, vízjel, sprite) a háttérben készül el — addig a feltöltött média „Feldolgozás alatt” státuszban marad.
             </p>
+
+            <div v-if="preprocessedVideo" class="mt-3 rounded-[var(--radius-base)] border border-border bg-surface-2 p-3 text-xs text-muted">
+                <p class="font-semibold text-content">Elő-feldolgozott videó mód</p>
+                <p class="mt-1">
+                    A szerver NEM kódol videót. Minden videóhoz tölts fel egy fájl-hármast közös alapnévvel:
+                </p>
+                <ul class="mt-1 list-disc space-y-0.5 pl-5">
+                    <li><code>klip.mp4</code> — teljes felbontású eredeti (ezt kapja meg a vásárló)</li>
+                    <li><code>klip_lores.mp4</code> — kis felbontású, vízjelezett előnézet (kötelező)</li>
+                    <li><code>klip.jpg</code> — állókép poszter (opcionális)</li>
+                </ul>
+                <p class="mt-2">Előnézet készítése helyben (a vízjel-szöveg az aktuális beállításból):</p>
+                <pre class="mt-1 overflow-x-auto rounded bg-black/40 p-2 text-[11px] text-content">{{ ffmpegHint }}</pre>
+            </div>
 
             <form class="mt-4 flex flex-wrap items-end gap-3" @submit.prevent="submitUpload">
                 <label v-if="isAdmin" class="block">

@@ -21,6 +21,31 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Videó-mód: szerver-oldali kódolás vagy elő-feldolgozott feltöltés
+    |--------------------------------------------------------------------------
+    |
+    |   pipeline     : (alap) a szerver FFmpeg-gel legyártja a thumbnailt, a
+    |                  vízjelezett 720p előnézetet, a scrub sprite-ot és a HLS
+    |                  streamet — App\Jobs\ProcessVideoMedia.
+    |   preprocessed : NINCS szerver-oldali FFmpeg. A fotós a helyi gépén
+    |                  előre elkészíti a kis felbontású előnézetet, és a
+    |                  következő fájl-hármast tölti fel (közös alapnév):
+    |                    foo.mp4        – teljes felbontású eredeti (a termék)
+    |                    foo_lores.mp4  – kis felbontású, vízjelezett előnézet
+    |                    foo.jpg        – állókép poszter (opcionális)
+    |                  A galéria-kártyán statikus poszter + lejátszás-ikon,
+    |                  kattintásra a lores előnézet játszódik le. Nincs
+    |                  scrub sáv és nincs HLS.
+    |
+    */
+
+    'video_mode' => env('MEDIA_VIDEO_MODE', 'pipeline'),
+
+    // A kis felbontású előnézet-fájl kötelező utótagja preprocessed módban.
+    'preprocessed_lores_suffix' => '_lores',
+
+    /*
+    |--------------------------------------------------------------------------
     | HLS streaming (EPIC-16)
     |--------------------------------------------------------------------------
     |

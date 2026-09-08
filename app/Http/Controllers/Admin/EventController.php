@@ -11,6 +11,7 @@ use App\Models\Media;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\FtpImport;
+use App\Services\WatermarkSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -99,6 +100,8 @@ class EventController extends Controller
             'ftpImport' => $user->isAdmin()
                 ? ['available' => app(FtpImport::class)->isAvailable()]
                 : null,
+            'videoMode' => config('media.video_mode'),
+            'watermarkText' => app(WatermarkSettings::class)->text(),
         ]);
     }
 
@@ -177,6 +180,8 @@ class EventController extends Controller
             'ftpImport' => $user->isAdmin()
                 ? ['available' => app(FtpImport::class)->isAvailable()]
                 : null,
+            'videoMode' => config('media.video_mode'),
+            'watermarkText' => app(WatermarkSettings::class)->text(),
         ]);
     }
 

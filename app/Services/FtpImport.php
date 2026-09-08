@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Event;
 use App\Models\Media;
+use App\Support\PreprocessedVideoGrouper;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;
@@ -27,11 +28,29 @@ class FtpImport
 
     private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 
+    private const VIDEO_EXTENSIONS = ['mp4', 'mov', 'avi'];
+
     public function __construct(private NasConnection $nas, private MediaIngestor $ingestor) {}
 
     public function isAvailable(): bool
     {
         return $this->nas->isConfigured();
+    }
+
+    /** Elő-feldolgozott videó-mód: a böngésző videókat is mutat, az import párosít. */
+    private function isPreprocessed(): bool
+    {
+        return config('media.video_mode') === 'preprocessed';
+    }
+
+    /**
+     * @return list<string> A böngészőben látható / importálható fájlkiterjesztések.
+     */
+    private function browsableExtensions(): array
+    {
+        return $this->isPreprocessed()
+            ? [...self::IMAGE_EXTENSIONS, ...self::VIDEO_EXTENSIONS]
+            : self::IMAGE_EXTENSIONS;
     }
 
     /**
@@ -56,12 +75,21 @@ class FtpImport
             ->values()
             ->all();
 
+        $loresSuffix = (string) config('media.preprocessed_lores_suffix', '_lores');
+        $browsable = $this->browsableExtensions();
+
         $files = collect($disk->files($path))
             ->filter(fn (string $file): bool => in_array(
                 strtolower(pathinfo($file, PATHINFO_EXTENSION)),
-                self::IMAGE_EXTENSIONS,
+                $browsable,
                 true,
             ))
+            // A kis felbontású előnézetet nem lehet külön kiválasztani — az import
+            // a mester videó mellé automatikusan behúzza.
+            ->reject(fn (string $file): bool => $this->isPreprocessed()
+                && $loresSuffix !== ''
+                && str_ends_with(pathinfo($file, PATHINFO_FILENAME), $loresSuffix)
+                && in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), self::VIDEO_EXTENSIONS, true))
             ->map(fn (string $file): array => [
                 'name' => basename($file),
                 'path' => $this->normalize($file),
@@ -110,12 +138,6 @@ class FtpImport
 
             $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
-            if (! in_array($extension, self::IMAGE_EXTENSIONS, true)) {
-                $failed[] = $path;
-
-                continue;
-            }
-
             // Gyors elő-szűrés: ugyanezt a forrás-útvonalat már importáltuk.
             if (Media::query()->where('event_id', $event->id)->where('import_source_path', $path)->exists()) {
                 $skipped++;
@@ -123,21 +145,22 @@ class FtpImport
                 continue;
             }
 
-            $key = sprintf('originals/%d/%s.%s', $event->id, (string) Str::uuid(), $extension);
+            if ($this->isPreprocessed() && in_array($extension, self::VIDEO_EXTENSIONS, true)) {
+                $outcome = $this->importPreprocessedVideo($event, $path, $photographerId, $remote, $staging);
+                $outcome === 'imported' ? $imported++ : ($outcome === 'skipped' ? $skipped++ : $failed[] = $path);
 
-            try {
-                $stream = $remote->readStream($path);
+                continue;
+            }
 
-                if (! is_resource($stream)) {
-                    $failed[] = $path;
+            if (! in_array($extension, self::IMAGE_EXTENSIONS, true)) {
+                $failed[] = $path;
 
-                    continue;
-                }
+                continue;
+            }
 
-                $staging->writeStream($key, $stream);
-                fclose($stream);
-            } catch (\Throwable $e) {
-                report($e);
+            $key = $this->stageRemote($event, $path, $extension, $remote, $staging);
+
+            if ($key === null) {
                 $failed[] = $path;
 
                 continue;
@@ -152,6 +175,95 @@ class FtpImport
         }
 
         return ['imported' => $imported, 'skipped' => $skipped, 'failed' => $failed];
+    }
+
+    /**
+     * Elő-feldolgozott videó importja: a mester videó mellé a `_lores` előnézetet
+     * és (ha van) a poszter-képet a SAME távoli mappából automatikusan behúzza.
+     *
+     * @return 'imported'|'skipped'|'failed'
+     */
+    private function importPreprocessedVideo(
+        Event $event,
+        string $path,
+        string $photographerId,
+        Filesystem $remote,
+        Filesystem $staging,
+    ): string {
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $stem = pathinfo($path, PATHINFO_FILENAME);
+        $dir = trim(str_replace('\\', '/', dirname($path)), '/.');
+        $prefix = $dir === '' ? '' : $dir.'/';
+        $suffix = (string) config('media.preprocessed_lores_suffix', '_lores');
+
+        $loresPath = null;
+        foreach (self::VIDEO_EXTENSIONS as $ext) {
+            $candidate = "{$prefix}{$stem}{$suffix}.{$ext}";
+            if (rescue(fn () => $remote->exists($candidate), false, false)) {
+                $loresPath = $candidate;
+                break;
+            }
+        }
+
+        if ($loresPath === null) {
+            return 'failed';
+        }
+
+        $posterPath = null;
+        foreach (PreprocessedVideoGrouper::POSTER_EXTENSIONS as $ext) {
+            $candidate = "{$prefix}{$stem}.{$ext}";
+            if (rescue(fn () => $remote->exists($candidate), false, false)) {
+                $posterPath = $candidate;
+                break;
+            }
+        }
+
+        $masterKey = $this->stageRemote($event, $path, $extension, $remote, $staging);
+        $loresKey = $masterKey === null ? null
+            : $this->stageRemote($event, $loresPath, strtolower(pathinfo($loresPath, PATHINFO_EXTENSION)), $remote, $staging);
+
+        if ($masterKey === null || $loresKey === null) {
+            return 'failed';
+        }
+
+        $posterKey = $posterPath === null ? null
+            : $this->stageRemote($event, $posterPath, strtolower(pathinfo($posterPath, PATHINFO_EXTENSION)), $remote, $staging);
+
+        $media = $this->ingestor->ingestPreprocessedVideo(
+            $event, $photographerId, $masterKey, $loresKey, $posterKey, $path,
+        );
+
+        return $media !== null ? 'imported' : 'skipped';
+    }
+
+    /**
+     * Egy távoli fájl letöltése a lokális stagingbe. Null hiba esetén.
+     */
+    private function stageRemote(
+        Event $event,
+        string $path,
+        string $extension,
+        Filesystem $remote,
+        Filesystem $staging,
+    ): ?string {
+        $key = sprintf('originals/%d/%s.%s', $event->id, (string) Str::uuid(), $extension);
+
+        try {
+            $stream = $remote->readStream($path);
+
+            if (! is_resource($stream)) {
+                return null;
+            }
+
+            $staging->writeStream($key, $stream);
+            fclose($stream);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return null;
+        }
+
+        return $key;
     }
 
     /**

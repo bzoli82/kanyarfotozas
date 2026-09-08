@@ -10,8 +10,10 @@ use App\Models\Media;
 use App\Services\MediaDeleter;
 use App\Services\MediaIngestor;
 use App\Services\MediaStorage;
+use App\Support\PreprocessedVideoGrouper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -35,23 +37,54 @@ class MediaController extends Controller
 
         $uploaded = 0;
         $duplicates = 0;
+        $rejected = 0;
 
-        foreach ($request->file('files', []) as $file) {
-            $extension = strtolower($file->getClientOriginalExtension());
-            $isVideo = in_array($extension, ['mp4', 'mov', 'avi'], true);
-            $type = $isVideo ? Media::TYPE_VIDEO : Media::TYPE_PHOTO;
+        $files = $request->file('files', []);
 
-            $key = sprintf('originals/%d/%s.%s', $event->id, (string) Str::uuid(), $extension);
-            Storage::disk(MediaStorage::STAGING)->putFileAs(
-                dirname($key),
-                $file,
-                basename($key),
-            );
+        if (config('media.video_mode') === 'preprocessed') {
+            $byName = [];
+            foreach ($files as $file) {
+                $byName[$file->getClientOriginalName()] = $file;
+            }
 
-            if ($ingestor->ingestStaged($event, $photographerId, $key, $type) !== null) {
-                $uploaded++;
-            } else {
-                $duplicates++;
+            $groups = PreprocessedVideoGrouper::group($byName);
+
+            foreach ($groups['videos'] as $group) {
+                if ($group['lores'] === null) {
+                    $rejected++;
+
+                    continue;
+                }
+
+                $result = $ingestor->ingestPreprocessedVideo(
+                    $event,
+                    $photographerId,
+                    $this->stageUpload($event, $group['master']),
+                    $this->stageUpload($event, $group['lores']),
+                    $group['poster'] ? $this->stageUpload($event, $group['poster']) : null,
+                );
+
+                $result !== null ? $uploaded++ : $duplicates++;
+            }
+
+            $rejected += count($groups['orphan_lores']);
+
+            foreach ($groups['photos'] as $file) {
+                $ingestor->ingestStaged($event, $photographerId, $this->stageUpload($event, $file), Media::TYPE_PHOTO) !== null
+                    ? $uploaded++
+                    : $duplicates++;
+            }
+        } else {
+            foreach ($files as $file) {
+                $extension = strtolower($file->getClientOriginalExtension());
+                $isVideo = in_array($extension, ['mp4', 'mov', 'avi'], true);
+                $type = $isVideo ? Media::TYPE_VIDEO : Media::TYPE_PHOTO;
+
+                if ($ingestor->ingestStaged($event, $photographerId, $this->stageUpload($event, $file), $type) !== null) {
+                    $uploaded++;
+                } else {
+                    $duplicates++;
+                }
             }
         }
 
@@ -61,7 +94,21 @@ class MediaController extends Controller
             $message .= " {$duplicates} fájlt kihagytunk, mert már fel van töltve ehhez az eseményhez.";
         }
 
+        if ($rejected > 0) {
+            $message .= " {$rejected} videót kihagytunk, mert hiányzik a hozzá tartozó _lores.mp4 előnézet.";
+        }
+
         return back()->with($uploaded > 0 ? 'success' : 'error', $message);
+    }
+
+    private function stageUpload(Event $event, UploadedFile $file): string
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+        $key = sprintf('originals/%d/%s.%s', $event->id, (string) Str::uuid(), $extension);
+
+        Storage::disk(MediaStorage::STAGING)->putFileAs(dirname($key), $file, basename($key));
+
+        return $key;
     }
 
     public function update(Request $request, Media $media): RedirectResponse
