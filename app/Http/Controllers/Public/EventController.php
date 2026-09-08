@@ -26,7 +26,7 @@ class EventController extends Controller
     public function index(Request $request, EventSearch $search): Response
     {
         $filters = $this->filtersFromRequest($request);
-        $hasGpsFilter = filled($filters['lat'] ?? null) && filled($filters['lon'] ?? null);
+        $hasGpsFilter = $search->hasGeoFilter($filters);
 
         $query = $search->defaultOrder($search->query($filters), $hasGpsFilter);
 

@@ -5,6 +5,7 @@ namespace Tests\Feature\Public;
 use App\Models\Country;
 use App\Models\Event;
 use App\Models\Media;
+use App\Models\SiteSetting;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -123,6 +124,8 @@ class EventGalleryTest extends TestCase
 
     public function test_gps_radius_search_includes_nearby_and_excludes_far_events_with_distance(): void
     {
+        SiteSetting::set('geo_search_enabled', '1');
+
         // Eger kozeppontja korul: a "kozeli" esemeny kb. 5 km-re van (meg ugyanaz a varos),
         // a "tavoli" esemeny Budapesten (~110 km), ami 50 km-es sugaron kivul esik.
         $nearby = Event::factory()->create([
@@ -145,6 +148,29 @@ class EventGalleryTest extends TestCase
         $nearbyRow = $events->firstWhere('id', $nearby->id);
         $this->assertArrayHasKey('distance_km', $nearbyRow);
         $this->assertLessThan(10, (float) $nearbyRow['distance_km']);
+    }
+
+    public function test_gps_radius_params_are_ignored_when_geo_search_is_disabled(): void
+    {
+        // Alapból KI van kapcsolva (PostGIS-függőség) — a lat/lon paramétereket
+        // figyelmen kívül kell hagyni, nem szabad ST_DWithin-t hívni.
+        $near = Event::factory()->create([
+            'status' => Event::STATUS_LIVE, 'name' => 'Eger Kanyar', 'location' => 'Eger',
+            'latitude' => 47.95, 'longitude' => 20.38,
+        ]);
+        $far = Event::factory()->create([
+            'status' => Event::STATUS_LIVE, 'name' => 'Budapest Kanyar', 'location' => 'Budapest',
+            'latitude' => 47.4979, 'longitude' => 19.0402,
+        ]);
+
+        $response = $this->get('/events?'.http_build_query(['lat' => 47.9025, 'lon' => 20.3772, 'radius' => 5]));
+
+        $response->assertOk();
+        $events = collect($response->viewData('page')['props']['events']['data']);
+        $ids = $events->pluck('id');
+        $this->assertTrue($ids->contains($near->id));
+        $this->assertTrue($ids->contains($far->id), 'A távoli esemény is jön, mert a sugaras szűrés ki van kapcsolva.');
+        $this->assertArrayNotHasKey('distance_km', $events->firstWhere('id', $near->id));
     }
 
     public function test_event_list_exposes_first_ready_media_thumbnail_as_cover(): void
@@ -171,6 +197,8 @@ class EventGalleryTest extends TestCase
 
     public function test_gps_radius_search_orders_results_by_distance_ascending(): void
     {
+        SiteSetting::set('geo_search_enabled', '1');
+
         $far = Event::factory()->create([
             'status' => Event::STATUS_LIVE, 'name' => 'Mátra Rally', 'location' => 'Mátraháza',
             'latitude' => 47.87, 'longitude' => 19.95,

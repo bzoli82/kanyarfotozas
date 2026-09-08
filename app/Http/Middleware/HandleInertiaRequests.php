@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\GeoSearchSettings;
 use App\Services\MediaStorage;
 use App\Services\Seo;
 use App\Services\SiteBranding;
@@ -54,6 +55,9 @@ class HandleInertiaRequests extends Middleware
             // A publikus média böngészőből elérhető bázis-URL-je: dev `/storage`,
             // élesben az R2 publikus domain. A frontend `mediaUrl()` helper ezt fűzi a kulcs elé.
             'mediaBaseUrl' => MediaStorage::publicBaseUrl(),
+            // GPS sugaras helyszín-keresés (PostGIS-igényes) — a kereső-panel + a
+            // térkép-modal ez alapján mutatja/rejti a GPS fület és a „Keress itt" gombot.
+            'geoSearch' => fn () => app(GeoSearchSettings::class)->enabled(),
             'auth' => [
                 'user' => $request->user()
                     ? $request->user()->only('id', 'name', 'email', 'role')

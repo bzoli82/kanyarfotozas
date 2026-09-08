@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class EventSearch
 {
+    public function __construct(private GeoSearchSettings $geoSearch) {}
+
     /**
      * @param  array{location?: string, countries?: array<string>, date_from?: string, date_to?: string, type?: string, photographer_id?: string, lat?: float, lon?: float, radius?: float}  $filters
      * @return Builder<Event>
@@ -57,7 +59,7 @@ class EventSearch
                 ->where('status', Media::STATUS_READY));
         }
 
-        if (filled($filters['lat'] ?? null) && filled($filters['lon'] ?? null)) {
+        if ($this->geoSearch->enabled() && filled($filters['lat'] ?? null) && filled($filters['lon'] ?? null)) {
             $lat = (float) $filters['lat'];
             $lon = (float) $filters['lon'];
             $radiusMeters = (float) ($filters['radius'] ?? 15) * 1000;
@@ -74,6 +76,19 @@ class EventSearch
         }
 
         return $query;
+    }
+
+    /**
+     * Aktív-e a GPS sugaras szűrés ehhez a kéréshez (a funkció be van kapcsolva
+     * ÉS van érvényes lat/lon a szűrőkben).
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function hasGeoFilter(array $filters): bool
+    {
+        return $this->geoSearch->enabled()
+            && filled($filters['lat'] ?? null)
+            && filled($filters['lon'] ?? null);
     }
 
     /**

@@ -4,6 +4,8 @@ import 'leaflet/dist/leaflet.css';
 
 const props = defineProps({
     open: { type: Boolean, default: false },
+    // GPS sugaras keresés (PostGIS) — kikapcsolva a „Keress itt" gomb rejtve.
+    allowAreaSearch: { type: Boolean, default: true },
 });
 
 const emit = defineEmits(['close', 'select', 'search', 'search-area']);
@@ -363,6 +365,7 @@ onBeforeUnmount(() => {
                     </p>
                     <div class="flex items-center gap-2">
                         <button
+                            v-if="allowAreaSearch"
                             type="button"
                             class="rounded-lg border border-border px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-content hover:border-accent hover:text-accent"
                             @click="searchCurrentArea"

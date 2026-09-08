@@ -1,10 +1,14 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import EventMapModal from '@/Components/EventMapModal.vue';
 import { useI18n } from '@/Composables/useI18n';
 
 const { t } = useI18n();
+
+// GPS sugaras keresés (PostGIS) — adminból kikapcsolható; ekkor a GPS fül és a
+// térkép „Keress itt" gombja eltűnik, marad a helyszínnév / ország / dátum keresés.
+const geoSearchEnabled = computed(() => !!usePage().props.geoSearch);
 
 const props = defineProps({
     // A jelenlegi /events szűrők (előtöltéshez), pl. a controller `filters` propja.
@@ -114,10 +118,10 @@ const countryLabel = computed(() => {
 
 const searchTabs = computed(() => [
     { key: 'default', label: t('home.search.tab_default') },
-    { key: 'gps', label: t('home.search.tab_gps') },
+    ...(geoSearchEnabled.value ? [{ key: 'gps', label: t('home.search.tab_gps') }] : []),
     { key: 'map', label: t('home.search.tab_map') },
 ]);
-const activeTab = ref(search.lat && search.lon ? 'gps' : 'default');
+const activeTab = ref(geoSearchEnabled.value && search.lat && search.lon ? 'gps' : 'default');
 
 const mapOpen = ref(false);
 const gpsError = ref('');
@@ -394,6 +398,7 @@ function submitSearch() {
 
         <EventMapModal
             :open="mapOpen"
+            :allow-area-search="geoSearchEnabled"
             v-model:date-from="search.dateFrom"
             v-model:date-until="search.dateUntil"
             v-model:photographer-id="search.photographerId"

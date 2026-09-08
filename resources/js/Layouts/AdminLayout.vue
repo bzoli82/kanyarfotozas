@@ -35,6 +35,7 @@ const adminNav = computed(() => {
         items.push({ label: 'E-mail sablonok', href: '/admin/settings/mail', icon: 'mail' });
         items.push({ label: 'SEO', href: '/admin/settings/seo', icon: 'search' });
         items.push({ label: 'GEO (AI-keresők)', href: '/admin/settings/geo', icon: 'robot' });
+        items.push({ label: 'Helyszín-keresés', href: '/admin/settings/location-search', icon: 'pin' });
         items.push({ label: 'Jogi oldalak', href: '/admin/settings/legal', icon: 'doc' });
         items.push({ label: 'Közösségi média', href: '/admin/settings/social', icon: 'share2' });
         items.push({ label: 'Téma', href: '/admin/settings/theme', icon: 'theme' });
@@ -103,6 +104,7 @@ function logout() {
                     <svg v-else-if="item.icon === 'wallet'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M16 12h4M3 9h13" /></svg>
                     <svg v-else-if="item.icon === 'fingerprint'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 11c0 4-1 6-2 8M8 7a5 5 0 0 1 8 4c0 4 0 5 1 7M5 11a7 7 0 0 1 12-5M12 15c0 3 .5 4 1 5.5M19 13c0 4-.5 5-1 6.5" /></svg>
                     <svg v-else-if="item.icon === 'robot'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="8" width="16" height="12" rx="2" /><path d="M12 4v4M9 14h.01M15 14h.01M2 13h2M20 13h2" /></svg>
+                    <svg v-else-if="item.icon === 'pin'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></svg>
                     <svg v-else-if="item.icon === 'privacy'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
                     <svg v-else-if="item.icon === 'doc'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2" /></svg>
                     <svg v-else-if="item.icon === 'share2'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" /></svg>

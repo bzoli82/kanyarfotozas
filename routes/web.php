@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ForensicController;
 use App\Http\Controllers\Admin\GeoController;
 use App\Http\Controllers\Admin\HeroSlideController;
 use App\Http\Controllers\Admin\LegalSettingsController;
+use App\Http\Controllers\Admin\LocationSearchController;
 use App\Http\Controllers\Admin\MailTemplateController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MediaImportController;
@@ -245,6 +246,9 @@ Route::middleware(['auth', 'role:superadmin', '2fa'])->prefix('admin')->name('ad
 
     Route::get('/settings/geo', [GeoController::class, 'index'])->name('settings.geo');
     Route::put('/settings/geo', [GeoController::class, 'update'])->name('settings.geo.update');
+
+    Route::get('/settings/location-search', [LocationSearchController::class, 'index'])->name('settings.location-search');
+    Route::put('/settings/location-search', [LocationSearchController::class, 'update'])->name('settings.location-search.update');
 
     Route::get('/settings/legal', [LegalSettingsController::class, 'index'])->name('settings.legal');
     Route::put('/settings/legal', [LegalSettingsController::class, 'update'])->name('settings.legal.update');
