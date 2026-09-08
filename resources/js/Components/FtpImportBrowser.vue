@@ -7,8 +7,11 @@ const props = defineProps({
     photographers: { type: Array, default: () => [] },
     // v-model:paths — a kijelölt fájl- ÉS mappa-útvonalak (a mappákat a szerver bontja ki)
     paths: { type: Array, default: () => [] },
-    // v-model:photographerId — a kiválasztott fotós
+    // v-model:photographerId — a kiválasztott fotós (csak adminnál)
     photographerId: { type: [String, Number], default: '' },
+    // Fotós esetén a saját, elkülönített almappája (a böngésző ide van gyökerezve);
+    // adminnál null (a tároló teljes gyökerét látja, és fotóst választhat).
+    scope: { type: String, default: null },
 });
 
 const emit = defineEmits(['update:paths', 'update:photographerId']);
@@ -97,7 +100,7 @@ function fmtSize(bytes) {
             </p>
 
             <template v-else>
-                <label class="block">
+                <label v-if="scope === null" class="block">
                     <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">Fotós</span>
                     <select
                         :value="photographerId"
@@ -107,6 +110,12 @@ function fmtSize(bytes) {
                         <option v-for="p in photographers" :key="p.id" :value="p.id">{{ p.name }}</option>
                     </select>
                 </label>
+
+                <p v-else class="rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs text-muted">
+                    A te feltöltő mappád a tárolóban: <code class="text-content">{{ scope }}/</code> — ide másold a fájlokat
+                    (pl. rclone-nal <code>rclone copy MAPPA r2:&lt;bucket&gt;/{{ scope }}/…</code>), majd itt böngészd és importáld
+                    az eseményhez. A saját nevedben importálsz.
+                </p>
 
                 <div class="mt-3 flex flex-wrap items-center gap-1 text-xs text-muted">
                     <button type="button" class="hover:text-content" @click="load('')">gyökér</button>

@@ -220,6 +220,8 @@ Route::middleware(['auth', 'role:superadmin', '2fa'])->prefix('admin')->name('ad
     Route::get('/settings/storage', [StorageSettingsController::class, 'index'])->name('settings.storage');
     Route::put('/settings/storage', [StorageSettingsController::class, 'update'])->name('settings.storage.update');
     Route::post('/settings/storage/test', [StorageSettingsController::class, 'test'])->name('settings.storage.test');
+    Route::put('/settings/storage/r2', [StorageSettingsController::class, 'updateR2'])->name('settings.storage.r2');
+    Route::post('/settings/storage/r2/test', [StorageSettingsController::class, 'testR2'])->name('settings.storage.r2.test');
     Route::post('/media/{media}/retry-archive', [StorageSettingsController::class, 'retry'])->name('media.retry-archive');
 
     Route::get('/settings/watermark', [WatermarkSettingsController::class, 'index'])->name('settings.watermark');

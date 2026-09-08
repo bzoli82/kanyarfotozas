@@ -132,10 +132,11 @@ function submit() {
                 </label>
             </div>
 
-            <!-- Opcionalis: kepek beolvasasa FTP-rol mindjart a letrehozaskor -->
+            <!-- Opcionalis: media beolvasasa a tarolobol mindjart a letrehozaskor -->
             <FtpImportBrowser
                 v-if="ftpImport"
                 :available="ftpImport.available"
+                :scope="ftpImport.scope"
                 :photographers="photographers"
                 v-model:paths="form.import_paths"
                 v-model:photographer-id="form.import_photographer_id"

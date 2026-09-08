@@ -97,12 +97,30 @@ class EventController extends Controller
                 ? User::query()->where('role', User::ROLE_PHOTOGRAPHER)->where('is_active', true)->orderBy('name')->get(['id', 'name'])
                 : [],
             'organizers' => $user->isAdmin() ? $this->organizerOptions() : [],
-            'ftpImport' => $user->isAdmin()
-                ? ['available' => app(FtpImport::class)->isAvailable()]
-                : null,
+            'ftpImport' => $this->ftpImportProp($user),
             'videoMode' => config('media.video_mode'),
             'watermarkText' => app(WatermarkSettings::class)->text(),
         ]);
+    }
+
+    /**
+     * A „Beolvasás tárolóból" panel propja — admin ÉS aktív fotós is használhatja
+     * (a fotós a saját, elkülönített almappáját).
+     *
+     * @return array{available: bool, scope: string|null}|null
+     */
+    private function ftpImportProp(User $user): ?array
+    {
+        if (! $user->isAdmin() && ! ($user->isPhotographer() && $user->is_active)) {
+            return null;
+        }
+
+        return [
+            'available' => app(FtpImport::class)->isAvailable(),
+            'scope' => $user->isAdmin()
+                ? null
+                : trim((string) config('media.import_photographer_folder', 'fotosok'), '/')."/{$user->id}",
+        ];
     }
 
     public function store(StoreEventRequest $request, FtpImport $ftpImport): RedirectResponse
@@ -122,27 +140,33 @@ class EventController extends Controller
 
         $message = 'Esemény létrehozva.';
 
-        // Opcionalis: a kivalasztott tavoli kepek importalasa mindjart letrehozaskor
-        // (csak admin, ld. Admin\MediaImportController — a fotos a sima feltoltest hasznalja).
-        if ($user->isAdmin() && ! empty($data['import_paths']) && ! empty($data['import_photographer_id'])) {
+        // Opcionalis: a kivalasztott tavoli fajlok importalasa mindjart letrehozaskor.
+        // Admin barmely fotos neveben, a tarolo gyokerebol; aktiv fotos a sajat
+        // neveben, a sajat almappajabol (scope).
+        $importPhotographerId = $user->isAdmin() ? ($data['import_photographer_id'] ?? null) : $user->id;
+        $importScope = $user->isAdmin()
+            ? ''
+            : trim((string) config('media.import_photographer_folder', 'fotosok'), '/')."/{$user->id}";
+
+        if (! empty($data['import_paths']) && filled($importPhotographerId)) {
             if ($ftpImport->isAvailable()) {
                 try {
-                    $result = $ftpImport->import($event, $data['import_paths'], $data['import_photographer_id']);
+                    $result = $ftpImport->import($event, $data['import_paths'], $importPhotographerId, $importScope);
 
                     activity()->performedOn($event)->causedBy($user)
-                        ->log("FTP import (létrehozáskor): {$result['imported']} kép importálva".($result['skipped'] > 0 ? ", {$result['skipped']} kihagyva" : ''));
+                        ->log("Import (létrehozáskor): {$result['imported']} média importálva".($result['skipped'] > 0 ? ", {$result['skipped']} kihagyva" : ''));
 
-                    $message .= " {$result['imported']} kép importálva az FTP-ről — a feldolgozás elindult.";
+                    $message .= " {$result['imported']} média importálva a tárolóból — a feldolgozás elindult.";
 
                     if (count($result['failed']) > 0) {
                         $message .= ' '.count($result['failed']).' fájlt nem sikerült beolvasni.';
                     }
                 } catch (\Throwable $e) {
                     report($e);
-                    $message .= ' Az FTP import viszont nem sikerült: '.$e->getMessage();
+                    $message .= ' Az import viszont nem sikerült: '.$e->getMessage();
                 }
             } else {
-                $message .= ' Az FTP import kimaradt: a távoli fájlszerver kapcsolat nincs beállítva.';
+                $message .= ' Az import kimaradt: a forrás-tároló nincs beállítva.';
             }
         }
 
@@ -177,9 +201,7 @@ class EventController extends Controller
             'organizers' => $user->isAdmin() ? $this->organizerOptions() : [],
             'isAdmin' => $user->isAdmin(),
             'canEditEvent' => Gate::forUser($user)->allows('manage-event', $event),
-            'ftpImport' => $user->isAdmin()
-                ? ['available' => app(FtpImport::class)->isAvailable()]
-                : null,
+            'ftpImport' => $this->ftpImportProp($user),
             'videoMode' => config('media.video_mode'),
             'watermarkText' => app(WatermarkSettings::class)->text(),
         ]);

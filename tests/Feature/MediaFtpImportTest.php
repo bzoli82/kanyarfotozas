@@ -137,22 +137,34 @@ class MediaFtpImportTest extends TestCase
             ->assertJsonPath('available', false);
     }
 
-    public function test_photographers_cannot_browse_or_import_from_ftp(): void
+    public function test_inactive_photographers_cannot_use_the_importer(): void
     {
         $this->configureFtp();
-        $photographer = User::factory()->photographer()->create();
+        $photographer = User::factory()->photographer()->create(['is_active' => false]);
         $event = Event::factory()->create(['created_by' => $photographer->id]);
 
+        $this->actingAs($photographer)->getJson('/admin/media-import/browse')->assertForbidden();
         $this->actingAs($photographer)
-            ->getJson('/admin/media-import/browse')
+            ->post("/admin/events/{$event->id}/import", ['paths' => ['x/y.jpg']])
             ->assertForbidden();
+    }
 
-        $this->actingAs($photographer)
-            ->post("/admin/events/{$event->id}/import", [
-                'photographer_id' => $photographer->id,
-                'paths' => ['x/y.jpg'],
-            ])
-            ->assertForbidden();
+    public function test_active_photographers_browse_only_their_own_scoped_folder(): void
+    {
+        $this->configureFtp();
+        $anna = User::factory()->photographer()->create();
+        $bela = User::factory()->photographer()->create();
+
+        // Anna a saját mappájában lát, Béla mappájában nem.
+        $this->putRemoteImage("fotosok/{$anna->id}/rally/a.jpg");
+        $this->putRemoteImage("fotosok/{$bela->id}/rally/b.jpg");
+
+        $anna->refresh();
+        $listing = $this->actingAs($anna)->getJson('/admin/media-import/browse?path=rally')->assertOk();
+        $listing->assertJsonCount(1, 'files')->assertJsonPath('files.0.name', 'a.jpg');
+
+        // A visszaadott útvonal a scope-hoz relatív (nem szivárog ki a fotós-id).
+        $this->assertSame('rally/a.jpg', $listing->json('files.0.path'));
     }
 
     public function test_new_event_can_import_ftp_images_on_creation(): void

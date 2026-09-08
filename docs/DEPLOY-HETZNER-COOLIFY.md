@@ -107,6 +107,11 @@ curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
    - jegyezd fel: **Access Key ID**, **Secret Access Key**, és az
      **S3 API endpoint**-ot (`https://<accountid>.r2.cloudflarestorage.com`).
 
+> A kulcsokat megadhatod az env-ben (lentebb) **VAGY** az admin
+> `/admin/settings/storage` → „Cloudflare R2" szekcióban (titkosítva a
+> `site_settings`-ben, kapcsolat-teszt gombbal). A disk-szerepet
+> (`MEDIA_PUBLIC_DISK` / `_ARCHIVE_DISK` / `_IMPORT_DISK`) mindig az env dönti el.
+
 ---
 
 ## 5. Coolify: projekt + PostgreSQL
@@ -318,7 +323,8 @@ Sorban, amíg minden csoport **zöld**:
 2. **Számlázás** — Billingo v3 kulcs + számlatömb-azonosító, auto-számla BE.
 3. **E-mail** — ha nem az env-ből: SMTP itt; küldj tesztlevelet.
 4. **Monitoring** — hiba-webhook (Slack/Discord) vagy e-mail BE.
-5. **Tárhely** — az R2 státusz zöld (az env-ből jön).
+5. **Tárhely** (`/admin/settings/storage`) — az R2 kulcsok itt is megadhatók
+   (ha nem env-ből); a státusz zöld.
 6. **Alaprendszer** — `APP_DEBUG=false`, `APP_URL` https, alapár beállítva.
 7. **SEO** (`/admin/settings/seo`) — a „kereshetőség" kapcsoló **KI**, amíg
    nem élesedsz igazán (karbantartási mód: minden oldal `noindex`,
@@ -397,6 +403,10 @@ kattintással az eseményhez importálja az egész mappát.
    → Importálás. 25 fájl felett a **`imports` queue-n, háttérben** fut, az esemény
    oldalán **folyamatjelzővel** (X / Y). A média fokozatosan `processing` →
    `ready` lesz.
+   - **Admin**: a bucket teljes gyökerét látja, bármely fotós nevében importálhat.
+   - **Fotós**: csak a saját almappáját (`fotosok/{a-fotós-id}/…`) — ide másol
+     (`rclone copy MAPPA r2:kanyarfotozas-import/fotosok/<id>/…`), és mindig a
+     saját nevében importál. A fotós-id az admin felületén az import-panelben látszik.
 4. **Sebesség**: 1 worker ~feldolgoz pár fájl/mp-et (letöltés R2-ből + thumbnail +
    vízjel + R2-re vissza). 5000 képhez futtass 2–3 párhuzamos workert
    (Coolify → a worker process replikái), vagy indítsd el este.

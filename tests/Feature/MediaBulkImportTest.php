@@ -168,15 +168,58 @@ class MediaBulkImportTest extends TestCase
         $this->assertSame(1, Media::query()->where('event_id', $event->id)->where('type', Media::TYPE_PHOTO)->count());
     }
 
-    public function test_photographers_cannot_use_bulk_import(): void
+    public function test_inactive_photographer_is_forbidden(): void
     {
-        $photographer = User::factory()->photographer()->create();
+        $photographer = User::factory()->photographer()->create(['is_active' => false]);
         $event = Event::factory()->create();
 
         $this->actingAs($photographer)->getJson('/admin/media-import/browse')->assertForbidden();
         $this->actingAs($photographer)
-            ->post("/admin/events/{$event->id}/import", ['photographer_id' => $photographer->id, 'paths' => ['x']])
+            ->post("/admin/events/{$event->id}/import", ['paths' => ['x']])
             ->assertForbidden();
+    }
+
+    public function test_active_photographer_imports_from_their_scoped_folder_as_themselves(): void
+    {
+        $anna = User::factory()->photographer()->create();
+        $mallory = User::factory()->photographer()->create();
+
+        foreach (range(1, 4) as $i) {
+            $this->putRemote("fotosok/{$anna->id}/rally/a{$i}.jpg");
+        }
+        // Mallory anyagát Anna nem érheti el a scope-on kívülről.
+        $this->putRemote("fotosok/{$mallory->id}/titkos/x.jpg");
+
+        $anna->refresh();
+        $event = Event::factory()->create(['created_by' => $anna->id]);
+
+        // Béla nevében próbál importálni — a szerver felülírja a sajátjára.
+        $this->actingAs($anna)
+            ->post("/admin/events/{$event->id}/import", [
+                'photographer_id' => $mallory->id,
+                'paths' => ['rally'],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $media = Media::query()->where('event_id', $event->id)->get();
+        $this->assertCount(4, $media);
+        $this->assertTrue($media->every(fn ($m) => $m->photographer_id === $anna->id));
+        $this->assertTrue($media->every(fn ($m) => str_starts_with($m->import_source_path, "fotosok/{$anna->id}/rally/")));
+    }
+
+    public function test_photographer_cannot_escape_scope_with_traversal(): void
+    {
+        $anna = User::factory()->photographer()->create();
+        $this->putRemote('titkos/masik-esemeny/x.jpg');
+        $anna->refresh();
+        $event = Event::factory()->create(['created_by' => $anna->id]);
+
+        $this->actingAs($anna)
+            ->post("/admin/events/{$event->id}/import", ['paths' => ['../../titkos/masik-esemeny']])
+            ->assertSessionHas('error');
+
+        $this->assertSame(0, Media::query()->count());
     }
 
     public function test_empty_selection_reports_nothing_to_import(): void

@@ -98,20 +98,23 @@ class FtpImport
      *     files: list<array{name: string, path: string, size: int|null, last_modified: string|null}>
      * }
      */
-    public function browse(string $path = ''): array
+    public function browse(string $path = '', string $scope = ''): array
     {
         $path = $this->normalize($path);
+        $scope = $this->normalize($scope);
+        $full = $this->joinScope($scope, $path);
+
         $this->applyRuntimeConfigIfNeeded();
         $disk = Storage::disk(self::disk());
 
-        $rawDirs = $disk->directories($path);
+        $rawDirs = $disk->directories($full);
         // A fájlszám-előnézet (mappánként egy listázás) csak kevés almappánál éri meg.
         $countFiles = count($rawDirs) <= 12;
 
         $directories = collect($rawDirs)
             ->map(fn (string $dir): array => [
                 'name' => basename($dir),
-                'path' => $this->normalize($dir),
+                'path' => $this->stripScope($scope, $this->normalize($dir)),
                 'file_count' => $countFiles ? $this->safeFileCount($disk, $dir) : null,
             ])
             ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
@@ -121,7 +124,7 @@ class FtpImport
         $loresSuffix = (string) config('media.preprocessed_lores_suffix', '_lores');
         $browsable = $this->browsableExtensions();
 
-        $files = collect($disk->files($path))
+        $files = collect($disk->files($full))
             ->filter(fn (string $file): bool => in_array(
                 strtolower(pathinfo($file, PATHINFO_EXTENSION)),
                 $browsable,
@@ -135,7 +138,7 @@ class FtpImport
                 && in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), self::VIDEO_EXTENSIONS, true))
             ->map(fn (string $file): array => [
                 'name' => basename($file),
-                'path' => $this->normalize($file),
+                'path' => $this->stripScope($scope, $this->normalize($file)),
                 'size' => $this->safeSize($disk, $file),
                 'last_modified' => $this->safeLastModified($disk, $file),
             ])
@@ -151,6 +154,22 @@ class FtpImport
         ];
     }
 
+    /** A scope-ot (fotós almappa) egy relatív útvonal elé fűzi. */
+    private function joinScope(string $scope, string $path): string
+    {
+        return $scope === '' ? $path : trim("{$scope}/{$path}", '/');
+    }
+
+    /** A scope-prefixet levágja egy abszolút (disk-gyökér-relatív) útvonalról. */
+    private function stripScope(string $scope, string $path): string
+    {
+        if ($scope === '') {
+            return $path;
+        }
+
+        return ltrim(str_starts_with($path, "{$scope}/") ? substr($path, strlen($scope) + 1) : $path, '/');
+    }
+
     /**
      * A nyers kijelölést (fájlok ÉS/VAGY mappák) importálandó „egységekre" bontja:
      * a mappákat rekurzívan kibontja, szűri a kiterjesztést, preprocessed módban a
@@ -159,16 +178,17 @@ class FtpImport
      * @param  list<string>  $paths
      * @return array{units: list<ImportUnit>, total: int}
      */
-    public function planImport(array $paths): array
+    public function planImport(array $paths, string $scope = ''): array
     {
         $this->applyRuntimeConfigIfNeeded();
         $disk = Storage::disk(self::disk());
+        $scope = $this->normalize($scope);
 
         $files = [];
 
         foreach ($paths as $raw) {
             try {
-                $p = $this->normalize((string) $raw);
+                $p = $this->joinScope($scope, $this->normalize((string) $raw));
             } catch (\InvalidArgumentException) {
                 continue;
             }
@@ -243,9 +263,9 @@ class FtpImport
      * @param  list<string>  $paths
      * @return array{imported: int, skipped: int, failed: list<string>}
      */
-    public function import(Event $event, array $paths, string $photographerId): array
+    public function import(Event $event, array $paths, string $photographerId, string $scope = ''): array
     {
-        $plan = $this->planImport($paths);
+        $plan = $this->planImport($paths, $scope);
 
         $imported = 0;
         $skipped = 0;

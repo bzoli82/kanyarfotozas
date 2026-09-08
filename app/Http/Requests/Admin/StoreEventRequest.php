@@ -39,12 +39,13 @@ class StoreEventRequest extends FormRequest
             'organizer_id' => ['nullable', 'uuid', Rule::exists('users', 'id')->where('role', User::ROLE_ORGANIZER)],
             'organizer_share_percent' => ['nullable', 'integer', 'min:0', 'max:100', 'required_with:organizer_id'],
 
-            // Opcionalis: kepek importalasa FTP-rol mindjart letrehozaskor (csak admin).
+            // Opcionalis: media importalasa a tarolobol mindjart letrehozaskor.
+            // A fotos a sajat neveben importal (nem kell import_photographer_id).
             'import_paths' => ['nullable', 'array', 'max:'.FtpImport::MAX_PER_IMPORT],
             'import_paths.*' => ['required', 'string', 'max:1024'],
             'import_photographer_id' => [
                 'nullable',
-                'required_with:import_paths',
+                Rule::requiredIf(fn (): bool => filled($this->input('import_paths')) && (bool) $this->user()?->isAdmin()),
                 'uuid',
                 Rule::exists('users', 'id')->where('role', User::ROLE_PHOTOGRAPHER),
             ],

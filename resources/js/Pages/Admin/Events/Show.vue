@@ -438,6 +438,7 @@ onBeforeUnmount(() => importPollTimer && clearTimeout(importPollTimer));
             v-if="ftpImport"
             class="mt-6"
             :available="ftpImport.available"
+            :scope="ftpImport.scope"
             :photographers="photographers"
             v-model:paths="importForm.paths"
             v-model:photographer-id="importForm.photographer_id"

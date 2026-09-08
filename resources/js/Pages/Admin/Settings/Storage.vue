@@ -7,12 +7,41 @@ const props = defineProps({
     connection: Object,
     stats: Object,
     failingMedia: Array,
+    r2: Object,
+    r2Configured: Boolean,
+    importDisk: String,
+    diskRoles: Object,
 });
 
 const testForm = useForm({});
 
 function testConnection() {
     testForm.post('/admin/settings/storage/test', { preserveScroll: true });
+}
+
+// --- Cloudflare R2 ---
+const r2Form = useForm({
+    endpoint: props.r2.endpoint ?? '',
+    access_key_id: props.r2.access_key_id ?? '',
+    secret_access_key: '',
+    public_bucket: props.r2.public_bucket ?? '',
+    private_bucket: props.r2.private_bucket ?? '',
+    import_bucket: props.r2.import_bucket ?? '',
+    public_url: props.r2.public_url ?? '',
+});
+const r2TestForm = useForm({});
+
+function saveR2() {
+    r2Form.transform((data) => ({ ...data, _method: 'put' })).post('/admin/settings/storage/r2', {
+        preserveScroll: true,
+        onSuccess: () => {
+            r2Form.secret_access_key = '';
+        },
+    });
+}
+
+function testR2() {
+    r2TestForm.post('/admin/settings/storage/r2/test', { preserveScroll: true });
 }
 
 const connectionForm = useForm({
@@ -82,7 +111,7 @@ MEDIA_ARCHIVE_DISK=…   # nagy fájlok: eredeti + letölthető változatok</pre
             <h3>2. A hitelesítő adatok helye</h3>
             <ul class="mt-1 list-disc space-y-1 pl-5">
                 <li><strong>NAS / SFTP</strong> (host, felhasználó, jelszó/kulcs): ezen az oldalon, lentebb — titkosítva tárolva, kapcsolat-teszt gombbal.</li>
-                <li><strong>Cloudflare R2</strong> (kulcsok, bucket-nevek, publikus domain): csak a <code>.env</code>-ben (<code>R2_ACCESS_KEY_ID</code>, <code>R2_PUBLIC_BUCKET</code>, …).</li>
+                <li><strong>Cloudflare R2</strong> (kulcsok, bucket-nevek, publikus domain): szintén ezen az oldalon lentebb — titkosítva tárolva (a secret), vagy fallback-ként a <code>.env</code>-ből.</li>
             </ul>
 
             <h3>3. Váltás (bármikor, később is)</h3>
@@ -107,6 +136,83 @@ MEDIA_ARCHIVE_DISK=…   # nagy fájlok: eredeti + letölthető változatok</pre
                 <li>A vásárlói letöltés a <strong>kézbesítési gyorsítótár</strong> miatt mindkét esetben gyors — az archív réteg választása csak a hosszú távú tárolást érinti.</li>
             </ul>
         </details>
+
+        <!-- Cloudflare R2 kulcsok -->
+        <form class="mt-6 rounded-[var(--radius-base)] border border-border bg-surface-1 p-5" @submit.prevent="saveR2">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-content">Cloudflare R2 (S3-kompatibilis tárhely)</h2>
+                <button
+                    type="button"
+                    :disabled="!r2Configured || r2TestForm.processing"
+                    class="rounded-lg border border-border px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-content hover:border-accent disabled:opacity-40"
+                    @click="testR2"
+                >
+                    {{ r2TestForm.processing ? 'Tesztelés…' : 'Kapcsolat tesztelése' }}
+                </button>
+            </div>
+            <p class="mt-1 text-xs" :class="r2Configured ? 'text-accent' : 'text-muted'">
+                {{ r2Configured ? 'Be van állítva.' : 'Még nincs teljesen beállítva.' }}
+                <span class="text-muted">· Jelenlegi szerep: publikus disk = <code>{{ diskRoles.public }}</code>, archív = <code>{{ diskRoles.archive }}</code>, import = <code>{{ importDisk }}</code></span>
+            </p>
+            <p class="mt-1 text-[11px] text-muted">
+                A kulcspárt a Cloudflare R2 → „Manage API Tokens" → „Create API Token" (Object Read &amp; Write) adja.
+                Egy account-endpoint + egy kulcspár, 3 bucket (publikus / privát / import).
+            </p>
+
+            <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                <label class="block sm:col-span-2">
+                    <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">S3 API endpoint</span>
+                    <input v-model="r2Form.endpoint" type="text" placeholder="https://<accountid>.r2.cloudflarestorage.com" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                    <p v-if="r2Form.errors.endpoint" class="mt-1 text-xs text-accent">{{ r2Form.errors.endpoint }}</p>
+                </label>
+
+                <label class="block">
+                    <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">Access Key ID</span>
+                    <input v-model="r2Form.access_key_id" type="text" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
+                    <p v-if="r2Form.errors.access_key_id" class="mt-1 text-xs text-accent">{{ r2Form.errors.access_key_id }}</p>
+                </label>
+
+                <label class="block">
+                    <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">
+                        Secret Access Key
+                        <span v-if="r2.has_secret" class="normal-case text-muted">(beállítva — üresen hagyva megmarad)</span>
+                    </span>
+                    <input v-model="r2Form.secret_access_key" type="password" autocomplete="new-password" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
+                </label>
+
+                <label class="block">
+                    <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">Publikus bucket</span>
+                    <input v-model="r2Form.public_bucket" type="text" placeholder="kanyarfotozas-public" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                    <p v-if="r2Form.errors.public_bucket" class="mt-1 text-xs text-accent">{{ r2Form.errors.public_bucket }}</p>
+                </label>
+
+                <label class="block">
+                    <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">Privát bucket</span>
+                    <input v-model="r2Form.private_bucket" type="text" placeholder="kanyarfotozas-private" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                    <p v-if="r2Form.errors.private_bucket" class="mt-1 text-xs text-accent">{{ r2Form.errors.private_bucket }}</p>
+                </label>
+
+                <label class="block">
+                    <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">Import bucket <span class="normal-case text-muted">(tömeges import, opcionális)</span></span>
+                    <input v-model="r2Form.import_bucket" type="text" placeholder="kanyarfotozas-import" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                </label>
+
+                <label class="block">
+                    <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">Publikus domain (R2_PUBLIC_URL)</span>
+                    <input v-model="r2Form.public_url" type="text" placeholder="https://media.kanyarfotozas.hu" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                    <p v-if="r2Form.errors.public_url" class="mt-1 text-xs text-accent">{{ r2Form.errors.public_url }}</p>
+                </label>
+            </div>
+
+            <p class="mt-3 text-[11px] text-muted">
+                Mentés után futtasd egyszer: <code>php artisan kanyarfotozas:sync-media-storage</code> — a meglévő fájlokat átmásolja az R2-re.
+                A publikus/archív disk szerepét (<code>MEDIA_PUBLIC_DISK</code> / <code>MEDIA_ARCHIVE_DISK</code> / <code>MEDIA_IMPORT_DISK</code>) továbbra is a <code>.env</code> dönti el.
+            </p>
+
+            <button type="submit" :disabled="r2Form.processing" class="mt-4 rounded-lg bg-accent px-6 py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover disabled:opacity-60">
+                Mentés
+            </button>
+        </form>
 
         <!-- Kapcsolati adatok szerkesztese -->
         <form class="mt-6 rounded-[var(--radius-base)] border border-border bg-surface-1 p-5" @submit.prevent="saveConnection">

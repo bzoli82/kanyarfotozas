@@ -62,6 +62,11 @@ return [
 
     'import_disk' => env('MEDIA_IMPORT_DISK', 'nas'),
 
+    // A fotósok saját, elkülönített almappája az import-tárolóban: a böngészőjük
+    // ide van „gyökerezve" ({folder}/{photographer_id}), így nem látják egymás /
+    // más események anyagát. Az adminok a tároló teljes gyökerét látják.
+    'import_photographer_folder' => env('MEDIA_IMPORT_PHOTOGRAPHER_FOLDER', 'fotosok'),
+
     // Egy import-batch egy chunk-jában feldolgozott „egység" (kép vagy videó-hármas).
     'import_chunk_size' => (int) env('MEDIA_IMPORT_CHUNK_SIZE', 100),
 

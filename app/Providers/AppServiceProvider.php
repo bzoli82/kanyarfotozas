@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Event;
 use App\Models\User;
 use App\Services\MailSettings;
+use App\Services\R2Storage;
 use App\Services\Seo;
 use App\Services\SiteBranding;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -33,6 +34,10 @@ class AppServiceProvider extends ServiceProvider
         // toltjuk — a superadmin a /admin/settings/critical oldalon allitja, nem
         // kell .env-et szerkeszteni a szerveren. Migracio elott / DB nelkul csendes.
         rescue(fn () => app(MailSettings::class)->applyRuntimeConfig(), report: false);
+
+        // Ugyanígy a Cloudflare R2 (tárhely) kulcsai — a superadmin a
+        // /admin/settings/storage oldalon állítja, nem kell .env.
+        rescue(fn () => app(R2Storage::class)->applyRuntimeConfig(), report: false);
 
         // Az oldal neve (SiteBranding) elerheto az app.blade.php cimeben es a mail
         // sablonok alairasaban — a config('app.name') helyett. View composer, hogy
