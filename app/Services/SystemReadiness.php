@@ -145,11 +145,11 @@ class SystemReadiness
             $items[] = $this->item('nas', 'NAS (SFTP) kapcsolat a nagy fájlokhoz', $configured ? self::OK : self::WARNING,
                 $configured
                     ? 'Kapcsolati adatok beállítva (kapcsolat-teszt a Tárhely oldalon).'
-                    : 'Nincs NAS kapcsolat — az eredeti + letölthető fájlok a webhosting tárhelyét fogyasztják.');
+                    : 'Nincs NAS kapcsolat — az eredeti + letölthető fájlok a webhosting tárhelyét fogyasztják. (Ha R2-t használsz, állítsd: MEDIA_ARCHIVE_DISK=r2_private.)');
         } elseif (str_starts_with($archiveDisk, 'r2')) {
             $r2 = filled(config('filesystems.disks.r2_private.key')) && filled(config('filesystems.disks.r2_private.bucket'));
             $items[] = $this->item('r2', 'Cloudflare R2 (archív)', $r2 ? self::OK : self::CRITICAL,
-                $r2 ? 'R2 kulcsok + bucket beállítva.' : 'Az archív disk R2, de hiányoznak az R2 kulcsok / bucket a .env-ből.');
+                $r2 ? 'R2 kulcsok + bucket beállítva.' : 'Az archív disk R2, de hiányoznak az R2 kulcsok / bucket — add meg a Tárhely oldalon vagy a .env-ben.');
         } else {
             $items[] = $this->item('archive', 'Archív tároló', self::WARNING,
                 'Nincs külön archív réteg — a nagy fájlok a lokális diskon maradnak.');
@@ -158,14 +158,24 @@ class SystemReadiness
         if (str_starts_with($publicDisk, 'r2')) {
             $r2pub = filled(config('filesystems.disks.r2_public.key')) && filled(config('filesystems.disks.r2_public.url'));
             $items[] = $this->item('r2_public', 'Cloudflare R2 (publikus)', $r2pub ? self::OK : self::CRITICAL,
-                $r2pub ? 'R2 publikus kulcs + domain (R2_PUBLIC_URL) beállítva.' : 'Hiányoznak az R2 publikus kulcsok / a publikus domain.');
+                $r2pub ? 'R2 publikus kulcs + domain (R2_PUBLIC_URL) beállítva.' : 'Hiányoznak az R2 publikus kulcsok / a publikus domain — Tárhely oldal vagy .env.');
+        }
+
+        // Tömeges import / böngésző→R2 közvetlen feltöltés forrás-diskje.
+        $importDisk = FtpImport::disk();
+        if (str_starts_with($importDisk, 'r2')) {
+            $direct = app(FtpImport::class)->providesDirectUpload();
+            $items[] = $this->item('import_disk', 'Nagy feltöltés (böngésző → R2)', $direct ? self::OK : self::WARNING,
+                $direct
+                    ? 'Az import-tároló ('.$importDisk.') támogatja a közvetlen feltöltést. Ne feledd a CORS-szabályt az import bucketen (ld. Deploy-emlékeztetők).'
+                    : 'Az import-disk R2, de a közvetlen feltöltés nem elérhető — ellenőrizd az R2 kulcsokat.');
         }
 
         return [
             'group' => 'Tárhely',
             'summary' => self::OK,
             'items' => $items,
-            'action' => ['label' => 'Tárhely / NAS oldal', 'href' => '/admin/settings/storage'],
+            'action' => ['label' => 'Tárhely (R2 / NAS)', 'href' => '/admin/settings/storage'],
         ];
     }
 
