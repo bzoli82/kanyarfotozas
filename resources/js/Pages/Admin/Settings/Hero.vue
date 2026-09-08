@@ -6,6 +6,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 const props = defineProps({
     slides: Array,
     recommended: Object,
+    allowVideo: { type: Boolean, default: false },
 });
 
 const fileInput = ref(null);
@@ -73,7 +74,7 @@ function move(index, direction) {
                     max {{ recommended.image.width }} px széles, optimalizált WebP-re konvertálja.
                 </p>
             </div>
-            <div class="rounded-[var(--radius-base)] border border-accent/40 bg-accent/10 p-4 text-sm text-content">
+            <div v-if="allowVideo" class="rounded-[var(--radius-base)] border border-accent/40 bg-accent/10 p-4 text-sm text-content">
                 <p class="font-semibold">Videó — ajánlott: {{ recommended.video.width }} × {{ recommended.video.height }} px (Full HD)</p>
                 <p class="mt-1 text-xs text-muted">
                     16:9, fekvő. MP4 (H.264), max {{ recommended.video.bitrate_mbps }} Mbps bitráta,
@@ -81,6 +82,10 @@ function move(index, direction) {
                     Hang nem kell. A gyors oldalbetöltésért a rendszer újrakódolja max {{ recommended.video.width }} px
                     szélességre, ~4 Mbps-re, hang nélkül, és egy poszterképet is készít.
                 </p>
+            </div>
+            <div v-else class="rounded-[var(--radius-base)] border border-border bg-surface-1 p-4 text-xs text-muted">
+                Videó hero jelenleg nem tölthető fel: a szerver nem kódol videót
+                (<code>MEDIA_VIDEO_MODE</code> ≠ <code>pipeline</code>). Csak kép.
             </div>
         </div>
 
@@ -90,8 +95,8 @@ function move(index, direction) {
                 :class="{ 'pointer-events-none opacity-60': uploadForm.processing }"
             >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
-                {{ uploadForm.processing ? 'Feldolgozás…' : 'Kép vagy videó hozzáadása' }}
-                <input ref="fileInput" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" class="hidden" @change="onFileChange" />
+                {{ uploadForm.processing ? 'Feldolgozás…' : (allowVideo ? 'Kép vagy videó hozzáadása' : 'Kép hozzáadása') }}
+                <input ref="fileInput" type="file" :accept="allowVideo ? 'image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm' : 'image/jpeg,image/png,image/webp'" class="hidden" @change="onFileChange" />
             </label>
             <p v-if="uploadForm.processing" class="mt-2 text-xs text-muted">Videónál ez eltarthat pár másodpercig (újrakódolás).</p>
             <p v-if="uploadForm.errors.file" class="mt-2 text-xs text-accent">{{ uploadForm.errors.file }}</p>

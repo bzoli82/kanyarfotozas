@@ -3,18 +3,26 @@
 A kód minden pontban kész; ez a lista a **környezet + konfiguráció** teendői.
 A rendszer állapotát a `/admin/settings/critical` oldal élőben mutatja (zöld/sárga/piros).
 
+A lépésről lépésre szóló szerver-telepítés (Hetzner CX22 + Coolify): **`docs/DEPLOY-HETZNER-COOLIFY.md`**.
+
 ---
 
 ## 1. Szerver / infrastruktúra
 
 - [ ] PHP 8.4 (`pdo_pgsql`, `pgsql`, `gd`, `exif`, `intl`, `zip`, `bcmath`, `mbstring`)
-- [ ] PostgreSQL 18 + **PostGIS** kiterjesztés az éles adatbázisban (`CREATE EXTENSION postgis;`)
-- [ ] FFmpeg + FFprobe telepítve (videófeldolgozás + mentés) — `FFMPEG_BINARY` / `FFPROBE_BINARY` a `.env`-ben ha nincs a PATH-on
-- [ ] `pg_dump` elérhető (napi mentés) — `PG_DUMP_BINARY` ha nincs a PATH-on
+- [ ] PostgreSQL 16+ (a Coolify sablon 16-ot ad) — **PostGIS NEM kell** (a GPS sugaras keresés alapból KI, ld. `/admin/settings/location-search`)
+- [ ] **FFmpeg NEM kell** — a videó-mód `preprocessed` (`MEDIA_VIDEO_MODE=preprocessed`): a fotós kódolja a kis felbontású előnézetet, a szerver nem
+- [ ] `pg_dump` elérhető (napi mentés) — `PG_DUMP_BINARY` ha nincs a PATH-on (a `postgresql-client` csomag adja)
 - [ ] `php artisan storage:link` lefuttatva
-- [ ] **Queue worker**: `php artisan queue:work --queue=videos,default` (supervisor / systemd)
-- [ ] **Cron**: `* * * * * php artisan schedule:run`
-- [ ] Webszerver: hosszú `Cache-Control` a `/build/*` és a média-fájlokra (nginx/apache)
+- [ ] **Queue worker**: `php artisan queue:work --queue=videos,default` (Coolify: külön „worker" process a compose-ban)
+- [ ] **Cron**: `* * * * * php artisan schedule:run` (Coolify: „scheduled task" vagy cron-process)
+- [ ] Perzisztens kötet a `storage/app` alá (staging + delivery cache — NEM efemer!)
+- [ ] Webszerver: hosszú `Cache-Control` a `/build/*` és (ha lokális disk) a média-fájlokra
+
+> **Ha később mégis kell** a GPS sugaras keresés: `apt install postgresql-16-postgis-3`,
+> `CREATE EXTENSION postgis;`, a GIST index kézzel (ld. `create_events_table` migráció
+> kommentje), majd `/admin/settings/location-search` → bekapcsol.
+> Szerver-oldali videókódolás: `apt install ffmpeg`, `MEDIA_VIDEO_MODE=pipeline`.
 
 ## 2. `.env` — alaprendszer
 
@@ -22,8 +30,9 @@ A rendszer állapotát a `/admin/settings/critical` oldal élőben mutatja (zöl
 - [ ] `APP_ENV=production`, `APP_DEBUG=false`
 - [ ] `APP_URL=https://<végleges-domain>` (HTTPS — a fizetési visszatérési URL-ek ebből képződnek)
 - [ ] `APP_NAME` + `DB_DATABASE` a végleges névre (ld. 7. pont)
-- [ ] `MAIL_MAILER=smtp` + valódi SMTP adatok, `MAIL_FROM_ADDRESS`
+- [ ] `MAIL_MAILER=smtp` + valódi SMTP adatok, `MAIL_FROM_ADDRESS` (VAGY a `/admin/settings/critical` → E-mail szekcióból)
 - [ ] `QUEUE_CONNECTION=database` (vagy redis), `CACHE_STORE=database` (vagy redis)
+- [ ] `MEDIA_VIDEO_MODE=preprocessed`
 
 ## 3. Tárhely — Cloudflare R2
 
@@ -41,6 +50,8 @@ A kulcsokat lehet `.env`-ből VAGY a `/admin/settings/storage` oldalról megadni
       (webhook endpoint a Stripe Dashboardban: `{APP_URL}/api/stripe/webhook`)
 - [ ] **SimplePay** éles: merchant azonosító, secret key, SANDBOX = KI
       (IPN URL a SimplePay adminban: `{APP_URL}/api/simplepay/ipn`)
+- [ ] **Barion** éles: POSKey, a fiók e-mailje (payee), SANDBOX = KI
+      (callback URL a Barion shopnál: `{APP_URL}/api/barion/callback`)
 - [ ] Alapértelmezett szolgáltató kiválasztva; a nem használt szolgáltató „Elérhető a pénztárban" = KI
 - [ ] Alap médiaár beállítva (`/admin/settings` vagy `site_settings.base_price_huf`)
 

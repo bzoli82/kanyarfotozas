@@ -1,0 +1,376 @@
+# Deploy runbook — Hetzner CX22 + Coolify
+
+Cél: a KanyarFotózás platform éles üzembe helyezése a **legolcsóbb, ehhez az apphoz
+illő** módon.
+
+- **Szerver**: Hetzner Cloud **CX22** (2 vCPU / 4 GB RAM / 40 GB SSD) — ~€4,5/hó.
+  (Alternatíva: **CAX11** ARM, 4 GB, ~€3,8/hó — minden függőség fut ARM-on. A lépések azonosak.)
+- **Vezérlőpanel**: **Coolify** (ingyenes, self-hosted PaaS — deploy, SSL, env, worker).
+- **Tárhely**: Cloudflare **R2** (ehhez a forgalomhoz gyakorlatilag ingyen, nincs egress-díj).
+- **Adatbázis**: PostgreSQL 16, a Coolify sablonból. **PostGIS NEM kell.**
+- **FFmpeg NEM kell** — a videó-mód `preprocessed`.
+
+Becsült teljes havidíj: **~€4–5 + a domain**.
+
+> A `/admin/settings/critical` oldal éles állapotot mutat (zöld/sárga/piros). A
+> `ELES-INDULAS-CHECKLIST.md` a magas szintű pipálós lista; ez a fájl a
+> lépésről lépésre szóló szerver-setup.
+
+---
+
+## 0. Előfeltételek (a gépeden)
+
+- Egy SSH-kulcs (`~/.ssh/id_ed25519.pub`). Ha nincs: `ssh-keygen -t ed25519`.
+- Hozzáférés a domain DNS-éhez (pl. `kanyarfotozas.hu`).
+- Cloudflare-fiók (R2-höz).
+- A GitHub repo: `github.com/bzoli82/kanyarfotozas` (privát is jó, Coolify deploy-kulccsal fér hozzá).
+
+---
+
+## 1. Hetzner szerver létrehozása
+
+1. Hetzner Cloud Console → **New Project** → „kanyarfotozas".
+2. **Add Server**:
+   - Location: **Nürnberg** vagy **Falkenstein** (közel HU-hoz, alacsony latency).
+   - Image: **Ubuntu 24.04**.
+   - Type: **CX22** (Shared vCPU, x86) — vagy **CAX11** (Ampere ARM).
+   - **SSH key**: add hozzá a publikus kulcsod.
+   - Name: `kf-prod-1`.
+   - **Create & Buy now**.
+3. Jegyezd fel a szerver **publikus IPv4** címét.
+4. (Ajánlott) Hetzner **Firewall** a projektben: engedélyezd befelé a **22** (SSH),
+   **80** (HTTP), **443** (HTTPS), **8000** (Coolify UI — később lekapcsolható) portokat,
+   minden mást tilts. Rendeld a szerverhez.
+
+---
+
+## 2. Alap szerver-beállítás
+
+SSH-zz be: `ssh root@<SZERVER_IP>`
+
+```bash
+# rendszerfrissítés
+apt update && apt upgrade -y
+
+# időzóna
+timedatecfg set-timezone Europe/Budapest   # ha nincs: timedatectl set-timezone Europe/Budapest
+
+# 2 GB swap (a CX22-n a képfeldolgozás-csúcsokhoz biztonsági tartalék)
+fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+echo '/swapfile none swap sw 0 0' >> /etc/fstab
+
+# postgresql-client (a pg_dump kell a napi mentéshez)
+apt install -y postgresql-client
+
+# alap tűzfal (ha nem a Hetzner Firewallt használod)
+apt install -y ufw
+ufw allow 22 && ufw allow 80 && ufw allow 443 && ufw allow 8000
+ufw --force enable
+```
+
+---
+
+## 3. Coolify telepítése
+
+```bash
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
+```
+
+- ~3–5 perc. A végén kiírja: `http://<SZERVER_IP>:8000`.
+- Nyisd meg böngészőben → **regisztráld az első (admin) fiókot** azonnal
+  (az első regisztráció lesz a tulajdonos; utána a nyilvános regisztráció zárható).
+- Settings → **Instance Settings**:
+  - állítsd be az „Instance Domain"-t később a Coolify saját domainjéhez (opcionális),
+  - kapcsold ki a public registrationt.
+
+---
+
+## 4. Cloudflare R2 (tárhely)
+
+1. Cloudflare Dashboard → **R2** → **Create bucket**: `kanyarfotozas-public`.
+2. Még egy: `kanyarfotozas-private`.
+3. A **public** bucket → Settings → **Public access**: engedélyezd az `r2.dev`
+   alдомént, VAGY (ajánlott) köss rá egy **custom domaint** (pl. `media.kanyarfotozas.hu`)
+   Cloudflare CDN mögött.
+4. R2 → **Manage API Tokens** → **Create API Token**:
+   - Permissions: **Object Read & Write**,
+   - Bucket: mindkettő (vagy „Apply to all buckets"),
+   - jegyezd fel: **Access Key ID**, **Secret Access Key**, és az
+     **S3 API endpoint**-ot (`https://<accountid>.r2.cloudflarestorage.com`).
+
+---
+
+## 5. Coolify: projekt + PostgreSQL
+
+1. Coolify → **Projects** → **+ Add** → „kanyarfotozas" → **Environment: production**.
+2. A projektben → **+ New Resource** → **Databases** → **PostgreSQL 16**.
+   - Név: `kf-postgres`.
+   - Jegyezd fel a Coolify által generált jelszót és a belső hostnevet
+     (pl. `kf-postgres`), portot (`5432`), db-nevet, usert.
+   - **Deploy**.
+   - A DB alapból csak a Coolify belső hálózatán érhető el (jó — ne tedd publikussá).
+
+---
+
+## 6. Coolify: az alkalmazás
+
+1. A projektben → **+ New Resource** → **Application** → **Public Repository** vagy
+   **GitHub App** (privát repóhoz a GitHub App a kényelmesebb; egyszeri repo-jogosítás).
+   - Repository: `https://github.com/bzoli82/kanyarfotozas`
+   - Branch: `main`
+   - Build Pack: **Nixpacks** (Laravelt felismeri: PHP 8.4 + `composer install` +
+     `npm ci && npm run build`).
+2. **Általános beállítások**:
+   - Ports Exposes: `8080` (a Nixpacks Laravel a beépített szerverét ezen adja) —
+     Coolify ezt automatikusan proxyzza; ha nem, állítsd `80`-ra a Nixpacks configból.
+   - Health check path: `/` (vagy `/login`).
+3. **Build**:
+   - Install Command: (üresen hagyva a Nixpacks intézi) — ha kézzel kell:
+     `composer install --no-dev --optimize-autoloader && npm ci && npm run build`
+   - Start Command:
+     `php artisan config:cache && php artisan route:cache && php artisan migrate --force && php artisan storage:link || true && php artisan serve --host=0.0.0.0 --port=8080`
+     > Éles alternatíva a `php artisan serve` helyett: `php-fpm` + `nginx` (Dockerfile-alapú
+     > deploy). Kezdésnek a `serve` is jó egy CX22-n, később válts.
+
+### 6/a. Perzisztens kötet (KÖTELEZŐ)
+
+A `storage/app` **nem lehet efemer** — itt van a feltöltés-staging és a
+**delivery cache** (a megvásárolt fájlok gyors másolata).
+
+- Application → **Storages** → **+ Add**:
+  - Type: **Volume**
+  - Name: `kf-storage`
+  - Mount Path: `/app/storage/app`
+  - (a `storage/logs` és `framework/cache` maradhat efemer, vagy tedd az egész
+    `/app/storage`-ot kötetre — a `views`/`sessions` regenerálódik.)
+
+### 6/b. Környezeti változók
+
+Application → **Environment Variables** → illeszd be (a `<...>` helyekre a valós értéket):
+
+```dotenv
+APP_NAME="KanyarFotózás"
+APP_ENV=production
+APP_KEY=                         # 6/c-ben generáljuk
+APP_DEBUG=false
+APP_URL=https://kanyarfotozas.hu
+APP_LOCALE=hu
+APP_FALLBACK_LOCALE=en
+
+LOG_CHANNEL=stack
+LOG_LEVEL=warning
+
+DB_CONNECTION=pgsql
+DB_HOST=kf-postgres              # a Coolify DB belső hostneve
+DB_PORT=5432
+DB_DATABASE=<coolify_db_neve>
+DB_USERNAME=<coolify_db_user>
+DB_PASSWORD=<coolify_db_jelszo>
+
+SESSION_DRIVER=database
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+
+# --- Média / videó ---
+MEDIA_VIDEO_MODE=preprocessed
+MEDIA_PUBLIC_DISK=r2_public
+MEDIA_ARCHIVE_DISK=r2_private
+MEDIA_DELIVERY_DISK=delivery
+MEDIA_DELIVERY_MAX_AGE_HOURS=168
+
+# --- Cloudflare R2 ---
+R2_ACCESS_KEY_ID=<...>
+R2_SECRET_ACCESS_KEY=<...>
+R2_DEFAULT_REGION=auto
+R2_ENDPOINT=https://<accountid>.r2.cloudflarestorage.com
+R2_PUBLIC_BUCKET=kanyarfotozas-public
+R2_PRIVATE_BUCKET=kanyarfotozas-private
+R2_PUBLIC_URL=https://media.kanyarfotozas.hu
+
+# --- Mentés ---
+PG_DUMP_BINARY=pg_dump
+BACKUP_DISK=r2_private
+BACKUP_PATH=backups
+BACKUP_KEEP=14
+
+# --- E-mail (VAGY az adminból: /admin/settings/critical) ---
+MAIL_MAILER=smtp
+MAIL_HOST=<smtp_host>
+MAIL_PORT=587
+MAIL_USERNAME=<...>
+MAIL_PASSWORD=<...>
+MAIL_FROM_ADDRESS=noreply@kanyarfotozas.hu
+MAIL_FROM_NAME="KanyarFotózás"
+
+# A fizetési / számlázási kulcsokat NE ide — a /admin/settings/critical
+# oldalról add meg (titkosítva a site_settings-ben).
+```
+
+> **Nem kell**: `FFMPEG_BINARY`, `FFPROBE_BINARY`, PostGIS, `NAS_*` (az R2 a tár).
+
+### 6/c. APP_KEY
+
+Első deploy előtt a Coolify **Terminal**-jában (vagy egy egyszeri parancsban):
+
+```bash
+php artisan key:generate --show
+```
+
+A kapott `base64:...` értéket másold az `APP_KEY` env-be. **Ezt soha ne cseréld
+később** (a titkosított `site_settings` mezők — fizetési kulcsok, 2FA-titkok —
+ezzel vannak titkosítva).
+
+---
+
+## 7. Worker + Scheduler
+
+A Coolify **Application** → **+ Add** (Compose-alapú resource) VAGY külön
+„Service" a queue workerhez és a schedulerhez. A két folyamat:
+
+**Queue worker** (mindig fut):
+```bash
+php artisan queue:work --queue=videos,default --sleep=3 --tries=3 --max-time=3600
+```
+
+**Scheduler** (percenként):
+- Coolify → Application → **Scheduled Tasks** → **+ Add**:
+  - Command: `php artisan schedule:run`
+  - Frequency: `* * * * *`
+- (Ha a Coolify-verziód nem ad Scheduled Tasks-ot: egy külön process
+  `while true; do php artisan schedule:run; sleep 60; done`.)
+
+A schedulerre 8 parancs épül (heartbeat, napi mentés, letöltés-emlékeztetők,
+riasztás-scan, delivery-cache takarítás, fotós riportok, order-fulfillment retry).
+
+---
+
+## 8. Domain + SSL
+
+1. **DNS** (a domain szolgáltatójánál / Cloudflare-nél):
+   - `A` rekord: `kanyarfotozas.hu` → `<SZERVER_IP>`
+   - `A` rekord: `www` → `<SZERVER_IP>` (opcionális, redirect)
+   - `CNAME`/`A`: `media` → a Cloudflare R2 custom domain (ld. 4.3)
+   - Ha Cloudflare-t használsz proxy-nak: a `kanyarfotozas.hu` rekord lehet
+     „DNS only" (szürke felhő) az első Let's Encrypt-kiállításig, utána
+     visszakapcsolható proxyra.
+2. Coolify → Application → **Domains**: `https://kanyarfotozas.hu`
+   - Coolify automatikusan kér **Let's Encrypt** tanúsítványt.
+3. Deploy után ellenőrizd: `https://kanyarfotozas.hu` → betölt, lakat zöld.
+
+---
+
+## 9. Első deploy
+
+1. Coolify → Application → **Deploy**.
+2. Nézd a **build logot**: `composer install` → `npm run build` → konténer indul.
+3. A start command lefuttatja a `migrate --force`-ot — az `events` migráció
+   PostGIS híján **sima b-tree indexet** csinál (ez a várt viselkedés).
+4. Ellenőrzés a Coolify **Terminal**-ból:
+   ```bash
+   php artisan about                     # env=production, debug=false
+   php artisan migrate:status            # minden Ran
+   php artisan storage:link              # ha a start commandban „|| true" elnyomta
+   ```
+
+---
+
+## 10. Első superadmin + alapadatok
+
+A Coolify Terminalból:
+
+```bash
+# Szerep-jogosultságok (ha a deploy nem seedelte):
+php artisan db:seed --class=RolePermissionSeeder --force
+
+# Első superadmin (tinker):
+php artisan tinker --execute "\$u = App\Models\User::create(['name'=>'Zoli','email'=>'bzoli82@gmail.com','password'=>bcrypt('<ERŐS_JELSZÓ>'),'role'=>'superadmin','is_active'=>true]); echo \$u->id;"
+```
+
+> **NE** a demo `password123`-mal. A `belepesi-adatok.txt` fejlesztői fájl —
+> élesre nem kerül (gitignore-olt).
+
+Belépés: `https://kanyarfotozas.hu/login` → `/admin/settings/security` → **2FA be**.
+
+---
+
+## 11. Admin-oldali konfiguráció (`/admin/settings/critical`)
+
+Sorban, amíg minden csoport **zöld**:
+
+1. **Fizetés** — Stripe / SimplePay / Barion éles kulcsok (SANDBOX = KI),
+   webhook/IPN/callback URL-ek beállítva a szolgáltatók oldalán:
+   - Stripe: `https://kanyarfotozas.hu/api/stripe/webhook`
+   - SimplePay: `https://kanyarfotozas.hu/api/simplepay/ipn`
+   - Barion: `https://kanyarfotozas.hu/api/barion/callback`
+2. **Számlázás** — Billingo v3 kulcs + számlatömb-azonosító, auto-számla BE.
+3. **E-mail** — ha nem az env-ből: SMTP itt; küldj tesztlevelet.
+4. **Monitoring** — hiba-webhook (Slack/Discord) vagy e-mail BE.
+5. **Tárhely** — az R2 státusz zöld (az env-ből jön).
+6. **Alaprendszer** — `APP_DEBUG=false`, `APP_URL` https, alapár beállítva.
+7. **SEO** (`/admin/settings/seo`) — a „kereshetőség" kapcsoló **KI**, amíg
+   nem élesedsz igazán (karbantartási mód: minden oldal `noindex`,
+   `robots.txt` `Disallow: /`). Éleskor BE.
+8. **Helyszín-keresés** (`/admin/settings/location-search`) — marad **KI**
+   (nincs PostGIS). A többi kereső (helyszínnév/ország/dátum/fotós/típus) + a
+   térkép megy.
+
+---
+
+## 12. E-mail deliverability (KRITIKUS)
+
+A visszaigazoló e-mailek spam-be esnek SPF/DKIM/DMARC nélkül. A küldő
+domainre (`kanyarfotozas.hu`):
+
+- **SPF** TXT: `v=spf1 include:<smtp_szolgáltató_spf> -all`
+- **DKIM**: a szolgáltatónál generált CNAME/TXT rekord(ok)
+- **DMARC** TXT (`_dmarc`): `v=DMARC1; p=quarantine; rua=mailto:dmarc@kanyarfotozas.hu`
+
+Teszt: küldj magadnak egy tesztlevelet a `/admin/settings/critical` gombbal,
+nézd meg a fejlécben `spf=pass` / `dkim=pass`.
+
+---
+
+## 13. Füst-teszt (éles, valódi pénz — kis összeg)
+
+1. Hozz létre egy teszteseményt + tölts fel 1 fotót (a feldolgozás:
+   `status=processing` → pár mp múlva `ready`; a worker fut).
+2. Állíts az eseményen 100–200 Ft árat.
+3. Nyisd inkognitóban → tedd kosárba → fogadd el az ÁSZF-et → fizess
+   **mindhárom** szolgáltatóval (amit használni fogsz).
+4. Ellenőrizd: visszaigazoló e-mail megjött, letöltés működik, **számla**
+   kiállt és látszik a NAV Online Számla felületén.
+5. Csinálj egy **részleges és egy teljes visszatérítést** az admin
+   rendelés-nézetből — a teljesnél a letöltő token lejár + sztornó számla.
+6. Másnap: `/admin/settings/critical` → Monitoring → **az első napi mentés
+   lefutott** (a mentés az R2 `r2_private` bucketbe megy).
+7. `sitemap.xml` beküldése a Google Search Console-ba, a „kereshetőség"
+   kapcsoló BE.
+
+---
+
+## 14. Bővítés később (mind visszafelé kompatibilis)
+
+| Mit | Hogyan |
+|---|---|
+| **Nagyobb szerver** | Hetzner Console → Server → **Rescale** (CX32/CX42…) — pár perc állás, Coolify újraindul. A CX22 sok forgalmat elbír, mert a média R2/CDN-en van. |
+| **GPS sugaras keresés** | `apt install postgresql-16-postgis-3` a DB-konténerbe (vagy managed PostGIS-es DB), `CREATE EXTENSION postgis;`, a GIST index kézzel (ld. `create_events_table` migráció komment), `/admin/settings/location-search` → BE. Nincs adatmigráció. |
+| **Szerver-oldali videókódolás** | `apt install ffmpeg` (vagy a Nixpacks configba `ffmpeg`), `MEDIA_VIDEO_MODE=pipeline`. Az új feltöltések pipeline-t kapnak; a régi `preprocessed` videók változatlanul mennek. |
+| **Redis** (gyorsabb cache/queue) | Coolify → + Database → Redis; `CACHE_STORE=redis`, `QUEUE_CONNECTION=redis`, `REDIS_HOST=<coolify_redis>`. |
+| **Managed Postgres** | `DB_*` átirányítása (pl. Neon — támogat PostGIS-t is); Coolify csak az appot futtatja. |
+| **Külön worker/DB gép** | Coolify multi-server (több szerver egy instance alatt), vagy load balancer + több app-node. |
+| **Váltás Forge / Laravel Cloud** | Semmi Coolify-specifikus a kódban — sima Laravel app. `git remote` marad, új platform, env átmásol. |
+
+---
+
+## Hibaelhárítás
+
+- **„Vite manifest not found"** a deploy után → az `npm run build` nem futott le a
+  buildben; nézd a build logot, a `public/build/manifest.json`-nak létre kell jönnie.
+- **500 a kezdőlapon, üres log** → `APP_KEY` hiányzik vagy hibás.
+- **Feltöltött kép „processing"-ben ragad** → a **queue worker** nem fut (11. pont).
+- **Az ütemező-életjel sárga a `/admin/settings/critical`-on** → a **scheduler**
+  (`schedule:run` percenként) nem fut (7. pont).
+- **Fizetés után nincs letöltés** → a delivery-cache kötet efemer, vagy nincs
+  csatolva (6/a). `php artisan kanyarfotozas:retry-order-fulfillment`.
+- **E-mail nem érkezik** → SMTP hibás VAGY SPF/DKIM hiányzik (12. pont);
+  `storage/logs/laravel.log`.

@@ -132,6 +132,19 @@ class PreprocessedVideoModeTest extends TestCase
         $this->assertSame(Media::STATUS_READY, $media->status);
     }
 
+    public function test_hero_video_upload_is_rejected_in_preprocessed_mode(): void
+    {
+        $superadmin = User::factory()->superadmin()->create();
+
+        $upload = new UploadedFile(base_path('tests/Fixtures/sample.mp4'), 'hero.mp4', 'video/mp4', null, true);
+
+        $this->actingAs($superadmin)
+            ->post('/admin/settings/hero', ['file' => $upload])
+            ->assertSessionHasErrors('file');
+
+        $this->assertDatabaseCount('hero_slides', 0);
+    }
+
     private function configureFtp(): void
     {
         SiteSetting::set('nas_host', 'nas.example');

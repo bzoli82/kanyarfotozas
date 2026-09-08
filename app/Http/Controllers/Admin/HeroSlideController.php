@@ -65,6 +65,7 @@ class HeroSlideController extends Controller
                     'is_active' => $slide->is_active,
                     'sort_order' => $slide->sort_order,
                 ]),
+            'allowVideo' => $this->serverVideoEncoding(),
             'recommended' => [
                 'image' => [
                     'width' => self::IMAGE_WIDTH,
@@ -82,10 +83,22 @@ class HeroSlideController extends Controller
         ]);
     }
 
+    /** Videó hero csak szerver-oldali videókódolással (FFmpeg) — ld. config media.video_mode. */
+    private function serverVideoEncoding(): bool
+    {
+        return config('media.video_mode') === 'pipeline';
+    }
+
     public function store(Request $request, ImageProcessingService $images, VideoProcessingService $videos): RedirectResponse
     {
         $upload = $request->file('file');
-        $isVideo = $upload !== null && str_starts_with((string) $upload->getMimeType(), 'video/');
+        $looksVideo = $upload !== null && str_starts_with((string) $upload->getMimeType(), 'video/');
+
+        if ($looksVideo && ! $this->serverVideoEncoding()) {
+            return back()->withErrors(['file' => 'Videó hero csak szerver-oldali videókódolással tölthető fel (MEDIA_VIDEO_MODE=pipeline). Tölts fel képet helyette.']);
+        }
+
+        $isVideo = $looksVideo;
 
         $request->validate([
             'file' => $isVideo

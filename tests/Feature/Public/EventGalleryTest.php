@@ -9,6 +9,7 @@ use App\Models\SiteSetting;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class EventGalleryTest extends TestCase
@@ -20,6 +21,18 @@ class EventGalleryTest extends TestCase
         parent::setUp();
 
         $this->seed(RolePermissionSeeder::class);
+    }
+
+    /**
+     * A GPS sugaras keresés PostGIS-t igényel (ST_DWithin). Az éles cél PostGIS
+     * nélkül fut (a funkció alapból KI), a CI is sima Postgres-en — ott ezek a
+     * tesztek kimaradnak. Lokálisan (PostGIS-es tesztadatbázis) lefutnak.
+     */
+    private function requirePostgis(): void
+    {
+        if (! DB::selectOne("SELECT 1 FROM pg_extension WHERE extname = 'postgis'")) {
+            $this->markTestSkipped('PostGIS nem elérhető — a GPS sugaras keresés tesztje kimarad.');
+        }
     }
 
     public function test_events_index_lists_live_and_announced_events(): void
@@ -124,6 +137,7 @@ class EventGalleryTest extends TestCase
 
     public function test_gps_radius_search_includes_nearby_and_excludes_far_events_with_distance(): void
     {
+        $this->requirePostgis();
         SiteSetting::set('geo_search_enabled', '1');
 
         // Eger kozeppontja korul: a "kozeli" esemeny kb. 5 km-re van (meg ugyanaz a varos),
@@ -197,6 +211,7 @@ class EventGalleryTest extends TestCase
 
     public function test_gps_radius_search_orders_results_by_distance_ascending(): void
     {
+        $this->requirePostgis();
         SiteSetting::set('geo_search_enabled', '1');
 
         $far = Event::factory()->create([

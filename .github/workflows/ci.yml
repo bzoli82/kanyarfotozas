@@ -16,8 +16,12 @@ jobs:
 
     services:
       postgres:
-        # PostGIS kell — az events tábla migrációja natív ST_MakePoint/GIST indexet hoz létre.
-        image: postgis/postgis:16-3.4
+        # Sima PostgreSQL — az éles cél (Hetzner CX22 + Coolify) is PostGIS NÉLKÜL fut.
+        # Az events migráció feltételes: PostGIS híján sima b-tree indexet készít, a GPS
+        # sugaras keresés pedig alapból KI (App\Services\GeoSearchSettings). Ha később
+        # kell a PostGIS-es GPS-keresés, cseréld az image-t `postgis/postgis:16-3.4`-re
+        # és told vissza a "CREATE EXTENSION postgis" lépést.
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -57,9 +61,6 @@ jobs:
 
       - name: Install FFmpeg
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
-
-      - name: Enable PostGIS extension
-        run: PGPASSWORD=postgres psql -h 127.0.0.1 -U postgres -d kanyarfotozas_test -c 'CREATE EXTENSION IF NOT EXISTS postgis;'
 
       - name: Composer cache
         uses: actions/cache@v4

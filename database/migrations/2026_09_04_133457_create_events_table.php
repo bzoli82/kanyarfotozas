@@ -32,8 +32,19 @@ return new class extends Migration
             $table->index(['country_id', 'status']);
         });
 
-        // PostGIS spatial index a lat/lon parosra (GPS sugaras kereses, EPIC-10 ST_DWithin)
-        DB::statement('CREATE INDEX events_geog_idx ON events USING GIST (ST_SetSRID(ST_MakePoint(longitude, latitude), 4326))');
+        // GPS sugaras kereses (EPIC-10, App\Services\EventSearch): ha az adatbazison
+        // elerheto a PostGIS, terbeli GIST indexet teszunk a lat/lon parosra
+        // (ST_DWithin/ST_Distance). PostGIS nelkuli hostingon (a funkcio alapbol KI,
+        // ld. App\Services\GeoSearchSettings) sima b-tree index keszul, es a migracio
+        // igy is lefut. PostGIS kesobbi telepitese utan a GIST index kezzel felvehető:
+        //   CREATE INDEX events_geog_idx ON events USING GIST (ST_SetSRID(ST_MakePoint(longitude, latitude), 4326));
+        $hasPostgis = (bool) DB::selectOne("SELECT 1 FROM pg_extension WHERE extname = 'postgis'");
+
+        if ($hasPostgis) {
+            DB::statement('CREATE INDEX events_geog_idx ON events USING GIST (ST_SetSRID(ST_MakePoint(longitude, latitude), 4326))');
+        } else {
+            DB::statement('CREATE INDEX events_geog_idx ON events (latitude, longitude)');
+        }
     }
 
     public function down(): void

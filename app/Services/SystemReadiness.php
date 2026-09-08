@@ -230,9 +230,14 @@ class SystemReadiness
     {
         $items = [];
 
-        foreach (['ffmpeg' => config('media.ffmpeg_binary'), 'ffprobe' => config('media.ffprobe_binary')] as $name => $binary) {
-            [$status, $detail] = $this->binaryStatus((string) $binary);
-            $items[] = $this->item($name, mb_strtoupper($name), $status, $detail);
+        if (config('media.video_mode') === 'pipeline') {
+            foreach (['ffmpeg' => config('media.ffmpeg_binary'), 'ffprobe' => config('media.ffprobe_binary')] as $name => $binary) {
+                [$status, $detail] = $this->binaryStatus((string) $binary);
+                $items[] = $this->item($name, mb_strtoupper($name), $status, $detail);
+            }
+        } else {
+            $items[] = $this->item('video_mode', 'Videó-mód', self::OK,
+                'Elő-feldolgozott mód (MEDIA_VIDEO_MODE=preprocessed): a fotós kódolja a videót, a szervernek nincs szüksége FFmpeg-re.');
         }
 
         $failedMedia = Media::query()->where('status', Media::STATUS_FAILED)->count();
