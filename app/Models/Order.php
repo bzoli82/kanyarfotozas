@@ -15,7 +15,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 #[Fillable([
     'order_number', 'buyer_email', 'total_cents', 'payment_provider', 'payment_provider_reference',
-    'payment_status', 'coupon_id', 'discount_cents', 'plate_consent',
+    'payment_status', 'coupon_id', 'discount_cents', 'bulk_discount_cents', 'plate_consent',
     'payment_provider_order_ref', 'refunded_cents', 'refund_reference', 'refunded_at', 'refund_reason',
     'billing_name', 'billing_country', 'billing_zip', 'billing_city', 'billing_address', 'billing_tax_number',
     'fulfillment_status', 'fulfillment_prepared_at', 'fulfillment_attempts', 'fulfillment_error',

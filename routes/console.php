@@ -14,6 +14,9 @@ Schedule::command('kanyarfotozas:heartbeat')->everyFiveMinutes();
 // EPIC-12 — automatikus e-mailek (a szerveren `php artisan schedule:work` vagy cron: `* * * * * php artisan schedule:run`)
 Schedule::command('kanyarfotozas:send-download-reminders')->hourly();
 
+// Elhagyott kosár — egyszeri emlékeztető a 24 órán belül félbehagyott vásárlásokról
+Schedule::command('kanyarfotozas:send-abandoned-cart-reminders')->hourly();
+
 // EPIC-18 — proaktiv dashboard-figyelmeztetesek ellenorzese + e-mail a superadminoknak
 Schedule::command('kanyarfotozas:scan-alerts')->everyFifteenMinutes();
 

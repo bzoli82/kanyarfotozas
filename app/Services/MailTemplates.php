@@ -69,6 +69,21 @@ class MailTemplates
                     'signature' => $signature,
                 ],
             ],
+            'abandoned_cart' => [
+                'label' => 'Elhagyott kosár emlékeztető',
+                'description' => 'Egyszeri emlékeztető, ha valaki elindított egy vásárlást, de 24 órán belül nem fizetett.',
+                'placeholders' => [
+                    'app_name' => 'Az oldal neve',
+                    'item_count' => 'A kosárban maradt tételek száma',
+                ],
+                'defaults' => [
+                    'subject' => 'Ott maradtak a képeid a kosárban',
+                    'heading' => 'Folytatod a vásárlást?',
+                    'intro' => ':item_count kép várt rád a kosárban — a lenti gombbal egy kattintással folytathatod, ahol abbahagytad.',
+                    'outro' => 'Ezt az egyszeri emlékeztetőt azért kaptad, mert elkezdtél egy vásárlást nálunk. Ha már nem érdekel, nyugodtan hagyd figyelmen kívül — több levelet nem küldünk erről.',
+                    'signature' => $signature,
+                ],
+            ],
             'download_reminder' => [
                 'label' => 'Letöltési emlékeztető',
                 'description' => 'Emlékeztető, ha a letöltési link 48 órán belül lejár és van még le nem töltött tétel.',

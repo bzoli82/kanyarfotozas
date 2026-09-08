@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\OrganizerPayoutController;
 use App\Http\Controllers\Admin\PayoutController;
 use App\Http\Controllers\Admin\PhotographerController;
 use App\Http\Controllers\Admin\PlateRecognitionSettingsController;
+use App\Http\Controllers\Admin\PricingSettingsController;
 use App\Http\Controllers\Admin\SecuritySettingsController;
 use App\Http\Controllers\Admin\SeoSettingsController;
 use App\Http\Controllers\Admin\SocialSettingsController;
@@ -258,6 +259,9 @@ Route::middleware(['auth', 'role:superadmin', '2fa'])->prefix('admin')->name('ad
 
     Route::get('/settings/social', [SocialSettingsController::class, 'index'])->name('settings.social');
     Route::put('/settings/social', [SocialSettingsController::class, 'update'])->name('settings.social.update');
+
+    Route::get('/settings/pricing', [PricingSettingsController::class, 'index'])->name('settings.pricing');
+    Route::put('/settings/pricing', [PricingSettingsController::class, 'update'])->name('settings.pricing.update');
 
     // Hibanapló + monitoring/mentés
     Route::get('/errors', [ErrorEventController::class, 'index'])->name('errors.index');

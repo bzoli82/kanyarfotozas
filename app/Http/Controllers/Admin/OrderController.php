@@ -66,6 +66,7 @@ class OrderController extends Controller
             'order' => [
                 ...$this->summary($order),
                 'discount_cents' => $order->discount_cents,
+                'bulk_discount_cents' => $order->bulk_discount_cents,
                 'coupon' => $order->coupon?->code,
                 'plate_consent' => $order->plate_consent,
                 'payment_provider_reference' => $order->payment_provider_reference,

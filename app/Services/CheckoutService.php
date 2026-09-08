@@ -42,11 +42,16 @@ class CheckoutService
         }
 
         $subtotal = (int) $media->sum('price_cents');
+
+        // Automatikus mennyiségi kedvezmény (eseményenként) — a kupon UTÁN a
+        // kupon a már csökkentett részösszegre számol.
+        $bulkDiscount = app(BulkDiscount::class)->forMedia($media)['discount_cents'];
+
         $coupon = null;
         $discount = 0;
 
         if (filled($couponCode)) {
-            $result = $this->coupons->apply($couponCode, $subtotal);
+            $result = $this->coupons->apply($couponCode, max(0, $subtotal - $bulkDiscount));
             $coupon = $result['coupon'];
             $discount = $result['discount_cents'];
         }
@@ -57,13 +62,14 @@ class CheckoutService
 
         $termsAcceptedAt = ! empty($billing['terms_accepted']) ? now() : null;
 
-        return DB::transaction(function () use ($media, $email, $coupon, $subtotal, $discount, $plateConsent, $billingFields, $termsAcceptedAt) {
+        return DB::transaction(function () use ($media, $email, $coupon, $subtotal, $bulkDiscount, $discount, $plateConsent, $billingFields, $termsAcceptedAt) {
             $order = Order::create([
                 'buyer_email' => $email,
-                'total_cents' => max(0, $subtotal - $discount),
+                'total_cents' => max(0, $subtotal - $bulkDiscount - $discount),
                 'payment_status' => Order::STATUS_PENDING,
                 'coupon_id' => $coupon?->id,
                 'discount_cents' => $discount,
+                'bulk_discount_cents' => $bulkDiscount,
                 'plate_consent' => $plateConsent,
                 'terms_accepted_at' => $termsAcceptedAt,
                 ...$billingFields,

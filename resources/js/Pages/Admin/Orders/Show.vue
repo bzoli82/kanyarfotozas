@@ -65,7 +65,8 @@ const statusLabel = { pending: 'Függőben', paid: 'Fizetve', failed: 'Sikertele
                         </tr>
                     </tbody>
                     <tfoot class="border-t border-border text-sm">
-                        <tr v-if="order.discount_cents > 0"><td class="py-2 text-accent">Kedvezmény{{ order.coupon ? ` (${order.coupon})` : '' }}</td><td class="py-2 text-right text-accent">-{{ huf(order.discount_cents) }}</td></tr>
+                        <tr v-if="order.bulk_discount_cents > 0"><td class="py-2 text-accent">Mennyiségi kedvezmény</td><td class="py-2 text-right text-accent">-{{ huf(order.bulk_discount_cents) }}</td></tr>
+                        <tr v-if="order.discount_cents > 0"><td class="py-2 text-accent">Kuponkedvezmény{{ order.coupon ? ` (${order.coupon})` : '' }}</td><td class="py-2 text-right text-accent">-{{ huf(order.discount_cents) }}</td></tr>
                         <tr><td class="py-2 font-semibold text-content">Végösszeg</td><td class="py-2 text-right font-bold text-content">{{ huf(order.total_cents) }}</td></tr>
                         <tr v-if="order.refunded_cents > 0"><td class="py-2 text-red-500">Visszatérítve</td><td class="py-2 text-right text-red-500">-{{ huf(order.refunded_cents) }}</td></tr>
                     </tfoot>

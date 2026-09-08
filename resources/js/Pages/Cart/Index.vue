@@ -9,6 +9,7 @@ import { useMediaUrl } from '@/Composables/useMediaUrl';
 const props = defineProps({
     paymentProviders: { type: Array, default: () => [] },
     billingRequired: { type: Boolean, default: false },
+    resumeItems: { type: Array, default: () => [] },
 });
 
 const { t } = useI18n();
@@ -40,42 +41,70 @@ const hasBlurredPlate = ref(false); // EPIC-13: van homályosított rendszámú 
 const plateConsent = ref(false);
 const termsAccepted = ref(false); // ÁSZF + adatvédelem + elállási jog lemondása (kötelező)
 
+const bulkDiscountInfo = ref(null); // { discount_cents, groups: [...], hints: [{event_id, needed, percent}] }
+
+const bulkHints = computed(() => (bulkDiscountInfo.value?.hints ?? []).map((h) => {
+    const item = cart.items.find((i) => i.event_id === h.event_id);
+    return { ...h, event_name: item?.event_name || '', event_slug: item?.event_slug || null };
+}));
+
 const subtotal = computed(() => cart.items.reduce((sum, item) => sum + (item.price_cents ?? 0), 0));
+const bulkDiscount = computed(() => bulkDiscountInfo.value?.discount_cents ?? 0);
 const discount = computed(() => (couponState.value?.valid ? couponState.value.discount_cents : 0));
-const total = computed(() => Math.max(0, subtotal.value - discount.value));
+const total = computed(() => Math.max(0, subtotal.value - bulkDiscount.value - discount.value));
 
 function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.content;
 }
 
-onMounted(async () => {
+async function refreshCart() {
     if (cart.items.length === 0) {
-        loading.value = false;
+        bulkDiscountInfo.value = null;
         return;
     }
 
+    const params = new URLSearchParams();
+    cart.items.forEach((item) => params.append('ids[]', item.id));
+    const res = await fetch(`/api/cart?${params.toString()}`);
+    const json = await res.json();
+
+    hasBlurredPlate.value = json.data.some((m) => m.plate_blurred);
+    bulkDiscountInfo.value = json.bulk_discount ?? null;
+
+    // Csak azok maradnak a kosarban, amik meg leteznek/lathatoak — az elavultak
+    // (torolt/elrejtett media) csendben kikerulnek, friss arral szinkronizalva.
+    cart.sync(
+        json.data.map((m) => ({
+            id: m.id,
+            type: m.type,
+            price_cents: m.price_cents,
+            thumbnail_s3_key: m.thumbnail_s3_key,
+            event_name: m.event?.name ?? '',
+            event_id: m.event?.id ?? null,
+            event_slug: m.event?.slug ?? null,
+        })),
+    );
+}
+
+onMounted(async () => {
     try {
-        const params = new URLSearchParams();
-        cart.items.forEach((item) => params.append('ids[]', item.id));
-        const res = await fetch(`/api/cart?${params.toString()}`);
-        const json = await res.json();
-
-        hasBlurredPlate.value = json.data.some((m) => m.plate_blurred);
-
-        // Csak azok maradnak a kosarban, amik meg leteznek/lathatoak — az elavultak
-        // (torolt/elrejtett media) csendben kikerulnek, friss arral szinkronizalva.
-        cart.sync(
-            json.data.map((m) => ({
-                id: m.id,
-                type: m.type,
-                price_cents: m.price_cents,
-                thumbnail_s3_key: m.thumbnail_s3_key,
-                event_name: m.event?.name ?? '',
-            })),
-        );
+        // Elhagyott-kosár emlékeztető „folytatás" linkje: a rendelés tételeit visszatöltjük.
+        props.resumeItems.forEach((item) => cart.add(item));
+        await refreshCart();
     } finally {
         loading.value = false;
     }
+});
+
+// Tétel törlésekor újraszámoltatjuk a mennyiségi kedvezményt + a kupont.
+let cartRefreshDebounce = null;
+watch(() => cart.items.map((i) => i.id).join(','), () => {
+    if (loading.value) return;
+    clearTimeout(cartRefreshDebounce);
+    cartRefreshDebounce = setTimeout(async () => {
+        await refreshCart();
+        if (couponState.value?.valid) checkCoupon();
+    }, 250);
 });
 
 let couponDebounce = null;
@@ -93,7 +122,8 @@ async function checkCoupon() {
         const res = await fetch('/api/coupon/validate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken(), Accept: 'application/json' },
-            body: JSON.stringify({ code: couponCode.value.trim(), subtotal_cents: subtotal.value }),
+            // A kupon a mennyiségi kedvezménnyel csökkentett részösszegre számol.
+            body: JSON.stringify({ code: couponCode.value.trim(), subtotal_cents: Math.max(0, subtotal.value - bulkDiscount.value) }),
         });
         couponState.value = await res.json();
     } catch (e) {
@@ -187,6 +217,13 @@ async function checkout() {
                         </div>
                     </div>
 
+                    <div v-for="h in bulkHints" :key="h.event_id" class="rounded-[var(--radius-base)] border border-accent/40 bg-accent/5 px-4 py-3 text-sm text-content">
+                        {{ t('cart.bulk_hint', { count: h.needed, percent: h.percent }) }}
+                        <Link v-if="h.event_slug" :href="`/events/${h.event_slug}`" class="font-semibold text-accent hover:underline">
+                            {{ h.event_name || t('cart.browse_events') }}
+                        </Link>
+                    </div>
+
                     <div class="rounded-[var(--radius-base)] border border-border bg-surface-1 p-5">
                         <label class="block">
                             <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">{{ t('cart.email') }}</span>
@@ -251,6 +288,10 @@ async function checkout() {
                             <div class="flex items-center justify-between text-sm text-muted">
                                 <span>{{ t('cart.subtotal') }}</span>
                                 <span>{{ subtotal }} Ft</span>
+                            </div>
+                            <div v-if="bulkDiscount > 0" class="flex items-center justify-between text-sm text-accent">
+                                <span>{{ t('cart.bulk_discount') }}</span>
+                                <span>-{{ bulkDiscount }} Ft</span>
                             </div>
                             <div v-if="discount > 0" class="flex items-center justify-between text-sm text-accent">
                                 <span>{{ t('cart.discount') }}</span>

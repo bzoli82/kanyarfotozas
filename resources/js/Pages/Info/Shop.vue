@@ -6,6 +6,7 @@ import { useI18n } from '@/Composables/useI18n';
 
 const props = defineProps({
     basePrice: { type: Number, default: 1490 },
+    bulkTiers: { type: Array, default: () => [] },
 });
 
 const { t } = useI18n();
@@ -37,6 +38,16 @@ const includes = computed(() => [1, 2, 3, 4, 5].map((n) => t(`shop.includes_${n}
                         <p class="mt-2 text-2xl font-bold text-content">{{ t('shop.from', { price: Math.round(basePrice * 1.3) }) }}</p>
                         <p class="mt-1 text-xs text-muted">{{ t('shop.per_clip') }}</p>
                     </div>
+                </div>
+
+                <div v-if="bulkTiers.length" class="mt-4 rounded-[var(--radius-base)] border border-accent/40 bg-accent/5 p-6">
+                    <h2 class="text-sm font-semibold uppercase tracking-wide text-content">{{ t('shop.bulk_title') }}</h2>
+                    <ul class="mt-3 space-y-1 text-sm text-muted">
+                        <li v-for="tier in bulkTiers" :key="tier.min">
+                            {{ t('shop.bulk_tier', { count: tier.min, percent: tier.percent }) }}
+                        </li>
+                    </ul>
+                    <p class="mt-2 text-xs text-muted">{{ t('shop.bulk_note') }}</p>
                 </div>
 
                 <div class="mt-8 rounded-[var(--radius-base)] border border-border bg-surface-1 p-6">

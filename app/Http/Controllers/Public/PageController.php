@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
+use App\Services\BulkDiscount;
 use App\Services\LegalPages;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,10 +25,11 @@ class PageController extends Controller
         return Inertia::render('Info/Privacy');
     }
 
-    public function shop(): Response
+    public function shop(BulkDiscount $bulkDiscount): Response
     {
         return Inertia::render('Info/Shop', [
             'basePrice' => (int) SiteSetting::get('base_price_huf', 1490),
+            'bulkTiers' => $bulkDiscount->tiers(),
         ]);
     }
 

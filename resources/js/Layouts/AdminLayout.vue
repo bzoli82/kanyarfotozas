@@ -23,6 +23,7 @@ const adminNav = computed(() => {
     if (isSuperadmin.value) {
         items.push({ label: 'Fotósok', href: '/admin/photographers', icon: 'users' });
         items.push({ label: 'Kritikus beállítások', href: '/admin/settings/critical', icon: 'shield' });
+        items.push({ label: 'Árazás', href: '/admin/settings/pricing', icon: 'wallet' });
         items.push({ label: 'Szervező kifizetések', href: '/admin/organizer-payouts', icon: 'wallet' });
         items.push({ label: 'Kép-visszakövetés', href: '/admin/forensics', icon: 'fingerprint' });
         items.push({ label: 'GDPR kérelmek', href: '/admin/data-requests', icon: 'privacy' });
