@@ -229,13 +229,13 @@ class SystemReadiness
         $last = SiteSetting::get(SchedulerHeartbeat::KEY);
         if ($last === null) {
             $items[] = $this->item('scheduler', 'Ütemező (cron)', self::WARNING,
-                'Még nem futott le az ütemező — állítsd be a szerveren: * * * * * php artisan schedule:run');
+                'Még nem futott le az ütemező — állítsd be a szerveren (`* * * * * php artisan schedule:run`), vagy kapcsold be a „Webes ütemezőt" a Deploy-emlékeztetőknél.');
         } else {
             $age = abs(Carbon::parse($last)->diffInMinutes(now()));
             $items[] = $this->item('scheduler', 'Ütemező (cron)', $age <= 20 ? self::OK : self::CRITICAL,
                 $age <= 20
                     ? 'Utolsó futás: '.Carbon::parse($last)->diffForHumans()
-                    : 'Az ütemező '.Carbon::parse($last)->diffForHumans().' óta nem futott — a cron (schedule:run) valószínűleg nem fut.');
+                    : 'Az ütemező '.Carbon::parse($last)->diffForHumans().' óta nem futott — a cron valószínűleg nem fut (vagy a webes ütemezőt hívó szolgáltatás áll).');
         }
 
         return ['group' => 'Várólista & ütemezés', 'summary' => self::OK, 'items' => $items];

@@ -12,6 +12,7 @@ use App\Services\PaymentSettings;
 use App\Services\SiteBranding;
 use App\Services\SiteIdentity;
 use App\Services\SystemReadiness;
+use App\Services\WebScheduler;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,7 +31,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class CriticalSettingsController extends Controller
 {
-    public function index(SystemReadiness $readiness, PaymentSettings $payments, SiteBranding $branding, InvoiceSettings $invoicing, MonitoringSettings $monitoring, BackupService $backup, MailSettings $mail, CaptchaSettings $captcha): InertiaResponse
+    public function index(SystemReadiness $readiness, PaymentSettings $payments, SiteBranding $branding, InvoiceSettings $invoicing, MonitoringSettings $monitoring, BackupService $backup, MailSettings $mail, CaptchaSettings $captcha, WebScheduler $webScheduler): InertiaResponse
     {
         return Inertia::render('Admin/Settings/Critical', [
             'groups' => $readiness->groups(),
@@ -61,7 +62,47 @@ class CriticalSettingsController extends Controller
                 // fülön történő domain-váltáskor automatikusan frissül.
                 'cors_origin' => 'https://'.$branding->domain(),
             ],
+            'webScheduler' => [
+                'enabled' => $webScheduler->enabled(),
+                'url' => $webScheduler->enabled() ? $webScheduler->url() : null,
+            ],
         ]);
+    }
+
+    /**
+     * A „webes ütemező" ki/be kapcsolása + (opcionálisan) új titkos token.
+     */
+    public function updateScheduler(Request $request, WebScheduler $webScheduler): RedirectResponse
+    {
+        $data = $request->validate([
+            'enabled' => ['required', 'boolean'],
+            'regenerate' => ['sometimes', 'boolean'],
+        ]);
+
+        if (! empty($data['regenerate'])) {
+            $webScheduler->regenerateToken();
+        }
+
+        $webScheduler->setEnabled($data['enabled']);
+
+        return back()->with('success', $data['enabled']
+            ? 'Webes ütemező bekapcsolva — másold a lenti URL-t a külső cron szolgáltatásba (1 perces intervallum).'
+            : 'Webes ütemező kikapcsolva.');
+    }
+
+    /**
+     * „Teszt most" — lefuttatja a soron következő ütemezett feladatokat, és
+     * visszaadja a kimenetet (a zöld/piros jelzés visszaigazolására).
+     */
+    public function testScheduler(WebScheduler $webScheduler): RedirectResponse
+    {
+        try {
+            $result = $webScheduler->runNow();
+
+            return back()->with('success', 'Ütemező lefutott. Kimenet: '.$result['output']);
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Az ütemező-teszt hibára futott: '.$e->getMessage());
+        }
     }
 
     public function updatePayments(Request $request, PaymentSettings $payments): RedirectResponse

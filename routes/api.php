@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Public\BarionCallbackController;
 use App\Http\Controllers\Public\SimplePayIpnController;
 use App\Http\Controllers\Public\StripeWebhookController;
+use App\Http\Controllers\Public\WebSchedulerController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +33,12 @@ Route::post('/coupon/validate', [CouponController::class, 'validateCode'])->name
 Route::post('/collection/track', [CollectionController::class, 'track'])->middleware('throttle:60,1')->name('api.collection.track');
 Route::post('/collection/share', [CollectionController::class, 'share'])->middleware('throttle:20,1')->name('api.collection.share');
 Route::post('/subscriptions', [SubscriptionController::class, 'store'])->middleware('throttle:10,1')->name('api.subscriptions.store');
+
+// „Webes utemezo" — egy kulso cron szolgaltatas percenkent meghivja a titkos URL-t
+// (ha a szerveren nincs mod rendes cront allitani). Ld. App\Services\WebScheduler.
+Route::match(['get', 'post'], '/ops/scheduler/{token}', WebSchedulerController::class)
+    ->middleware('throttle:30,1')
+    ->name('api.ops.scheduler');
 
 // Fizetesi szolgaltatok szerver-szerver ertesitesei — nem session-alapu, nincs CSRF.
 Route::middleware('payment.settings')->group(function () {

@@ -250,15 +250,19 @@ php artisan queue:work --queue=videos,imports,default --sleep=3 --tries=3 --max-
 > A `imports` queue-n a tömeges tárolóból-import batch-chunkjai futnak (lásd lent).
 > Nagy import alatt érdemes 2 workert futtatni (a Coolify-ban a process replikák számát növelve).
 
-**Scheduler** (percenként):
-- Coolify → Application → **Scheduled Tasks** → **+ Add**:
-  - Command: `php artisan schedule:run`
-  - Frequency: `* * * * *`
-- (Ha a Coolify-verziód nem ad Scheduled Tasks-ot: egy külön process
-  `while true; do php artisan schedule:run; sleep 60; done`.)
+**Scheduler** (percenként) — válassz egyet:
+- **Coolify Scheduled Task** (ajánlott): Coolify → Application → **Scheduled Tasks**
+  → **+ Add** → Command `php artisan schedule:run`, Frequency `* * * * *`.
+- **Külön process**: `while true; do php artisan schedule:run; sleep 60; done`.
+- **Webes ütemező** (ha egyik szerver-oldali sem megy): a superadmin bekapcsolja
+  `/admin/settings/critical` → „Deploy-emlékeztetők" → „Webes ütemező", és a kapott
+  titkos URL-t beilleszti egy ingyenes külső cronba (cron-job.org, 1 perces
+  intervallum). Kevésbé megbízható (a külső szolgáltatótól függ), de nulla
+  szerver-hozzáférést igényel.
 
-A schedulerre 8 parancs épül (heartbeat, napi mentés, letöltés-emlékeztetők,
-riasztás-scan, delivery-cache takarítás, fotós riportok, order-fulfillment retry).
+A schedulerre 9 parancs épül (heartbeat, napi mentés, letöltés-emlékeztetők,
+riasztás-scan, delivery-cache takarítás, fotós riportok, order-fulfillment retry,
+árva-feltöltés takarítás). Az admin „Ütemező teszt most" gomb egyszer lefuttatja.
 
 ---
 

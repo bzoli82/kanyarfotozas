@@ -12,7 +12,30 @@ const props = defineProps({
     monitoring: { type: Object, required: true },
     identity: { type: Object, required: true },
     deployReminders: { type: Object, default: () => ({ cors_origin: '' }) },
+    webScheduler: { type: Object, default: () => ({ enabled: false, url: null }) },
 });
+
+const schedulerForm = useForm({ enabled: props.webScheduler.enabled, regenerate: false });
+const schedulerTestForm = useForm({});
+const schedulerUrlCopied = ref(false);
+
+function toggleWebScheduler(regenerate = false) {
+    schedulerForm.regenerate = regenerate;
+    schedulerForm.enabled = regenerate ? true : !props.webScheduler.enabled;
+    schedulerForm.transform((d) => ({ ...d, _method: 'put' })).post('/admin/settings/critical/scheduler', { preserveScroll: true });
+}
+
+function copySchedulerUrl() {
+    if (!props.webScheduler.url) return;
+    navigator.clipboard?.writeText(props.webScheduler.url).then(() => {
+        schedulerUrlCopied.value = true;
+        setTimeout(() => { schedulerUrlCopied.value = false; }, 2000);
+    });
+}
+
+function testScheduler() {
+    schedulerTestForm.post('/admin/settings/critical/scheduler/test', { preserveScroll: true });
+}
 
 const corsPolicy = computed(() => JSON.stringify([{
     AllowedOrigins: [props.deployReminders.cors_origin],
@@ -271,6 +294,45 @@ function applyIdentity() {
                         Ha ez nincs beállítva: nincs mentés, nem mennek ki az emlékeztető/riasztó e-mailek, a
                         gyorsítótárak nem tisztulnak. A fenti zöld/piros jelzés 5–20 percen belül vált, ha működik.
                     </p>
+
+                    <!-- Webes ütemező: ha a szerveren nincs mód cront állítani -->
+                    <div class="mt-3 rounded-lg border border-border bg-surface-2 p-3">
+                        <label class="flex items-center gap-2 text-content">
+                            <input type="checkbox" :checked="webScheduler.enabled" class="accent-[var(--color-accent)]" @change="toggleWebScheduler(false)" />
+                            <span class="font-semibold">Webes ütemező</span>
+                            <span class="text-[12px] text-muted">— ha nem tudsz cront / Scheduled Task-ot állítani</span>
+                        </label>
+                        <p class="mt-1 text-[12px]">
+                            Bekapcsolva kapsz egy titkos URL-t. Illeszd be egy ingyenes külső ütemezőbe
+                            (pl. <a href="https://cron-job.org" target="_blank" rel="noopener" class="text-accent hover:text-accent-hover">cron-job.org</a>),
+                            állítsd <strong class="text-content">1 perces</strong> intervallumra — az percenként meghívja, és lefutnak a feladatok.
+                            Kevésbé megbízható, mint a szerver-cron (ha a külső szolgáltató áll, csúszik), de fallbacknak jó.
+                        </p>
+
+                        <div v-if="webScheduler.enabled && webScheduler.url" class="mt-2">
+                            <div class="flex items-start gap-2">
+                                <pre class="flex-1 overflow-x-auto rounded bg-surface-1 p-2 text-[11px] text-content">{{ webScheduler.url }}</pre>
+                                <button type="button" class="shrink-0 rounded border border-border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted hover:text-content" @click="copySchedulerUrl">
+                                    {{ schedulerUrlCopied ? 'Másolva ✓' : 'Másolás' }}
+                                </button>
+                            </div>
+                            <button type="button" class="mt-1 text-[11px] text-muted underline hover:text-content" @click="toggleWebScheduler(true)">
+                                Új URL generálása (a régi azonnal érvénytelen)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-2">
+                        <button
+                            type="button"
+                            :disabled="schedulerTestForm.processing"
+                            class="rounded-lg border border-border px-4 py-2 text-xs font-semibold uppercase tracking-wide text-content hover:border-accent disabled:opacity-50"
+                            @click="testScheduler"
+                        >
+                            {{ schedulerTestForm.processing ? 'Fut…' : 'Ütemező teszt most' }}
+                        </button>
+                        <span class="ml-2 text-[12px] text-muted">Lefuttatja az épp esedékes feladatokat, és kiírja az eredményt.</span>
+                    </div>
                 </div>
 
                 <div>

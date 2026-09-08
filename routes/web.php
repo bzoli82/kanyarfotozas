@@ -270,6 +270,8 @@ Route::middleware(['auth', 'role:superadmin', '2fa'])->prefix('admin')->name('ad
     Route::put('/settings/critical/captcha', [CriticalSettingsController::class, 'updateCaptcha'])->name('settings.critical.captcha');
     Route::post('/settings/critical/mail/test', [CriticalSettingsController::class, 'sendTestMail'])->middleware('throttle:6,1')->name('settings.critical.mail.test');
     Route::put('/settings/critical/monitoring', [CriticalSettingsController::class, 'updateMonitoring'])->name('settings.critical.monitoring');
+    Route::put('/settings/critical/scheduler', [CriticalSettingsController::class, 'updateScheduler'])->name('settings.critical.scheduler');
+    Route::post('/settings/critical/scheduler/test', [CriticalSettingsController::class, 'testScheduler'])->middleware('throttle:10,1')->name('settings.critical.scheduler.test');
     Route::post('/settings/critical/backup', [CriticalSettingsController::class, 'runBackup'])->name('settings.critical.backup');
     Route::get('/settings/critical/backup/{name}', [CriticalSettingsController::class, 'downloadBackup'])->name('settings.critical.backup.download');
 
