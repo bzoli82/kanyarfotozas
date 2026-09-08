@@ -14,7 +14,7 @@ A lépésről lépésre szóló szerver-telepítés (Hetzner CX22 + Coolify): **
 - [ ] **FFmpeg NEM kell** — a videó-mód `preprocessed` (`MEDIA_VIDEO_MODE=preprocessed`): a fotós kódolja a kis felbontású előnézetet, a szerver nem
 - [ ] `pg_dump` elérhető (napi mentés) — `PG_DUMP_BINARY` ha nincs a PATH-on (a `postgresql-client` csomag adja)
 - [ ] `php artisan storage:link` lefuttatva
-- [ ] **Queue worker**: `php artisan queue:work --queue=videos,default` (Coolify: külön „worker" process a compose-ban)
+- [ ] **Queue worker**: `php artisan queue:work --queue=videos,imports,default` (Coolify: külön „worker" process; nagy importhoz 2-3 replika)
 - [ ] **Cron**: `* * * * * php artisan schedule:run` (Coolify: „scheduled task" vagy cron-process)
 - [ ] Perzisztens kötet a `storage/app` alá (staging + delivery cache — NEM efemer!)
 - [ ] Webszerver: hosszú `Cache-Control` a `/build/*` és (ha lokális disk) a média-fájlokra
@@ -42,6 +42,7 @@ A kulcsokat lehet `.env`-ből VAGY a `/admin/settings/storage` oldalról megadni
 - [ ] `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`
 - [ ] `R2_PUBLIC_BUCKET`, `R2_PRIVATE_BUCKET`, `R2_PUBLIC_URL` (a publikus bucket saját domainje / CDN)
 - [ ] `MEDIA_PUBLIC_DISK=r2_public`, `MEDIA_ARCHIVE_DISK=r2_private`
+- [ ] (Tömeges importhoz) `R2_IMPORT_BUCKET` + `MEDIA_IMPORT_DISK=r2_import` — ld. deploy runbook „Tömeges import" szakasz
 - [ ] A `.ts` HLS-szegmensekre érdemes Cloudflare CDN cache
 
 ## 4. Fizetés (`/admin/settings/critical` → titkosítva tárolva)

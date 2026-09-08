@@ -95,12 +95,15 @@ curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
 
 1. Cloudflare Dashboard → **R2** → **Create bucket**: `kanyarfotozas-public`.
 2. Még egy: `kanyarfotozas-private`.
-3. A **public** bucket → Settings → **Public access**: engedélyezd az `r2.dev`
-   alдомént, VAGY (ajánlott) köss rá egy **custom domaint** (pl. `media.kanyarfotozas.hu`)
+3. (Opcionális, a tömeges importhoz) még egy: `kanyarfotozas-import` — ide
+   rclone-nal / S3-klienssel töltöd fel a nagy fotó-mappákat, az admin
+   eseményhez importálja. Ld. „Tömeges import (5000+ kép)" szakasz.
+4. A **public** bucket → Settings → **Public access**: engedélyezd az `r2.dev`
+   aldomént, VAGY (ajánlott) köss rá egy **custom domaint** (pl. `media.kanyarfotozas.hu`)
    Cloudflare CDN mögött.
-4. R2 → **Manage API Tokens** → **Create API Token**:
+5. R2 → **Manage API Tokens** → **Create API Token**:
    - Permissions: **Object Read & Write**,
-   - Bucket: mindkettő (vagy „Apply to all buckets"),
+   - Bucket: mindegyik (vagy „Apply to all buckets"),
    - jegyezd fel: **Access Key ID**, **Secret Access Key**, és az
      **S3 API endpoint**-ot (`https://<accountid>.r2.cloudflarestorage.com`).
 
@@ -183,6 +186,7 @@ MEDIA_PUBLIC_DISK=r2_public
 MEDIA_ARCHIVE_DISK=r2_private
 MEDIA_DELIVERY_DISK=delivery
 MEDIA_DELIVERY_MAX_AGE_HOURS=168
+MEDIA_IMPORT_DISK=r2_import          # tömeges import az „import" bucketből (vagy `nas`)
 
 # --- Cloudflare R2 ---
 R2_ACCESS_KEY_ID=<...>
@@ -191,6 +195,7 @@ R2_DEFAULT_REGION=auto
 R2_ENDPOINT=https://<accountid>.r2.cloudflarestorage.com
 R2_PUBLIC_BUCKET=kanyarfotozas-public
 R2_PRIVATE_BUCKET=kanyarfotozas-private
+R2_IMPORT_BUCKET=kanyarfotozas-import
 R2_PUBLIC_URL=https://media.kanyarfotozas.hu
 
 # --- Mentés ---
@@ -235,8 +240,10 @@ A Coolify **Application** → **+ Add** (Compose-alapú resource) VAGY külön
 
 **Queue worker** (mindig fut):
 ```bash
-php artisan queue:work --queue=videos,default --sleep=3 --tries=3 --max-time=3600
+php artisan queue:work --queue=videos,imports,default --sleep=3 --tries=3 --max-time=3600
 ```
+> A `imports` queue-n a tömeges tárolóból-import batch-chunkjai futnak (lásd lent).
+> Nagy import alatt érdemes 2 workert futtatni (a Coolify-ban a process replikák számát növelve).
 
 **Scheduler** (percenként):
 - Coolify → Application → **Scheduled Tasks** → **+ Add**:
@@ -365,6 +372,40 @@ nézd meg a fejlécben `spf=pass` / `dkim=pass`.
 | **Managed Postgres** | `DB_*` átirányítása (pl. Neon — támogat PostGIS-t is); Coolify csak az appot futtatja. |
 | **Külön worker/DB gép** | Coolify multi-server (több szerver egy instance alatt), vagy load balancer + több app-node. |
 | **Váltás Forge / Laravel Cloud** | Semmi Coolify-specifikus a kódban — sima Laravel app. `git remote` marad, új platform, env átmásol. |
+
+---
+
+## Tömeges import (5000+ kép egy rendezvényről)
+
+A böngészős feltöltés kötegenként max 200 fájl — nagy rendezvényhez lassú.
+Helyette: a fájlokat egy **R2 „drop zone" bucketbe** töltöd, az admin egy
+kattintással az eseményhez importálja az egész mappát.
+
+1. **Egyszeri setup**: `R2_IMPORT_BUCKET=kanyarfotozas-import` +
+   `MEDIA_IMPORT_DISK=r2_import` az env-ben (fent). (SFTP-szerverrel: `MEDIA_IMPORT_DISK=nas`.)
+2. **Feltöltés a gépedről** — [rclone](https://rclone.org)-nal (egyszeri config:
+   `rclone config` → új `r2` remote, „Amazon S3" / „Cloudflare R2", az R2 S3
+   kulcsokkal):
+   ```bash
+   rclone copy "D:\fotok\2026-06-hungaroring" r2:kanyarfotozas-import/2026-06-hungaroring \
+     --transfers 16 --progress
+   ```
+   (Preprocessed videó: a `klip.mp4` + `klip_lores.mp4` + `klip.jpg` hármast
+   ugyanabba a mappába.)
+3. **Import az adminban**: az esemény oldalán → „Beolvasás tárolóból" → megnyitod
+   a mappát → bejelölöd a mappa checkboxát (vagy „Az összes fájl ebben a mappában")
+   → Importálás. 25 fájl felett a **`imports` queue-n, háttérben** fut, az esemény
+   oldalán **folyamatjelzővel** (X / Y). A média fokozatosan `processing` →
+   `ready` lesz.
+4. **Sebesség**: 1 worker ~feldolgoz pár fájl/mp-et (letöltés R2-ből + thumbnail +
+   vízjel + R2-re vissza). 5000 képhez futtass 2–3 párhuzamos workert
+   (Coolify → a worker process replikái), vagy indítsd el este.
+5. **Takarítás**: sikeres import után az `import` bucket tartalma törölhető
+   (`rclone purge r2:kanyarfotozas-import/2026-06-hungaroring`) — az eredetik már
+   az archív (`r2_private`) bucketben vannak.
+
+Finomhangolás env-ből: `MEDIA_IMPORT_CHUNK_SIZE` (alap 100),
+`MEDIA_IMPORT_INLINE_MAX` (alap 25), `MEDIA_IMPORT_HARD_CAP` (alap 20000).
 
 ---
 

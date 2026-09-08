@@ -7,24 +7,30 @@ use App\Models\Media;
 use App\Support\PreprocessedVideoGrouper;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * Kézi kép-import a távoli fájlszerverről (a projekt SFTP `nas` diskje — a
- * felhasználói szóhasználatban „FTP szerver"). A fotósok a teljes méretű
- * eredetiket feltölthetik közvetlenül a szerverre; az admin az esemény
- * részletnézetében kiválasztja a mappát/fájlokat, és a rendszer letölti őket a
- * lokális stagingbe, majd a meglévő `ProcessImageMedia` pipeline legyártja a
- * thumbnailt + vízjeles előnézetet + letölthető változatokat, végül visszaarchivál.
+ * Tömeges média-import egy külső tárolóból egy eseményhez. A forrás-disk
+ * `config('media.import_disk')` szerint:
+ *
+ *   nas       – SFTP fájlszerver (a `NasConnection` kulcsaival)
+ *   r2_import – dedikált Cloudflare R2 „drop zone" bucket (rclone / S3-kliens tölti fel)
+ *   local     – a szerver egy helyi mappája (`storage/app/private` alatt)
+ *
+ * Az admin az esemény oldalán kiválaszt fájlokat VAGY egy egész mappát (rekurzívan
+ * kibontjuk), a rendszer a lokális stagingbe tölti őket, majd a `MediaIngestor` +
+ * a szokásos feldolgozó pipeline legyártja a thumbnailt, a vízjeles előnézetet és
+ * a letölthető változatokat, végül R2-be archivál. 100+ fájlnál a művelet a
+ * `imports` queue-n, batch job-ban fut (App\Jobs\ImportMediaChunk), folyamatjelzővel.
+ *
+ * @phpstan-type ImportUnit array{type: 'photo', path: string}|array{type: 'video', master: string, lores: string, poster: string|null}
  */
 class FtpImport
 {
-    /** A távoli forrás diskje — ugyanaz az SFTP kapcsolat, amit az archiválás használ. */
-    public const DISK = 'nas';
-
-    /** Egy import-hívásban feldolgozott fájlok felső korlátja. */
-    public const MAX_PER_IMPORT = 300;
+    /** A `paths[]` nyers tömb hossz-korlátja (mappákkal együtt — nem a fájlszám). */
+    public const MAX_PER_IMPORT = 500;
 
     private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 
@@ -32,9 +38,38 @@ class FtpImport
 
     public function __construct(private NasConnection $nas, private MediaIngestor $ingestor) {}
 
+    /** A beállított import forrás-disk neve. */
+    public static function disk(): string
+    {
+        return (string) config('media.import_disk', 'nas');
+    }
+
     public function isAvailable(): bool
     {
-        return $this->nas->isConfigured();
+        $disk = self::disk();
+
+        if ($disk === 'nas') {
+            return $this->nas->isConfigured();
+        }
+
+        if (! is_array(config("filesystems.disks.{$disk}"))) {
+            return false;
+        }
+
+        // Tényleges elérhetőség (egy listázás), 5 percre gyorsítótárazva, hogy az
+        // esemény-oldal betöltése ne kezdeményezzen minden alkalommal S3-hívást.
+        return (bool) Cache::remember("media.import_disk_available.{$disk}", now()->addMinutes(5), fn (): bool => rescue(function () use ($disk): bool {
+            Storage::disk($disk)->directories('');
+
+            return true;
+        }, false, false));
+    }
+
+    private function applyRuntimeConfigIfNeeded(): void
+    {
+        if (self::disk() === 'nas') {
+            $this->nas->applyRuntimeConfig();
+        }
     }
 
     /** Elő-feldolgozott videó-mód: a böngésző videókat is mutat, az import párosít. */
@@ -54,23 +89,31 @@ class FtpImport
     }
 
     /**
-     * Egy távoli könyvtár tartalma: almappák + képfájlok.
+     * Egy távoli könyvtár tartalma: almappák + fájlok.
      *
      * @return array{
      *     path: string,
      *     segments: list<array{name: string, path: string}>,
-     *     directories: list<array{name: string, path: string}>,
+     *     directories: list<array{name: string, path: string, file_count: int|null}>,
      *     files: list<array{name: string, path: string, size: int|null, last_modified: string|null}>
      * }
      */
     public function browse(string $path = ''): array
     {
         $path = $this->normalize($path);
-        $this->nas->applyRuntimeConfig();
-        $disk = Storage::disk(self::DISK);
+        $this->applyRuntimeConfigIfNeeded();
+        $disk = Storage::disk(self::disk());
 
-        $directories = collect($disk->directories($path))
-            ->map(fn (string $dir): array => ['name' => basename($dir), 'path' => $this->normalize($dir)])
+        $rawDirs = $disk->directories($path);
+        // A fájlszám-előnézet (mappánként egy listázás) csak kevés almappánál éri meg.
+        $countFiles = count($rawDirs) <= 12;
+
+        $directories = collect($rawDirs)
+            ->map(fn (string $dir): array => [
+                'name' => basename($dir),
+                'path' => $this->normalize($dir),
+                'file_count' => $countFiles ? $this->safeFileCount($disk, $dir) : null,
+            ])
             ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
             ->values()
             ->all();
@@ -109,131 +152,212 @@ class FtpImport
     }
 
     /**
-     * A megadott távoli képfájlokat letölti a stagingbe, `Media` rekordot hoz
-     * létre és elindítja a feldolgozó pipeline-t. Kétszeres importálást kiszűr:
-     * ugyanaz a forrás-útvonal VAGY ugyanaz a fájltartalom (SHA-256) egy
-     * eseményben csak egyszer kerül be (`skipped`-be számít).
+     * A nyers kijelölést (fájlok ÉS/VAGY mappák) importálandó „egységekre" bontja:
+     * a mappákat rekurzívan kibontja, szűri a kiterjesztést, preprocessed módban a
+     * videó-hármasokat (`.mp4` + `_lores.mp4` + `.jpg`) alapnév szerint párosítja.
+     *
+     * @param  list<string>  $paths
+     * @return array{units: list<ImportUnit>, total: int}
+     */
+    public function planImport(array $paths): array
+    {
+        $this->applyRuntimeConfigIfNeeded();
+        $disk = Storage::disk(self::disk());
+
+        $files = [];
+
+        foreach ($paths as $raw) {
+            try {
+                $p = $this->normalize((string) $raw);
+            } catch (\InvalidArgumentException) {
+                continue;
+            }
+
+            if ($p === '') {
+                continue;
+            }
+
+            if ($this->isDirectory($disk, $p)) {
+                foreach (rescue(fn () => $disk->allFiles($p), [], false) as $f) {
+                    $files[] = $f;
+                }
+            } else {
+                $files[] = $p;
+            }
+        }
+
+        $browsable = $this->browsableExtensions();
+
+        $files = collect($files)
+            ->unique()
+            ->filter(fn (string $f): bool => in_array(strtolower(pathinfo($f, PATHINFO_EXTENSION)), $browsable, true))
+            ->values()
+            ->all();
+
+        $units = $this->isPreprocessed()
+            ? $this->groupPreprocessedUnits($files)
+            : array_map(fn (string $f): array => ['type' => 'photo', 'path' => $f], $files);
+
+        return ['units' => array_values($units), 'total' => count($units)];
+    }
+
+    /**
+     * Egyetlen import-egység feldolgozása (a batch job chunkjaiból és a szinkron
+     * `import()`-ból is ez hívódik).
+     *
+     * @param  ImportUnit  $unit
+     * @return 'imported'|'skipped'|'failed'
+     */
+    public function importUnit(Event $event, array $unit, string $photographerId): string
+    {
+        $this->applyRuntimeConfigIfNeeded();
+        $remote = Storage::disk(self::disk());
+        $staging = Storage::disk(MediaStorage::STAGING);
+
+        $sourcePath = $unit['type'] === 'video' ? $unit['master'] : $unit['path'];
+
+        // Gyors elő-szűrés: ugyanezt a forrás-útvonalat már importáltuk ide.
+        if (Media::query()->where('event_id', $event->id)->where('import_source_path', $sourcePath)->exists()) {
+            return 'skipped';
+        }
+
+        if ($unit['type'] === 'video') {
+            return $this->importPreprocessedUnit($event, $unit, $photographerId, $remote, $staging);
+        }
+
+        $key = $this->stageRemote($event, $unit['path'], strtolower(pathinfo($unit['path'], PATHINFO_EXTENSION)), $remote, $staging);
+
+        if ($key === null) {
+            return 'failed';
+        }
+
+        return $this->ingestor->ingestStaged($event, $photographerId, $key, Media::TYPE_PHOTO, $unit['path']) !== null
+            ? 'imported'
+            : 'skipped';
+    }
+
+    /**
+     * Szinkron import (új-esemény űrlap + kis kötegek). A háttér-batch az
+     * `App\Jobs\ImportMediaChunk`-ban ugyanezt az `importUnit()`-ot hívja.
      *
      * @param  list<string>  $paths
      * @return array{imported: int, skipped: int, failed: list<string>}
      */
     public function import(Event $event, array $paths, string $photographerId): array
     {
-        $this->nas->applyRuntimeConfig();
-        $remote = Storage::disk(self::DISK);
-        $staging = Storage::disk(MediaStorage::STAGING);
+        $plan = $this->planImport($paths);
 
         $imported = 0;
         $skipped = 0;
         $failed = [];
 
-        foreach (array_slice(array_values($paths), 0, self::MAX_PER_IMPORT) as $rawPath) {
-            try {
-                $path = $this->normalize($rawPath);
-            } catch (\InvalidArgumentException) {
-                $failed[] = $rawPath;
+        foreach (array_slice($plan['units'], 0, (int) config('media.import_hard_cap', 20000)) as $unit) {
+            $outcome = $this->importUnit($event, $unit, $photographerId);
 
-                continue;
-            }
-
-            $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-
-            // Gyors elő-szűrés: ugyanezt a forrás-útvonalat már importáltuk.
-            if (Media::query()->where('event_id', $event->id)->where('import_source_path', $path)->exists()) {
-                $skipped++;
-
-                continue;
-            }
-
-            if ($this->isPreprocessed() && in_array($extension, self::VIDEO_EXTENSIONS, true)) {
-                $outcome = $this->importPreprocessedVideo($event, $path, $photographerId, $remote, $staging);
-                $outcome === 'imported' ? $imported++ : ($outcome === 'skipped' ? $skipped++ : $failed[] = $path);
-
-                continue;
-            }
-
-            if (! in_array($extension, self::IMAGE_EXTENSIONS, true)) {
-                $failed[] = $path;
-
-                continue;
-            }
-
-            $key = $this->stageRemote($event, $path, $extension, $remote, $staging);
-
-            if ($key === null) {
-                $failed[] = $path;
-
-                continue;
-            }
-
-            // Tartalom-alapú duplikátum-szűrés + rekord + pipeline egy helyen.
-            if ($this->ingestor->ingestStaged($event, $photographerId, $key, Media::TYPE_PHOTO, $path) !== null) {
-                $imported++;
-            } else {
-                $skipped++;
-            }
+            match ($outcome) {
+                'imported' => $imported++,
+                'skipped' => $skipped++,
+                default => $failed[] = $unit['path'] ?? $unit['master'],
+            };
         }
 
         return ['imported' => $imported, 'skipped' => $skipped, 'failed' => $failed];
     }
 
     /**
-     * Elő-feldolgozott videó importja: a mester videó mellé a `_lores` előnézetet
-     * és (ha van) a poszter-képet a SAME távoli mappából automatikusan behúzza.
+     * @param  list<string>  $files
+     * @return list<ImportUnit>
+     */
+    private function groupPreprocessedUnits(array $files): array
+    {
+        $disk = Storage::disk(self::disk());
+        $suffix = (string) config('media.preprocessed_lores_suffix', '_lores');
+
+        $byDir = [];
+
+        foreach ($files as $f) {
+            $byDir[$this->dirOf($f)][basename($f)] = $f;
+        }
+
+        $units = [];
+
+        foreach ($byDir as $nameToPath) {
+            $groups = PreprocessedVideoGrouper::group($nameToPath);
+
+            foreach ($groups['videos'] as $video) {
+                // A `_lores` / poszter testvér a kijelölésben lehet, VAGY a tárolón
+                // (ha csak a mester `.mp4`-et jelölte ki az admin) — mindkettőt nézzük.
+                $lores = $video['lores'] ?? $this->probeSibling($disk, $video['master'], $suffix, self::VIDEO_EXTENSIONS);
+
+                if ($lores === null) {
+                    continue; // _lores nélkül a videó kimarad
+                }
+
+                $units[] = [
+                    'type' => 'video',
+                    'master' => $video['master'],
+                    'lores' => $lores,
+                    'poster' => $video['poster'] ?? $this->probeSibling($disk, $video['master'], '', PreprocessedVideoGrouper::POSTER_EXTENSIONS),
+                ];
+            }
+
+            foreach ($groups['photos'] as $photo) {
+                $units[] = ['type' => 'photo', 'path' => $photo];
+            }
+        }
+
+        return $units;
+    }
+
+    /**
+     * A mester videó mellé keres egy testvér-fájlt a tárolón: {alapnév}{suffix}.{ext}.
      *
+     * @param  list<string>  $extensions
+     */
+    private function probeSibling(Filesystem $disk, string $masterPath, string $suffix, array $extensions): ?string
+    {
+        $dir = $this->dirOf($masterPath);
+        $prefix = $dir === '.' ? '' : $dir.'/';
+        $stem = pathinfo($masterPath, PATHINFO_FILENAME);
+
+        foreach ($extensions as $ext) {
+            $candidate = "{$prefix}{$stem}{$suffix}.{$ext}";
+
+            if (rescue(fn (): bool => $disk->fileExists($candidate), false, false)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array{type: 'video', master: string, lores: string, poster: string|null}  $unit
      * @return 'imported'|'skipped'|'failed'
      */
-    private function importPreprocessedVideo(
+    private function importPreprocessedUnit(
         Event $event,
-        string $path,
+        array $unit,
         string $photographerId,
         Filesystem $remote,
         Filesystem $staging,
     ): string {
-        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        $stem = pathinfo($path, PATHINFO_FILENAME);
-        $dir = trim(str_replace('\\', '/', dirname($path)), '/.');
-        $prefix = $dir === '' ? '' : $dir.'/';
-        $suffix = (string) config('media.preprocessed_lores_suffix', '_lores');
-
-        $loresPath = null;
-        foreach (self::VIDEO_EXTENSIONS as $ext) {
-            $candidate = "{$prefix}{$stem}{$suffix}.{$ext}";
-            if (rescue(fn () => $remote->exists($candidate), false, false)) {
-                $loresPath = $candidate;
-                break;
-            }
-        }
-
-        if ($loresPath === null) {
-            return 'failed';
-        }
-
-        $posterPath = null;
-        foreach (PreprocessedVideoGrouper::POSTER_EXTENSIONS as $ext) {
-            $candidate = "{$prefix}{$stem}.{$ext}";
-            if (rescue(fn () => $remote->exists($candidate), false, false)) {
-                $posterPath = $candidate;
-                break;
-            }
-        }
-
-        $masterKey = $this->stageRemote($event, $path, $extension, $remote, $staging);
-        $loresKey = $masterKey === null ? null
-            : $this->stageRemote($event, $loresPath, strtolower(pathinfo($loresPath, PATHINFO_EXTENSION)), $remote, $staging);
+        $masterKey = $this->stageRemote($event, $unit['master'], strtolower(pathinfo($unit['master'], PATHINFO_EXTENSION)), $remote, $staging);
+        $loresKey = $masterKey === null
+            ? null
+            : $this->stageRemote($event, $unit['lores'], strtolower(pathinfo($unit['lores'], PATHINFO_EXTENSION)), $remote, $staging);
 
         if ($masterKey === null || $loresKey === null) {
             return 'failed';
         }
 
-        $posterKey = $posterPath === null ? null
-            : $this->stageRemote($event, $posterPath, strtolower(pathinfo($posterPath, PATHINFO_EXTENSION)), $remote, $staging);
+        $posterKey = $unit['poster'] === null
+            ? null
+            : $this->stageRemote($event, $unit['poster'], strtolower(pathinfo($unit['poster'], PATHINFO_EXTENSION)), $remote, $staging);
 
-        $media = $this->ingestor->ingestPreprocessedVideo(
-            $event, $photographerId, $masterKey, $loresKey, $posterKey, $path,
-        );
-
-        return $media !== null ? 'imported' : 'skipped';
+        return $this->ingestor->ingestPreprocessedVideo(
+            $event, $photographerId, $masterKey, $loresKey, $posterKey, $unit['master'],
+        ) !== null ? 'imported' : 'skipped';
     }
 
     /**
@@ -264,6 +388,24 @@ class FtpImport
         }
 
         return $key;
+    }
+
+    private function isDirectory(Filesystem $disk, string $path): bool
+    {
+        if (rescue(fn (): bool => $disk->fileExists($path), false, false)) {
+            return false;
+        }
+
+        return rescue(fn (): bool => $disk->directoryExists($path), false, false)
+            || rescue(fn (): bool => count($disk->allFiles($path)) > 0 || count($disk->directories($path)) > 0, false, false);
+    }
+
+    /** A könyvtár-rész egy útvonalból (a `.`-t üresre normalizálva). */
+    private function dirOf(string $path): string
+    {
+        $dir = trim(str_replace('\\', '/', dirname($path)), '/.');
+
+        return $dir === '' ? '.' : $dir;
     }
 
     /**
@@ -310,6 +452,15 @@ class FtpImport
     {
         try {
             return $disk->size($file);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function safeFileCount(Filesystem $disk, string $dir): ?int
+    {
+        try {
+            return count($disk->allFiles($dir));
         } catch (\Throwable) {
             return null;
         }

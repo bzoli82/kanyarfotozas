@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import FtpImportBrowser from '@/Components/FtpImportBrowser.vue';
@@ -217,9 +217,37 @@ function runImport() {
     if (importForm.paths.length === 0) return;
     importForm.post(`/admin/events/${props.event.id}/import`, {
         preserveScroll: true,
-        onSuccess: () => importForm.reset('paths'),
+        onSuccess: () => {
+            importForm.reset('paths');
+            setTimeout(pollImportStatus, 800);
+        },
     });
 }
+
+// --- Hatter-import folyamatjelzo ---
+const importStatus = ref(null);
+let importPollTimer = null;
+
+async function pollImportStatus() {
+    try {
+        const res = await fetch(`/admin/events/${props.event.id}/import/status`, { headers: { Accept: 'application/json' } });
+        const data = await res.json();
+        const wasRunning = importStatus.value?.running;
+        importStatus.value = data.total > 0 ? data : null;
+
+        if (data.running) {
+            importPollTimer = setTimeout(pollImportStatus, 2500);
+        } else if (wasRunning && data.finished) {
+            // Frissen befejeződött — töltsük újra a média-rácsot.
+            router.reload({ only: ['media'] });
+        }
+    } catch {
+        // csendben — a következő poll újrapróbál
+    }
+}
+
+onMounted(pollImportStatus);
+onBeforeUnmount(() => importPollTimer && clearTimeout(importPollTimer));
 </script>
 
 <template>
@@ -429,6 +457,29 @@ function runImport() {
                 </div>
             </template>
         </FtpImportBrowser>
+
+        <!-- Hatter-import folyamatjelzo -->
+        <div v-if="importStatus" class="mt-4 rounded-[var(--radius-base)] border border-accent/40 bg-accent/5 p-4">
+            <div class="flex items-center justify-between gap-2 text-sm">
+                <span class="font-semibold text-content">
+                    {{ importStatus.running ? 'Import folyamatban…' : 'Import kész' }}
+                </span>
+                <span class="text-xs text-muted">
+                    {{ importStatus.processed }} / {{ importStatus.total }}
+                    <template v-if="importStatus.skipped">· {{ importStatus.skipped }} kihagyva</template>
+                    <template v-if="importStatus.failed">· {{ importStatus.failed }} hiba</template>
+                </span>
+            </div>
+            <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2">
+                <div
+                    class="h-full rounded-full bg-accent transition-all duration-500"
+                    :style="{ width: Math.min(100, Math.round((importStatus.processed / Math.max(1, importStatus.total)) * 100)) + '%' }"
+                ></div>
+            </div>
+            <p v-if="!importStatus.running" class="mt-2 text-xs text-muted">
+                {{ importStatus.imported }} média importálva — a feldolgozás (thumbnail, vízjel) a háttérben fut, frissítsd az oldalt pár perc múlva.
+            </p>
+        </div>
 
         <!-- 4. Media grid -->
         <div class="mt-8">

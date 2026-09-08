@@ -113,6 +113,25 @@ return [
         ],
 
         /*
+         * R2 „drop zone" a tömeges importhoz (App\Services\FtpImport, ha
+         * MEDIA_IMPORT_DISK=r2_import). Ide rclone-nal / S3-klienssel feltöltöd a
+         * teljes méretű eredetiket mappákba, az admin az eseményhez importálja.
+         * Külön bucket, hogy ne keveredjen a feldolgozott archívval.
+         */
+        'r2_import' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => env('R2_DEFAULT_REGION', 'auto'),
+            'bucket' => env('R2_IMPORT_BUCKET'),
+            'endpoint' => env('R2_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
+        /*
          * Tavoli NAS (SFTP): a teljes felbontasu eredeti kepek/videok es a
          * megvasarolt letoltheto JPEG/WebP/MP4 verziok itt taroldnak, hogy a
          * webhosting tarhelyet ne a nagy (5-10+ MB-os) fajlok fogyasszak.

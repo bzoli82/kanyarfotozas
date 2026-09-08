@@ -313,6 +313,7 @@ Route::middleware(['auth', 'role:superadmin|admin|photographer', '2fa'])->prefix
     Route::post('/events/{event}/media/bulk-delete', [MediaController::class, 'bulkDestroy'])->name('events.media.bulk-delete');
     Route::get('/media-import/browse', [MediaImportController::class, 'browse'])->name('media-import.browse');
     Route::post('/events/{event}/import', [MediaImportController::class, 'store'])->name('events.import.store');
+    Route::get('/events/{event}/import/status', [MediaImportController::class, 'status'])->name('events.import.status');
     Route::patch('/media/{media}', [MediaController::class, 'update'])->name('media.update');
     Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
 });

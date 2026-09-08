@@ -54,7 +54,7 @@ class MediaDeleter
         rescue(fn () => $public->deleteDirectory("hls/{$media->id}"), report: false);
 
         if ($deleteImportSource && filled($media->import_source_path)) {
-            rescue(fn () => Storage::disk(FtpImport::DISK)->delete($media->import_source_path), report: false);
+            rescue(fn () => Storage::disk(FtpImport::disk())->delete($media->import_source_path), report: false);
         }
 
         $media->delete();

@@ -46,6 +46,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Tömeges import forrás-disk (App\Services\FtpImport)
+    |--------------------------------------------------------------------------
+    |
+    | Melyik diskről olvas az esemény-oldali „Beolvasás tárolóból" böngésző:
+    |   nas       : SFTP fájlszerver (a `NasConnection` kulcsaival)
+    |   r2_import : dedikált Cloudflare R2 „drop zone" bucket (S3) — ide rclone-nal
+    |               vagy bármely S3-klienssel feltöltöd a mappákat, majd az admin
+    |               egy kattintással az eseményhez importálja az egészet
+    |   local     : a szerver egy helyi mappája (`storage/app/private` alatt)
+    |
+    | 100+ fájlnál az import a `imports` queue-n, batch job-ban fut, folyamatjelzővel.
+    |
+    */
+
+    'import_disk' => env('MEDIA_IMPORT_DISK', 'nas'),
+
+    // Egy import-batch egy chunk-jában feldolgozott „egység" (kép vagy videó-hármas).
+    'import_chunk_size' => (int) env('MEDIA_IMPORT_CHUNK_SIZE', 100),
+
+    // E fölött a fájlszám fölött az import a háttérben (queue batch) fut, alatta azonnal.
+    'import_inline_max' => (int) env('MEDIA_IMPORT_INLINE_MAX', 25),
+
+    // Egy import-hívásban feldolgozott fájlok abszolút felső korlátja.
+    'import_hard_cap' => (int) env('MEDIA_IMPORT_HARD_CAP', 20000),
+
+    /*
+    |--------------------------------------------------------------------------
     | HLS streaming (EPIC-16)
     |--------------------------------------------------------------------------
     |
