@@ -39,6 +39,10 @@ jobs:
       DB_DATABASE: kanyarfotozas_test
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
+      # A teszt-futáshoz ne kelljen cache/session/jobs tábla (phpunit.xml is ezt állítja).
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
 
     steps:
       - uses: actions/checkout@v4
