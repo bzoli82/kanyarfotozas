@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
 import EventSearchPanel from '@/Components/EventSearchPanel.vue';
+import PaymentLogos from '@/Components/PaymentLogos.vue';
 import { useI18n } from '@/Composables/useI18n';
 import { useMediaUrl } from '@/Composables/useMediaUrl';
 
@@ -76,6 +77,7 @@ async function loadRecentEvents() {
             mediaCount: event.media_count,
             date: event.event_date ?? '',
             cover: event.cover_thumbnail_s3_key,
+            comingSoon: event.status === 'announced',
         }));
     } catch (e) {
         recentEvents.value = [];
@@ -179,7 +181,8 @@ const stats = computed(() => [
                         v-for="ev in recentEvents"
                         :key="ev.slug"
                         :href="`/events/${ev.slug}`"
-                        class="group overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-1"
+                        class="group overflow-hidden rounded-[var(--radius-base)] border bg-surface-1 transition-colors"
+                        :class="ev.comingSoon ? 'border-accent/50' : 'border-border'"
                     >
                         <div class="relative aspect-[4/3] overflow-hidden bg-surface-2">
                             <img
@@ -189,17 +192,26 @@ const stats = computed(() => [
                                 decoding="async"
                                 alt=""
                                 class="h-full w-full object-cover"
+                                :class="{ 'opacity-60': ev.comingSoon }"
                             />
                             <div v-else class="absolute inset-0 grid place-items-center text-border">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 8h3l2-2h6l2 2h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg>
                             </div>
-                            <span class="absolute left-2.5 top-2.5 rounded bg-black/60 px-2 py-1 text-[10px] font-semibold text-white/90">
+                            <span
+                                v-if="ev.comingSoon"
+                                class="absolute left-2.5 top-2.5 rounded bg-accent px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white"
+                            >
+                                {{ t('home.recent.coming_soon') }}
+                            </span>
+                            <span v-else class="absolute left-2.5 top-2.5 rounded bg-black/60 px-2 py-1 text-[10px] font-semibold text-white/90">
                                 {{ ev.date }}
                             </span>
                         </div>
                         <div class="p-3">
                             <h3 class="text-sm font-semibold text-content group-hover:text-accent">{{ ev.name }}</h3>
-                            <p class="text-xs text-muted">{{ ev.location }} · {{ t('home.recent.media_count', { count: ev.mediaCount }) }}</p>
+                            <p class="text-xs text-muted">
+                                {{ ev.location }}<template v-if="!ev.comingSoon"> · {{ t('home.recent.media_count', { count: ev.mediaCount }) }}</template>
+                            </p>
                         </div>
                     </Link>
                 </div>
@@ -265,7 +277,7 @@ const stats = computed(() => [
                     <div
                         v-for="card in [
                             { t: t('home.pay.no_reg_title'), d: t('home.pay.no_reg_desc') },
-                            { t: t('home.pay.secure_title'), d: t('home.pay.secure_desc') },
+                            { t: t('home.pay.secure_title'), d: t('home.pay.secure_desc'), logos: true },
                             { t: t('home.pay.link_title'), d: t('home.pay.link_desc') },
                         ]"
                         :key="card.t"
@@ -273,6 +285,7 @@ const stats = computed(() => [
                     >
                         <h3 class="text-sm font-semibold text-content">{{ card.t }}</h3>
                         <p class="mt-1 text-sm text-muted">{{ card.d }}</p>
+                        <PaymentLogos v-if="card.logos" class="mt-3" />
                     </div>
                 </div>
             </div>

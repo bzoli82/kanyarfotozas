@@ -68,7 +68,7 @@ function setLocale(code) {
                         :key="item.href"
                         :href="item.href"
                         :aria-current="page.url === item.href ? 'page' : undefined"
-                        class="text-[13px] font-medium uppercase tracking-wide text-content/80 transition-colors hover:text-content aria-[current=page]:text-accent"
+                        class="inline-block text-[13px] font-medium uppercase tracking-wide text-content/80 transition duration-300 ease-out hover:text-accent active:scale-90 motion-reduce:transition-none motion-reduce:active:scale-100 aria-[current=page]:text-accent"
                     >
                         {{ item.label }}
                     </Link>
