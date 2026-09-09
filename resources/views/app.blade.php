@@ -6,7 +6,11 @@
     data-anim="{{ $anim->enabled() ? 'on' : 'off' }}"
     data-anim-page="{{ $anim->enabled() ? $anim->pageTransition() : 'none' }}"
     data-anim-cards="{{ $anim->enabled() ? $anim->cards() : 'none' }}"
-    data-anim-reveal="{{ $anim->enabled() && $anim->scrollReveal() ? 'on' : 'off' }}">
+    data-anim-reveal="{{ $anim->enabled() && $anim->scrollReveal() ? 'on' : 'off' }}"
+    data-anim-header="{{ $anim->enabled() && $anim->frostedHeader() ? 'on' : 'off' }}"
+    data-anim-progress="{{ $anim->enabled() && $anim->progressBar() ? 'on' : 'off' }}"
+    data-anim-imgfade="{{ $anim->enabled() && $anim->imageFade() ? 'on' : 'off' }}"
+    data-anim-grain="{{ $anim->enabled() && $anim->heroGrain() ? 'on' : 'off' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

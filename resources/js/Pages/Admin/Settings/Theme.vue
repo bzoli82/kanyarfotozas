@@ -31,6 +31,10 @@ const form = useForm({
     anim_cards: props.animation.cards,
     anim_reveal: props.animation.reveal,
     anim_counters: props.animation.counters,
+    anim_header: props.animation.header,
+    anim_progress: props.animation.progress,
+    anim_imgfade: props.animation.imgfade,
+    anim_grain: props.animation.grain,
 });
 
 // Animáció-előnézet: a kiválasztott (még nem mentett) stílus numerikus értékei.
@@ -300,6 +304,24 @@ function previewVars(palette) {
                         <label class="flex items-center gap-2 text-xs text-content">
                             <input v-model="form.anim_counters" type="checkbox" class="accent-[var(--color-accent)]" />
                             Statisztika-számlálók (0-ról felszámolnak)
+                        </label>
+
+                        <span class="block pt-1 text-[10px] font-semibold uppercase tracking-wide text-muted">Finomítások</span>
+                        <label class="flex items-center gap-2 text-xs text-content">
+                            <input v-model="form.anim_header" type="checkbox" class="accent-[var(--color-accent)]" />
+                            Fejléc: görgetéskor átlátszóból tömör, elmosott sávvá válik
+                        </label>
+                        <label class="flex items-center gap-2 text-xs text-content">
+                            <input v-model="form.anim_progress" type="checkbox" class="accent-[var(--color-accent)]" />
+                            Görgetés-jelző csík a lap tetején
+                        </label>
+                        <label class="flex items-center gap-2 text-xs text-content">
+                            <input v-model="form.anim_imgfade" type="checkbox" class="accent-[var(--color-accent)]" />
+                            Képek előúsznak betöltéskor (nem villannak be)
+                        </label>
+                        <label class="flex items-center gap-2 text-xs text-content">
+                            <input v-model="form.anim_grain" type="checkbox" class="accent-[var(--color-accent)]" />
+                            Hero: finom filmszemcse + „görgess" nyíl
                         </label>
 
                         <div class="rounded-md border border-border bg-surface-2 p-3">

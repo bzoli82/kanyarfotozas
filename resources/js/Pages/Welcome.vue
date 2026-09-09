@@ -17,6 +17,7 @@ const heroMode = computed(() => (anim.value.enabled ? anim.value.hero : 'none'))
 const heroFull = computed(() => heroMode.value === 'full');
 const kenBurns = computed(() => heroMode.value !== 'none');
 const countersOn = computed(() => anim.value.enabled && anim.value.counters);
+const grainOn = computed(() => anim.value.enabled && anim.value.grain !== false);
 
 const props = defineProps({
     // [{ type: 'image'|'video', url, poster }] — admin: /admin/settings/hero
@@ -184,6 +185,11 @@ const stats = computed(() => [
                 <div class="absolute inset-x-0 bottom-1/3 h-px bg-white/10"></div>
                 <div class="absolute inset-0 bg-gradient-to-t from-surface-0 via-surface-0/40 to-transparent"></div>
                 <div class="absolute inset-0 bg-gradient-to-r from-surface-0/90 via-surface-0/20 to-transparent"></div>
+
+                <div v-if="grainOn" class="hero-grain pointer-events-none absolute inset-0"></div>
+                <div v-if="grainOn" class="pointer-events-none absolute bottom-8 right-6 hidden text-white/45 sm:block">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-bounce"><path d="m6 9 6 6 6-6" /></svg>
+                </div>
 
                 <div class="relative mx-auto flex h-full max-w-7xl flex-col justify-end px-4 pb-40 sm:px-6 lg:px-8">
                     <h1 class="font-display max-w-xl text-[36px] font-bold uppercase leading-[0.95] tracking-tight text-content sm:text-[48px] lg:text-[56px]">
@@ -361,6 +367,11 @@ const stats = computed(() => [
 <style scoped>
 .hero-slide {
     transform: scale(1.05);
+}
+.hero-grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.07;
+    mix-blend-mode: overlay;
 }
 /* Parallax: a scroll a hero-média object-position-jét tolja (Welcome.vue onParallaxScroll) */
 #hero .hero-slide,

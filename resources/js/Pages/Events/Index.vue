@@ -76,6 +76,7 @@ function formatDate(value) {
                         <div class="relative aspect-[4/3] overflow-hidden bg-surface-2">
                             <img
                                 v-if="event.cover_thumbnail_s3_key"
+                                v-imgfade
                                 :src="mediaUrl(event.cover_thumbnail_s3_key)"
                                 loading="lazy"
                                 decoding="async"

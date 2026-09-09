@@ -126,6 +126,7 @@ function toggleCollection() {
                 </div>
                 <img
                     v-if="media.thumbnail_s3_key"
+                    v-imgfade
                     :src="mediaUrl(media.thumbnail_s3_key)"
                     class="hover-card__media h-full w-full object-cover"
                     :class="{ invisible: isHovering && media.type === 'video' && canHoverPreview }"

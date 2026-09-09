@@ -8,6 +8,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { useThemeStore } from '@/Stores/theme';
 import reveal from '@/directives/reveal';
 import tilt from '@/directives/tilt';
+import imgfade from '@/directives/imgfade';
 
 /**
  * Elavult build utáni chunk-hiba kezelése. Ha a felhasználó tabja nyitva marad
@@ -61,6 +62,7 @@ createInertiaApp({
 
         app.directive('reveal', reveal);
         app.directive('tilt', tilt);
+        app.directive('imgfade', imgfade);
 
         app.mount(el);
 

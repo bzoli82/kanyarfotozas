@@ -83,6 +83,26 @@ class AnimationSettings
         return (bool) SiteSetting::get('anim_counters', true);
     }
 
+    public function frostedHeader(): bool
+    {
+        return (bool) SiteSetting::get('anim_header', true);
+    }
+
+    public function progressBar(): bool
+    {
+        return (bool) SiteSetting::get('anim_progress', true);
+    }
+
+    public function imageFade(): bool
+    {
+        return (bool) SiteSetting::get('anim_imgfade', true);
+    }
+
+    public function heroGrain(): bool
+    {
+        return (bool) SiteSetting::get('anim_grain', true);
+    }
+
     /**
      * A választott stílus numerikus értékei — az app.blade.php CSS custom
      * property-ként injektálja. Kikapcsolt animációnál minden 0 (= azonnali).
@@ -119,6 +139,10 @@ class AnimationSettings
             'cards' => $this->cards(),
             'reveal' => $this->scrollReveal(),
             'counters' => $this->counters(),
+            'header' => $this->frostedHeader(),
+            'progress' => $this->progressBar(),
+            'imgfade' => $this->imageFade(),
+            'grain' => $this->heroGrain(),
         ];
     }
 
@@ -157,6 +181,10 @@ class AnimationSettings
             'anim_cards' => ['sometimes', Rule::in(self::CARD_MODES)],
             'anim_reveal' => ['sometimes', 'boolean'],
             'anim_counters' => ['sometimes', 'boolean'],
+            'anim_header' => ['sometimes', 'boolean'],
+            'anim_progress' => ['sometimes', 'boolean'],
+            'anim_imgfade' => ['sometimes', 'boolean'],
+            'anim_grain' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -165,7 +193,7 @@ class AnimationSettings
      */
     public function update(array $data): void
     {
-        foreach (['anim_enabled', 'anim_reveal', 'anim_counters'] as $key) {
+        foreach (['anim_enabled', 'anim_reveal', 'anim_counters', 'anim_header', 'anim_progress', 'anim_imgfade', 'anim_grain'] as $key) {
             if (array_key_exists($key, $data)) {
                 SiteSetting::set($key, $data[$key] ? '1' : '0');
             }

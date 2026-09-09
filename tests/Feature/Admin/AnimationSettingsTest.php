@@ -31,6 +31,10 @@ class AnimationSettingsTest extends TestCase
         $this->assertSame('lift', $anim->cards());
         $this->assertTrue($anim->scrollReveal());
         $this->assertTrue($anim->counters());
+        $this->assertTrue($anim->frostedHeader());
+        $this->assertTrue($anim->progressBar());
+        $this->assertTrue($anim->imageFade());
+        $this->assertTrue($anim->heroGrain());
         $this->assertSame('480ms', $anim->resolvedVars()['--anim-duration']);
     }
 
@@ -61,6 +65,10 @@ class AnimationSettingsTest extends TestCase
             'anim_cards' => 'tilt',
             'anim_reveal' => false,
             'anim_counters' => true,
+            'anim_header' => false,
+            'anim_progress' => false,
+            'anim_imgfade' => false,
+            'anim_grain' => false,
         ])->assertRedirect();
 
         $anim = app(AnimationSettings::class);
@@ -69,6 +77,8 @@ class AnimationSettingsTest extends TestCase
         $this->assertSame('none', $anim->hero());
         $this->assertSame('tilt', $anim->cards());
         $this->assertFalse($anim->scrollReveal());
+        $this->assertFalse($anim->frostedHeader());
+        $this->assertFalse($anim->heroGrain());
         $this->assertSame('720ms', $anim->resolvedVars()['--anim-duration']);
     }
 

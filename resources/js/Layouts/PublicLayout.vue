@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { useCartStore } from '@/Stores/cart';
 import { useCollectionStore } from '@/Stores/collection';
@@ -49,11 +49,46 @@ function setLocale(code) {
     if (code === locale.value) return;
     router.put(`/locale/${code}`, {}, { preserveScroll: true });
 }
+
+// Fejléc-fátyolüveg görgetéskor + görgetés-jelző csík (AnimationSettings kapcsolók).
+const ds = typeof document !== 'undefined' ? document.documentElement.dataset : {};
+const frostedHeaderOn = computed(() => props.transparentHeader && ds.animHeader !== 'off');
+const progressOn = computed(() => ds.animProgress !== 'off');
+const scrolled = ref(false);
+const scrollPct = ref(0);
+let scrollRaf = null;
+
+function onScroll() {
+    if (scrollRaf) return;
+    scrollRaf = requestAnimationFrame(() => {
+        scrollRaf = null;
+        scrolled.value = window.scrollY > 40;
+        const h = document.documentElement.scrollHeight - window.innerHeight;
+        scrollPct.value = h > 0 ? Math.min(100, (window.scrollY / h) * 100) : 0;
+    });
+}
+
+onMounted(() => {
+    if (frostedHeaderOn.value || progressOn.value) {
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+    }
+});
+onBeforeUnmount(() => {
+    window.removeEventListener('scroll', onScroll);
+    if (scrollRaf) cancelAnimationFrame(scrollRaf);
+});
 </script>
 
 <template>
     <div class="min-h-screen flex flex-col bg-surface-0">
         <SeoHead />
+        <div
+            v-if="progressOn"
+            class="fixed left-0 top-0 z-[60] h-[2px] bg-accent"
+            :style="{ width: scrollPct + '%' }"
+            aria-hidden="true"
+        ></div>
         <a
             href="#main"
             class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
@@ -63,7 +98,9 @@ function setLocale(code) {
         <header
             class="z-40 w-full"
             :class="transparentHeader
-                ? 'absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 via-black/30 to-transparent'
+                ? (frostedHeaderOn
+                    ? ['fixed inset-x-0 top-0 transition-colors duration-300', scrolled ? 'border-b border-border/80 bg-surface-0/85 shadow-lg shadow-black/10 backdrop-blur' : 'bg-gradient-to-b from-black/70 via-black/30 to-transparent']
+                    : 'absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 via-black/30 to-transparent')
                 : 'sticky top-0 border-b border-border/80 bg-surface-0/90 backdrop-blur'"
         >
             <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
