@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
-use App\Models\SiteSetting;
 use App\Models\User;
+use App\Services\PhotographerVisibility;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,9 +19,9 @@ use Inertia\Response;
  */
 class PhotographerController extends Controller
 {
-    public function index(): Response
+    public function index(PhotographerVisibility $visibility): Response
     {
-        $contactsPublic = (bool) SiteSetting::get('photographer_contacts_public', false);
+        $contactsPublic = $visibility->contactsPublic();
 
         $team = User::query()
             ->whereIn('role', [User::ROLE_PHOTOGRAPHER, User::ROLE_ADMIN, User::ROLE_SUPERADMIN])

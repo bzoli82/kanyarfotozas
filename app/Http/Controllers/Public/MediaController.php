@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\MediaResource;
 use App\Models\Media;
 use App\Services\CaptchaSettings;
+use App\Services\PhotographerVisibility;
 use App\Support\FormGuard;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,11 +17,12 @@ class MediaController extends Controller
     /**
      * Media reszlet oldal (/media/{media}) — nagy elonezet, ar, kosarba gomb.
      */
-    public function show(Request $request, Media $media, FormGuard $guard, CaptchaSettings $captcha): Response
+    public function show(Request $request, Media $media, FormGuard $guard, CaptchaSettings $captcha, PhotographerVisibility $visibility): Response
     {
         abort_unless($media->isReady(), 404);
 
-        $media->load(['event.country', 'photographer']);
+        $attributionPublic = $visibility->attributionPublic();
+        $media->load(array_filter(['event.country', $attributionPublic ? 'photographer' : null]));
 
         $nearby = Media::query()
             ->where('event_id', $media->event_id)
@@ -46,7 +48,7 @@ class MediaController extends Controller
                     'flag_emoji' => $media->event->country->flag_emoji,
                 ] : null,
             ],
-            'photographer' => $media->photographer ? [
+            'photographer' => $attributionPublic && $media->photographer ? [
                 'id' => $media->photographer->id,
                 'name' => $media->photographer->name,
             ] : null,

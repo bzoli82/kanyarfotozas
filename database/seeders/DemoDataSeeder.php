@@ -121,8 +121,9 @@ class DemoDataSeeder extends Seeder
             }
         }
 
-        // A demóban látszódjanak a fotós-elérhetőségek (éles alap: KI — anti-disintermediation).
+        // A demóban látszódjon minden fotós-adat (éles alap: contacts KI, attribution BE).
         SiteSetting::set('photographer_contacts_public', '1');
+        SiteSetting::set('photographer_attribution_public', '1');
 
         // Cég szintű közösségi média linkek (a Kapcsolat oldal „Kövess minket" + a lábléc) —
         // demó/placeholder URL-ek, hogy a szekció ne tűnjön el egy friss telepítés után.

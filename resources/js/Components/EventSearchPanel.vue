@@ -9,6 +9,8 @@ const { t } = useI18n();
 // GPS sugaras keresés (PostGIS) — adminból kikapcsolható; ekkor a GPS fül és a
 // térkép „Keress itt" gombja eltűnik, marad a helyszínnév / ország / dátum keresés.
 const geoSearchEnabled = computed(() => !!usePage().props.geoSearch);
+// Fotós-szűrő — a superadmin kikapcsolhatja (fotós-attribúció rejtése).
+const photographerSearchEnabled = computed(() => usePage().props.photographerSearch !== false);
 
 const props = defineProps({
     // A jelenlegi /events szűrők (előtöltéshez), pl. a controller `filters` propja.
@@ -36,6 +38,7 @@ const locationsLoading = ref(false);
 const locationDropdownOpen = ref(false);
 
 async function loadPhotographers() {
+    if (!photographerSearchEnabled.value) return;
     try {
         const res = await fetch('/api/photographers');
         photographers.value = (await res.json()).data ?? [];
@@ -319,7 +322,7 @@ function submitSearch() {
                     </span>
                     <input v-model="search.dateFrom" type="date" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
                 </label>
-                <label class="block">
+                <label v-if="photographerSearchEnabled" class="block">
                     <span class="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6" /></svg>
                         {{ t('home.search.photographer') }}

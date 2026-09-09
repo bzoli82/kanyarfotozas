@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class EventSearch
 {
-    public function __construct(private GeoSearchSettings $geoSearch) {}
+    public function __construct(private GeoSearchSettings $geoSearch, private PhotographerVisibility $visibility) {}
 
     /**
      * @param  array{location?: string, countries?: array<string>, date_from?: string, date_to?: string, type?: string, photographer_id?: string, lat?: float, lon?: float, radius?: float}  $filters
@@ -53,7 +53,7 @@ class EventSearch
                 ->where('status', Media::STATUS_READY));
         }
 
-        if (filled($filters['photographer_id'] ?? null)) {
+        if (filled($filters['photographer_id'] ?? null) && $this->visibility->attributionPublic()) {
             $query->whereHas('media', fn ($q) => $q
                 ->where('photographer_id', $filters['photographer_id'])
                 ->where('status', Media::STATUS_READY));

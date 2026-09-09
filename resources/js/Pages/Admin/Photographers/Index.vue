@@ -9,13 +9,20 @@ const props = defineProps({
     filters: Object,
     payoutTotals: { type: Object, default: () => ({ outstanding_cents: 0, paid_cents: 0 }) },
     contactsPublic: { type: Boolean, default: false },
+    attributionPublic: { type: Boolean, default: true },
 });
 
 const contactsForm = useForm({ contacts_public: props.contactsPublic });
+const attributionForm = useForm({ attribution_public: props.attributionPublic });
 
 function toggleContacts() {
     contactsForm.contacts_public = !props.contactsPublic;
     contactsForm.put('/admin/photographers/settings', { preserveScroll: true });
+}
+
+function toggleAttribution() {
+    attributionForm.attribution_public = !props.attributionPublic;
+    attributionForm.put('/admin/photographers/settings', { preserveScroll: true });
 }
 
 const search = ref(props.filters?.search ?? '');
@@ -72,26 +79,47 @@ function roleLabel(role) {
             </button>
         </div>
 
-        <!-- Nyilvános elérhetőségek kapcsoló (csak superadmin) -->
-        <div class="mt-4 flex flex-wrap items-start justify-between gap-3 rounded-[var(--radius-base)] border border-border bg-surface-1 p-4">
-            <div class="max-w-xl">
-                <p class="text-sm font-semibold text-content">Fotós-elérhetőségek a nyilvános „Fotósok" oldalon</p>
-                <p class="mt-1 text-xs text-muted">
-                    Ha bekapcsolod, a fotósok céges e-mailje, weboldala és közösségi linkjei megjelennek a
-                    <a href="/photographers" target="_blank" class="text-accent hover:underline">Fotósaink</a> oldalon.
-                    <strong class="text-content">Kikapcsolva</strong> csak a profilkép, a név és a bemutatkozó látszik —
-                    így a vásárló nem tudja megkerülni az oldalt a fotós közvetlen megkeresésével.
-                </p>
+        <!-- Nyilvános fotós-láthatóság kapcsolók (csak superadmin) — anti-disintermediation -->
+        <div class="mt-4 space-y-3 rounded-[var(--radius-base)] border border-border bg-surface-1 p-4">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div class="max-w-xl">
+                    <p class="text-sm font-semibold text-content">Fotós-elérhetőségek a nyilvános „Fotósok" oldalon</p>
+                    <p class="mt-1 text-xs text-muted">
+                        Ha bekapcsolod, a fotósok céges e-mailje, weboldala és közösségi linkjei megjelennek a
+                        <a href="/photographers" target="_blank" class="text-accent hover:underline">Fotósaink</a> oldalon.
+                        <strong class="text-content">Kikapcsolva</strong> csak a profilkép, a név és a bemutatkozó látszik.
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    :disabled="contactsForm.processing"
+                    class="shrink-0 rounded-lg px-4 py-2 text-xs font-semibold uppercase tracking-wide"
+                    :class="contactsPublic ? 'bg-accent text-white hover:bg-accent-hover' : 'border border-border text-content hover:border-accent'"
+                    @click="toggleContacts"
+                >
+                    {{ contactsPublic ? '● Megjelennek' : '○ Rejtve' }}
+                </button>
             </div>
-            <button
-                type="button"
-                :disabled="contactsForm.processing"
-                class="shrink-0 rounded-lg px-4 py-2 text-xs font-semibold uppercase tracking-wide"
-                :class="contactsPublic ? 'bg-accent text-white hover:bg-accent-hover' : 'border border-border text-content hover:border-accent'"
-                @click="toggleContacts"
-            >
-                {{ contactsPublic ? '● Megjelennek' : '○ Rejtve' }}
-            </button>
+
+            <div class="flex flex-wrap items-start justify-between gap-3 border-t border-border pt-3">
+                <div class="max-w-xl">
+                    <p class="text-sm font-semibold text-content">Fotós neve a képeknél + a kereső fotós-szűrője</p>
+                    <p class="mt-1 text-xs text-muted">
+                        Bekapcsolva a galériában / média-oldalon látszik, ki készítette a képet, és a kereső „Fotós" mezőjében rá lehet szűrni.
+                        <strong class="text-content">Kikapcsolva</strong> a képek névtelenül jelennek meg és a fotós-szűrő eltűnik —
+                        így a vásárló nem tudja, kit keressen az oldal megkerüléséhez. (A „Kérdés a fotóshoz" űrlap marad, az az oldalon keresztül megy.)
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    :disabled="attributionForm.processing"
+                    class="shrink-0 rounded-lg px-4 py-2 text-xs font-semibold uppercase tracking-wide"
+                    :class="attributionPublic ? 'bg-accent text-white hover:bg-accent-hover' : 'border border-border text-content hover:border-accent'"
+                    @click="toggleAttribution"
+                >
+                    {{ attributionPublic ? '● Látszik' : '○ Rejtve' }}
+                </button>
+            </div>
         </div>
 
         <form v-if="showInviteForm" class="mt-4 grid gap-3 rounded-[var(--radius-base)] border border-border bg-surface-1 p-4 sm:grid-cols-2 lg:grid-cols-4" @submit.prevent="sendInvite">

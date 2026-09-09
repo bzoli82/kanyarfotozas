@@ -133,7 +133,7 @@ async function submitAsk() {
                             </button>
                         </div>
 
-                        <div v-if="photographer && contactGuard" class="mt-4 rounded-[var(--radius-base)] border border-border bg-surface-1 p-4">
+                        <div v-if="contactGuard" class="mt-4 rounded-[var(--radius-base)] border border-border bg-surface-1 p-4">
                             <p v-if="askForm.recentlySuccessful" class="text-sm text-accent">{{ t('media.ask_photographer_sent') }}</p>
                             <template v-else>
                                 <button

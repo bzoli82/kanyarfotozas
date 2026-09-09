@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Services\GeoSearchSettings;
 use App\Services\MediaStorage;
+use App\Services\PhotographerVisibility;
 use App\Services\Seo;
 use App\Services\SiteBranding;
 use App\Services\SocialLinks;
@@ -58,6 +59,7 @@ class HandleInertiaRequests extends Middleware
             // GPS sugaras helyszín-keresés (PostGIS-igényes) — a kereső-panel + a
             // térkép-modal ez alapján mutatja/rejti a GPS fület és a „Keress itt" gombot.
             'geoSearch' => fn () => app(GeoSearchSettings::class)->enabled(),
+            'photographerSearch' => fn () => app(PhotographerVisibility::class)->attributionPublic(),
             'auth' => [
                 'user' => $request->user()
                     ? $request->user()->only('id', 'name', 'email', 'role')

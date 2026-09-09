@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\MediaResource;
 use App\Models\Event;
 use App\Models\Media;
+use App\Services\PhotographerVisibility;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class EventController extends Controller
 {
+    public function __construct(private PhotographerVisibility $visibility) {}
+
     /**
      * Nyilvanos, szurheto esemeny lista.
      *
@@ -22,7 +25,7 @@ class EventController extends Controller
     {
         $countryCodes = array_filter((array) $request->query('countries', []));
 
-        $photographerId = $request->string('photographer_id')->value() ?: null;
+        $photographerId = $this->visibility->attributionPublic() ? ($request->string('photographer_id')->value() ?: null) : null;
         $type = in_array($request->query('type'), [Media::TYPE_PHOTO, Media::TYPE_VIDEO], true) ? $request->query('type') : null;
 
         // A markereken a szűrésnek megfelelő médiaszám látszik.
@@ -84,7 +87,7 @@ class EventController extends Controller
         $shotTo = $request->string('shot_to')->value();
 
         $mediaQuery = $event->media()
-            ->with('photographer:id,name')
+            ->when($this->visibility->attributionPublic(), fn ($q) => $q->with('photographer:id,name'))
             ->where('status', Media::STATUS_READY)
             ->when(in_array($type, ['photo', 'video'], true), fn ($q) => $q->where('type', $type))
             ->when(filled($shotFrom), fn ($q) => $q->whereTime('shot_at', '>=', $shotFrom))
@@ -126,7 +129,7 @@ class EventController extends Controller
         $to = $reference->shot_at->copy()->addMinutes($window);
 
         $media = $event->media()
-            ->with('photographer:id,name')
+            ->when($this->visibility->attributionPublic(), fn ($q) => $q->with('photographer:id,name'))
             ->where('status', Media::STATUS_READY)
             ->whereKeyNot($reference->id)
             ->whereBetween('shot_at', [$from, $to])

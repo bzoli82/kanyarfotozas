@@ -7,12 +7,12 @@ use App\Mail\PhotographerInvitationMail;
 use App\Mail\TemporaryPasswordMail;
 use App\Models\Invitation;
 use App\Models\Media;
-use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\DashboardStatsService;
 use App\Services\ImageProcessingService;
 use App\Services\MediaStorage;
 use App\Services\PhotographerPayoutService;
+use App\Services\PhotographerVisibility;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -87,24 +87,32 @@ class PhotographerController extends Controller
                 'outstanding_cents' => (int) $payoutSummary->sum('outstanding_cents'),
                 'paid_cents' => (int) $payoutSummary->sum('total_paid_cents'),
             ],
-            'contactsPublic' => (bool) SiteSetting::get('photographer_contacts_public', false),
+            'contactsPublic' => app(PhotographerVisibility::class)->contactsPublic(),
+            'attributionPublic' => app(PhotographerVisibility::class)->attributionPublic(),
         ]);
     }
 
     /**
-     * A fotósok nyilvános elérhetőségeinek megjelenítése a „Fotósok" oldalon
-     * (céges e-mail / weboldal / közösségi linkek). Alap: KI — hogy a vásárló ne
-     * tudja megkerülni az oldalt a fotós közvetlen megkeresésével.
+     * A nyilvános fotós-láthatóság két kapcsolója (anti-disintermediation):
+     *  - contacts_public: a „Fotósok" oldalon látszanak-e az elérhetőségek (alap: KI)
+     *  - attribution_public: a kép-szintű „Fotós: X" + az esemény-kereső fotós-szűrője (alap: BE)
      */
-    public function updateSettings(Request $request): RedirectResponse
+    public function updateSettings(Request $request, PhotographerVisibility $visibility): RedirectResponse
     {
-        $data = $request->validate(['contacts_public' => ['required', 'boolean']]);
+        $data = $request->validate([
+            'contacts_public' => ['sometimes', 'boolean'],
+            'attribution_public' => ['sometimes', 'boolean'],
+        ]);
 
-        SiteSetting::set('photographer_contacts_public', $data['contacts_public'] ? '1' : '0');
+        if (array_key_exists('contacts_public', $data)) {
+            $visibility->setContactsPublic($data['contacts_public']);
+        }
 
-        return back()->with('success', $data['contacts_public']
-            ? 'A fotósok elérhetőségei mostantól megjelennek a nyilvános „Fotósok" oldalon.'
-            : 'A fotósok elérhetőségei rejtve — csak a profilkép, név és bemutatkozó látszik.');
+        if (array_key_exists('attribution_public', $data)) {
+            $visibility->setAttributionPublic($data['attribution_public']);
+        }
+
+        return back()->with('success', 'Fotós-láthatóság elmentve.');
     }
 
     private function revenueFor(string $userId): int

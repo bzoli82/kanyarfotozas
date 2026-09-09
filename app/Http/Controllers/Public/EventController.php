@@ -7,6 +7,7 @@ use App\Http\Resources\MediaResource;
 use App\Models\Event;
 use App\Models\Media;
 use App\Services\EventSearch;
+use App\Services\PhotographerVisibility;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -46,7 +47,7 @@ class EventController extends Controller
     /**
      * Esemeny galeria (/events/{slug}) — vegyes kep+video tartalom, tipus/idopont szures.
      */
-    public function show(Request $request, Event $event): Response
+    public function show(Request $request, Event $event, PhotographerVisibility $visibility): Response
     {
         abort_unless(in_array($event->status, [Event::STATUS_LIVE, Event::STATUS_ANNOUNCED], true), 404);
 
@@ -63,7 +64,7 @@ class EventController extends Controller
         $shotTo = $request->string('shot_to')->value();
 
         $mediaQuery = $event->media()
-            ->with('photographer:id,name')
+            ->when($visibility->attributionPublic(), fn ($q) => $q->with('photographer:id,name'))
             ->where('status', Media::STATUS_READY)
             ->when(in_array($type, ['photo', 'video'], true), fn ($q) => $q->where('type', $type))
             ->when(filled($shotFrom), fn ($q) => $q->whereTime('shot_at', '>=', $shotFrom))
