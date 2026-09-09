@@ -46,7 +46,7 @@ async function share(item) {
     }
 
     if (navigator.share) {
-        navigator.share({ url: state.url, title: item.event?.name ?? 'KanyarFotózás' }).catch(() => {});
+        navigator.share({ url: state.url, title: item.event?.name ?? 'RoadsidePhoto' }).catch(() => {});
     } else {
         try {
             await navigator.clipboard.writeText(state.url);

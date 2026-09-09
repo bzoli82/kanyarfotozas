@@ -134,7 +134,7 @@ function submit() {
                 <div class="mt-4 grid gap-3 sm:grid-cols-2">
                     <label class="block">
                         <span class="mb-1 block text-[10px] uppercase tracking-wide text-muted">Céges e-mail</span>
-                        <input v-model="form.public_email" type="email" placeholder="pl. peter@kanyarfotozas.hu" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                        <input v-model="form.public_email" type="email" placeholder="pl. peter@roadsidephoto.com" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
                         <span v-if="form.errors.public_email" class="mt-1 block text-xs text-accent">{{ form.errors.public_email }}</span>
                     </label>
                     <label class="block">

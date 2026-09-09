@@ -1,4 +1,6 @@
-# KanyarFotózás Platform
+# RoadsidePhoto Platform
+
+> **Márkanév:** a látható márka **RoadsidePhoto** (logó: `ROADSIDE` fehér + `PHOTO` accent; vízjel `ROADSIDEPHOTO`) — `App\Services\SiteBranding` defaultjai + a `site_settings`. A **technikai identitás** (artisan `kanyarfotozas:*` parancsnévtér, DB-név, `kanyarfotozas.*` localStorage-kulcsok, R2 bucket alapok, git repo, `site_domain`) egyelőre `kanyarfotozas` — a mély átnevezés a domain megszerzése után jön (`SiteIdentity` motor). A magyar szövegben a „kanyarfotózás" mint **tevékenység-szó** szándékosan marad (HU SEO).
 
 ## Tech stack
 - Backend: Laravel 13 (PHP 8.4), Sanctum-kompatibilis session auth, Spatie Permission, Spatie ActivityLog

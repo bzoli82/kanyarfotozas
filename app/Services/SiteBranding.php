@@ -7,17 +7,17 @@ use App\Models\SiteSetting;
 /**
  * Az oldal neve / márkajele — superadmin szerkeszti a /admin/settings/branding
  * oldalon. Egyetlen forrás: a fejléc logó, az oldalcímek, az e-mailek és a
- * vízjel is innen veszi a nevet (a végleges név még nincs eldöntve).
+ * vízjel is innen veszi a nevet.
  *
  * A kétszínű logó két részből áll: `logoLead` (alap szín) + `logoTail` (akcent).
  */
 class SiteBranding
 {
-    public const DEFAULT_NAME = 'KanyarFotó';
+    public const DEFAULT_NAME = 'RoadsidePhoto';
 
-    public const DEFAULT_LOGO_LEAD = 'KANYAR';
+    public const DEFAULT_LOGO_LEAD = 'ROADSIDE';
 
-    public const DEFAULT_LOGO_TAIL = 'FOTÓS';
+    public const DEFAULT_LOGO_TAIL = 'PHOTO';
 
     public function name(): string
     {

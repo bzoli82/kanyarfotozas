@@ -14,7 +14,7 @@ const hu = {
     sections: [
         {
             title: '1. Az adatkezelő',
-            html: '<p>A KanyarFotózás platformot üzemeltető csapat. Elérhetőség adatvédelmi kérdésekben: a Kapcsolat oldalon.</p>',
+            html: '<p>A RoadsidePhoto platformot üzemeltető csapat. Elérhetőség adatvédelmi kérdésekben: a Kapcsolat oldalon.</p>',
         },
         {
             title: '2. Milyen adatokat kezelünk',
@@ -50,7 +50,7 @@ const en = {
     sections: [
         {
             title: '1. Data controller',
-            html: '<p>The team operating the KanyarFotózás platform. For privacy matters, reach us via the Contact page.</p>',
+            html: '<p>The team operating the RoadsidePhoto platform. For privacy matters, reach us via the Contact page.</p>',
         },
         {
             title: '2. What data we process',

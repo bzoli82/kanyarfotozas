@@ -7,7 +7,7 @@ import { usePage } from '@inertiajs/vue3';
  * shared `branding` prop). `logo_tail` üresen hagyva egyszínű logót ad.
  */
 const page = usePage();
-const branding = computed(() => page.props.branding ?? { logo_lead: 'KANYAR', logo_tail: 'FOTÓS' });
+const branding = computed(() => page.props.branding ?? { logo_lead: 'ROADSIDE', logo_tail: 'PHOTO' });
 </script>
 
 <template>

@@ -41,7 +41,7 @@ window.addEventListener('load', () => {
 });
 
 // Az oldal neve a szerverről jön (Inertia shared `branding` prop, /admin/settings/branding).
-let brandName = import.meta.env.VITE_APP_NAME || 'KanyarFotó';
+let brandName = import.meta.env.VITE_APP_NAME || 'RoadsidePhoto';
 
 createInertiaApp({
     title: (title) => (title ? `${title} — ${brandName}` : brandName),

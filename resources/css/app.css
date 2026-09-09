@@ -6,7 +6,7 @@
 @source './**/*.vue';
 
 /*
- * KanyarFotózás — "Stilus 3: Meresz, split hero" alap tema.
+ * RoadsidePhoto — "Stilus 3: Meresz, split hero" alap tema.
  * A futasi ertekek CSS custom property-kbol jonnek (app.blade.php inline <style>-je es a
  * `data-theme` attributum, lasd resources/js/Stores/theme.js), a @theme csak a Tailwind
  * utility-ket generalja beloluk.

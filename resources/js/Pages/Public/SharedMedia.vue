@@ -6,7 +6,7 @@ import VideoPlayer from '@/Components/VideoPlayer.vue';
 // A `mediaUrl` prop a megosztási link — a média-fájl URL-jét az `assetUrl` helper adja.
 import { mediaUrl as assetUrl } from '@/Composables/useMediaUrl';
 
-const brand = computed(() => usePage().props.branding?.name ?? 'KanyarFotó');
+const brand = computed(() => usePage().props.branding?.name ?? 'RoadsidePhoto');
 
 const props = defineProps({
     media: { type: Object, required: true },

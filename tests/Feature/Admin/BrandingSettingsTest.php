@@ -32,8 +32,8 @@ class BrandingSettingsTest extends TestCase
         $branding = app(SiteBranding::class);
 
         $this->assertSame(SiteBranding::DEFAULT_NAME, $branding->name());
-        $this->assertSame('KANYAR', $branding->logoLead());
-        $this->assertSame('FOTÓS', $branding->logoTail());
+        $this->assertSame('ROADSIDE', $branding->logoLead());
+        $this->assertSame('PHOTO', $branding->logoTail());
     }
 
     public function test_saving_the_name_also_overwrites_the_watermark_text(): void
