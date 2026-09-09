@@ -28,6 +28,8 @@ const nf = new Intl.NumberFormat('hu-HU');
 
 const heroIndex = ref(0);
 const heroVideoEls = ref([]);
+const heroLayer = ref(null);
+let parallaxRaf = null;
 let heroTimer = null;
 
 const reduceMotion = typeof window !== 'undefined'
@@ -55,6 +57,24 @@ function syncHeroVideos() {
 
 watch(heroIndex, syncHeroVideos);
 
+// Enyhe parallax: a hero-kép lassabban görög, mint az oldal — a scroll az images
+// `object-position`-jét tolja (CSS változón át), nincs re-zoom / layout-mozgás.
+function onParallaxScroll() {
+    if (parallaxRaf) return;
+    parallaxRaf = requestAnimationFrame(() => {
+        parallaxRaf = null;
+        if (heroLayer.value) {
+            heroLayer.value.style.setProperty('--parallax', `${Math.min(window.scrollY, 900) * -0.06}px`);
+        }
+    });
+}
+
+const parallaxOn = () =>
+    heroMode.value !== 'none' &&
+    !reduceMotion &&
+    typeof document !== 'undefined' &&
+    document.documentElement.dataset.anim !== 'off';
+
 onMounted(() => {
     syncHeroVideos();
     if (props.heroSlides.length > 1) {
@@ -62,12 +82,20 @@ onMounted(() => {
             heroIndex.value = (heroIndex.value + 1) % props.heroSlides.length;
         }, 7000);
     }
+    if (parallaxOn()) {
+        window.addEventListener('scroll', onParallaxScroll, { passive: true });
+        onParallaxScroll();
+    }
     loadRecentEvents();
 });
 
 onBeforeUnmount(() => {
     if (heroTimer) {
         clearInterval(heroTimer);
+    }
+    window.removeEventListener('scroll', onParallaxScroll);
+    if (parallaxRaf) {
+        cancelAnimationFrame(parallaxRaf);
     }
 });
 
@@ -125,30 +153,33 @@ const stats = computed(() => [
             <div class="relative h-[560px] w-full overflow-hidden sm:h-[620px] lg:h-[680px]">
                 <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,#2a2a2a_0%,#141414_45%,#0d0d0d_100%)]"></div>
 
-                <template v-for="(slide, i) in heroSlides" :key="i">
-                    <video
-                        v-if="slide.type === 'video'"
-                        :ref="(el) => setHeroVideo(el, i)"
-                        :src="slide.url"
-                        :poster="slide.poster || undefined"
-                        muted
-                        loop
-                        playsinline
-                        preload="metadata"
-                        class="absolute inset-0 h-full w-full object-cover transition-opacity duration-[1500ms] ease-in-out"
-                        :class="i === heroIndex ? 'opacity-100' : 'opacity-0'"
-                    />
-                    <img
-                        v-else
-                        :src="slide.url"
-                        alt=""
-                        :loading="i === 0 ? 'eager' : 'lazy'"
-                        :fetchpriority="i === 0 ? 'high' : 'auto'"
-                        decoding="async"
-                        class="hero-slide absolute inset-0 h-full w-full object-cover transition-opacity duration-[1500ms] ease-in-out"
-                        :class="[i === heroIndex ? 'opacity-100' : 'opacity-0', i === heroIndex && kenBurns ? 'hero-slide--active' : '']"
-                    />
-                </template>
+                <!-- ref a parallaxhoz: a scroll az images `object-position`-jét tolja (nincs re-zoom / layout) -->
+                <div ref="heroLayer" class="absolute inset-0">
+                    <template v-for="(slide, i) in heroSlides" :key="i">
+                        <video
+                            v-if="slide.type === 'video'"
+                            :ref="(el) => setHeroVideo(el, i)"
+                            :src="slide.url"
+                            :poster="slide.poster || undefined"
+                            muted
+                            loop
+                            playsinline
+                            preload="metadata"
+                            class="absolute inset-0 h-full w-full object-cover transition-opacity duration-[1500ms] ease-in-out"
+                            :class="i === heroIndex ? 'opacity-100' : 'opacity-0'"
+                        />
+                        <img
+                            v-else
+                            :src="slide.url"
+                            alt=""
+                            :loading="i === 0 ? 'eager' : 'lazy'"
+                            :fetchpriority="i === 0 ? 'high' : 'auto'"
+                            decoding="async"
+                            class="hero-slide absolute inset-0 h-full w-full object-cover transition-opacity duration-[1500ms] ease-in-out"
+                            :class="[i === heroIndex ? 'opacity-100' : 'opacity-0', i === heroIndex && kenBurns ? 'hero-slide--active' : '']"
+                        />
+                    </template>
+                </div>
 
                 <div class="absolute inset-x-0 bottom-1/3 h-px bg-white/10"></div>
                 <div class="absolute inset-0 bg-gradient-to-t from-surface-0 via-surface-0/40 to-transparent"></div>
@@ -166,7 +197,11 @@ const stats = computed(() => [
             </div>
 
             <!-- Keresopanel: a hero also szelere ulve (ugyanez a panel a /events oldalon is) -->
-            <div class="relative z-10 mx-auto -mt-24 max-w-4xl px-4 sm:px-6 lg:px-8">
+            <div
+                class="relative z-10 mx-auto -mt-24 max-w-4xl px-4 sm:px-6 lg:px-8"
+                :class="{ 'hero-rise': heroFull }"
+                style="--hero-delay: 360ms"
+            >
                 <EventSearchPanel />
             </div>
         </section>
@@ -325,6 +360,11 @@ const stats = computed(() => [
 <style scoped>
 .hero-slide {
     transform: scale(1.05);
+}
+/* Parallax: a scroll a hero-média object-position-jét tolja (Welcome.vue onParallaxScroll) */
+#hero .hero-slide,
+#hero video {
+    object-position: center calc(50% + var(--parallax, 0px));
 }
 .hero-slide--active {
     animation: hero-kenburns 12s ease-out forwards;
