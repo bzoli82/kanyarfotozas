@@ -21,17 +21,13 @@ class PhotographerController extends Controller
             ->where('is_public', true)
             ->orderByRaw("array_position(ARRAY['photographer','admin','superadmin']::text[], role::text)")
             ->orderBy('name')
-            ->get(['name', 'bio', 'avatar_s3_key', 'role', 'social_instagram', 'social_facebook', 'social_youtube'])
+            ->get(['name', 'bio', 'avatar_s3_key', 'role', 'public_email', 'website', 'social_instagram', 'social_facebook', 'social_youtube', 'social_tiktok'])
             ->map(fn (User $user) => [
                 'name' => $user->name,
                 'bio' => $user->bio,
                 'avatar' => $user->avatar_s3_key,
                 'is_photographer' => $user->role === User::ROLE_PHOTOGRAPHER,
-                'socials' => array_filter([
-                    'instagram' => $user->social_instagram,
-                    'facebook' => $user->social_facebook,
-                    'youtube' => $user->social_youtube,
-                ]),
+                'contacts' => $user->publicContacts(),
             ])
             ->values();
 

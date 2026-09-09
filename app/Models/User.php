@@ -15,8 +15,8 @@ use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable([
-    'name', 'email', 'password', 'role', 'bio', 'avatar_s3_key',
-    'social_instagram', 'social_facebook', 'social_youtube',
+    'name', 'email', 'password', 'role', 'bio', 'avatar_s3_key', 'public_email', 'website',
+    'social_instagram', 'social_facebook', 'social_youtube', 'social_tiktok',
     'revenue_share_percent', 'is_active', 'is_public',
     'report_weekly', 'report_monthly',
 ])]
@@ -53,6 +53,29 @@ class User extends Authenticatable
     public function hasTwoFactorEnabled(): bool
     {
         return filled($this->two_factor_secret) && $this->two_factor_confirmed_at !== null;
+    }
+
+    /**
+     * A nyilvános elérhetőségek a „Fotósok" oldalhoz — csak a kitöltöttek, a
+     * közösségi linkek teljes `https://` URL-lé egészítve (ha a felhasználó séma
+     * nélkül adta meg).
+     *
+     * @return array<string, string>
+     */
+    public function publicContacts(): array
+    {
+        $url = fn (?string $value): ?string => filled($value)
+            ? (preg_match('#^https?://#i', $value) ? $value : 'https://'.ltrim($value, '/'))
+            : null;
+
+        return array_filter([
+            'email' => filled($this->public_email) ? $this->public_email : null,
+            'website' => $url($this->website),
+            'facebook' => $url($this->social_facebook),
+            'instagram' => $url($this->social_instagram),
+            'youtube' => $url($this->social_youtube),
+            'tiktok' => $url($this->social_tiktok),
+        ]);
     }
 
     /**

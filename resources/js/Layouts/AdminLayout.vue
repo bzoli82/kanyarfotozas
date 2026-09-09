@@ -17,6 +17,7 @@ const adminNav = computed(() => {
         { label: 'Rendelések', href: '/admin/orders', icon: 'cart' },
         { label: 'Üzenetek', href: '/admin/messages', icon: 'mail' },
         { label: 'Események', href: '/admin/events', icon: 'calendar' },
+        { label: 'Nyilvános profilom', href: '/profil', icon: 'idcard' },
         { label: 'Biztonság', href: '/admin/settings/security', icon: 'lock' },
     ];
 
@@ -50,6 +51,7 @@ const photographerNav = [
     { label: 'Dashboard', href: '/photographer/dashboard', icon: 'grid' },
     { label: 'Eseményeim', href: '/admin/events', icon: 'calendar' },
     { label: 'Üzenetek', href: '/photographer/messages', icon: 'mail' },
+    { label: 'Nyilvános profilom', href: '/profil', icon: 'idcard' },
 ];
 
 const organizerNav = [
@@ -111,6 +113,7 @@ function logout() {
                     <svg v-else-if="item.icon === 'doc'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2" /></svg>
                     <svg v-else-if="item.icon === 'share2'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" /></svg>
                     <svg v-else-if="item.icon === 'sync'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-15 6.7L3 16" /><path d="M3 12a9 9 0 0 1 15-6.7L21 8" /><path d="M21 3v5h-5M3 21v-5h5" /></svg>
+                    <svg v-else-if="item.icon === 'idcard'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="9" cy="12" r="2" /><path d="M14 10h4M14 14h4M6.5 16.5a3 3 0 0 1 5 0" /></svg>
                     <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
                     {{ item.label }}
                 </Link>

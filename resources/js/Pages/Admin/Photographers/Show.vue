@@ -52,9 +52,12 @@ const form = useForm({
     is_active: props.photographer.is_active,
     is_public: props.photographer.is_public ?? false,
     bio: props.photographer.bio ?? '',
+    public_email: props.photographer.public_email ?? '',
+    website: props.photographer.website ?? '',
     social_instagram: props.photographer.social_instagram ?? '',
     social_facebook: props.photographer.social_facebook ?? '',
     social_youtube: props.photographer.social_youtube ?? '',
+    social_tiktok: props.photographer.social_tiktok ?? '',
     avatar: null,
     remove_avatar: false,
 });
@@ -283,10 +286,26 @@ function deleteDraft(id) {
                         <span class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted">Bemutatkozás (pár mondat — a Fotósok oldalon jelenik meg)</span>
                         <textarea v-model="form.bio" rows="3" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content focus:border-accent focus:outline-none"></textarea>
                     </label>
-                    <div class="grid gap-3 sm:grid-cols-3">
-                        <input v-model="form.social_instagram" type="text" placeholder="Instagram" class="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
-                        <input v-model="form.social_facebook" type="text" placeholder="Facebook" class="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
-                        <input v-model="form.social_youtube" type="text" placeholder="YouTube" class="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+
+                    <div class="rounded-lg border border-border bg-surface-2/40 p-3">
+                        <span class="block text-[11px] font-semibold uppercase tracking-wide text-muted">Nyilvános elérhetőségek (a Fotósok oldalon jelennek meg)</span>
+                        <div class="mt-2 grid gap-2 sm:grid-cols-2">
+                            <label class="block">
+                                <span class="mb-1 block text-[10px] uppercase tracking-wide text-muted">Céges e-mail (a bejelentkezésitől külön)</span>
+                                <input v-model="form.public_email" type="email" placeholder="pl. peter@kanyarfotozas.hu" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                                <span v-if="form.errors.public_email" class="mt-1 block text-xs text-accent">{{ form.errors.public_email }}</span>
+                            </label>
+                            <label class="block">
+                                <span class="mb-1 block text-[10px] uppercase tracking-wide text-muted">Weboldal</span>
+                                <input v-model="form.website" type="text" placeholder="pl. peterfoto.hu" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                            </label>
+                        </div>
+                        <div class="mt-2 grid gap-2 sm:grid-cols-2">
+                            <input v-model="form.social_facebook" type="text" placeholder="Facebook oldal linkje" class="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                            <input v-model="form.social_instagram" type="text" placeholder="Instagram profil linkje" class="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                            <input v-model="form.social_youtube" type="text" placeholder="YouTube csatorna linkje" class="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                            <input v-model="form.social_tiktok" type="text" placeholder="TikTok oldal linkje" class="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                        </div>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-3 pt-2">

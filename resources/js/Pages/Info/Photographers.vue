@@ -1,8 +1,16 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
+import SocialIcon from '@/Components/SocialIcon.vue';
 import { useI18n } from '@/Composables/useI18n';
 import { useMediaUrl } from '@/Composables/useMediaUrl';
+
+const SOCIALS = [
+    ['facebook', 'Facebook'],
+    ['instagram', 'Instagram'],
+    ['youtube', 'YouTube'],
+    ['tiktok', 'TikTok'],
+];
 
 const { t } = useI18n();
 const { mediaUrl } = useMediaUrl();
@@ -55,10 +63,38 @@ function initials(name) {
                             <h2 class="font-display text-lg font-bold text-content sm:text-xl">{{ p.name }}</h2>
                             <p v-if="p.bio" class="mt-1 text-xs leading-relaxed text-muted">{{ p.bio }}</p>
 
-                            <div v-if="Object.keys(p.socials || {}).length" class="mt-2 flex gap-3 text-xs">
-                                <a v-if="p.socials.instagram" :href="p.socials.instagram" target="_blank" rel="noopener" class="text-muted hover:text-accent">Instagram</a>
-                                <a v-if="p.socials.facebook" :href="p.socials.facebook" target="_blank" rel="noopener" class="text-muted hover:text-accent">Facebook</a>
-                                <a v-if="p.socials.youtube" :href="p.socials.youtube" target="_blank" rel="noopener" class="text-muted hover:text-accent">YouTube</a>
+                            <div v-if="p.contacts && Object.keys(p.contacts).length" class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                                <a
+                                    v-if="p.contacts.email"
+                                    :href="`mailto:${p.contacts.email}`"
+                                    class="inline-flex items-center gap-1.5 text-xs text-muted hover:text-accent"
+                                >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
+                                    {{ p.contacts.email }}
+                                </a>
+                                <a
+                                    v-if="p.contacts.website"
+                                    :href="p.contacts.website"
+                                    target="_blank"
+                                    rel="noopener"
+                                    class="inline-flex items-center gap-1.5 text-xs text-muted hover:text-accent"
+                                >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" /></svg>
+                                    {{ p.contacts.website.replace(/^https?:\/\//, '') }}
+                                </a>
+                                <template v-for="[key, label] in SOCIALS" :key="key">
+                                    <a
+                                        v-if="p.contacts[key]"
+                                        :href="p.contacts[key]"
+                                        target="_blank"
+                                        rel="noopener"
+                                        :aria-label="label"
+                                        :title="label"
+                                        class="text-muted transition-colors hover:text-accent"
+                                    >
+                                        <SocialIcon :platform="key" class="h-4 w-4" />
+                                    </a>
+                                </template>
                             </div>
                         </div>
                     </li>

@@ -46,9 +46,9 @@ class DemoDataSeeder extends Seeder
         $admin->assignRole(User::ROLE_ADMIN);
 
         $photographerProfiles = [
-            ['name' => 'Kovács Péter', 'bio' => 'Rali- és túraautó-fókusz. A meredek emelkedők és a technikás szakaszok specialistája, 8 éve a pálya mellett.'],
-            ['name' => 'Nagy Anna', 'bio' => 'Motoros kanyarfotózás, alacsony szögből. A dőlésszög és a fény a szenvedélye.'],
-            ['name' => 'Tóth Bence', 'bio' => 'Sprint- és hegyi versenyek, nagy telefotó. Szereti az egészen közeli, drámai kompozíciókat.'],
+            ['name' => 'Kovács Péter', 'bio' => 'Rali- és túraautó-fókusz. A meredek emelkedők és a technikás szakaszok specialistája, 8 éve a pálya mellett.', 'public_email' => 'peter', 'website' => 'kovacspeterfoto.example', 'social_instagram' => 'https://instagram.com/kovacspeterfoto', 'social_facebook' => 'https://facebook.com/kovacspeterfoto'],
+            ['name' => 'Nagy Anna', 'bio' => 'Motoros kanyarfotózás, alacsony szögből. A dőlésszög és a fény a szenvedélye.', 'public_email' => 'anna', 'social_instagram' => 'https://instagram.com/annakanyar', 'social_tiktok' => 'https://tiktok.com/@annakanyar'],
+            ['name' => 'Tóth Bence', 'bio' => 'Sprint- és hegyi versenyek, nagy telefotó. Szereti az egészen közeli, drámai kompozíciókat.', 'public_email' => 'bence', 'social_youtube' => 'https://youtube.com/@tothbencefoto'],
         ];
         $photographers = collect($photographerProfiles)->map(function (array $profile, int $i) use ($mailDomain) {
             $user = User::query()->updateOrCreate(
@@ -61,6 +61,12 @@ class DemoDataSeeder extends Seeder
                     'is_active' => true,
                     'is_public' => true,
                     'bio' => $profile['bio'],
+                    'public_email' => $profile['public_email']."@{$mailDomain}",
+                    'website' => $profile['website'] ?? null,
+                    'social_instagram' => $profile['social_instagram'] ?? null,
+                    'social_facebook' => $profile['social_facebook'] ?? null,
+                    'social_youtube' => $profile['social_youtube'] ?? null,
+                    'social_tiktok' => $profile['social_tiktok'] ?? null,
                     'email_verified_at' => now(),
                 ],
             );

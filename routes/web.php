@@ -55,6 +55,7 @@ use App\Http\Controllers\Public\PageController;
 use App\Http\Controllers\Public\PhotographerController as PublicPhotographerController;
 use App\Http\Controllers\Public\PhotographerQuestionController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\TeamProfileController;
 use App\Models\Event;
 use App\Models\HeroSlide;
 use App\Models\Media;
@@ -94,6 +95,10 @@ Route::get('/llms.txt', LlmsController::class)->name('llms');
 //  a vite build masolja oda a public/build/-bol)
 Route::middleware(['auth', 'role:superadmin|admin|photographer'])->group(function () {
     Route::get('/upload', [MobileUploadController::class, 'index'])->name('mobile-upload');
+
+    // Saját nyilvános profil (a „Fotósok" oldalon megjelenő adatok) — a fotós maga szerkeszti
+    Route::get('/profil', [TeamProfileController::class, 'edit'])->name('team.profile.edit');
+    Route::post('/profil', [TeamProfileController::class, 'update'])->name('team.profile.update');
 });
 
 // Nyilvanos galeria + kosar — EPIC-06
