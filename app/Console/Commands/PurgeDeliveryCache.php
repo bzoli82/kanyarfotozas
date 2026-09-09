@@ -8,7 +8,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
-#[Signature('kanyarfotozas:purge-delivery-cache')]
+#[Signature('roadsidephoto:purge-delivery-cache')]
 #[Description('A kézbesítési gyorsítótár takarítása — lejárt/kimerült letöltési token után törli a másolt fájlokat')]
 class PurgeDeliveryCache extends Command
 {

@@ -9,7 +9,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
-#[Signature('kanyarfotozas:send-download-reminders')]
+#[Signature('roadsidephoto:send-download-reminders')]
 #[Description('Emlékeztető e-mail a 48 órán belül lejáró letöltési linkekről (EPIC-12)')]
 class SendDownloadReminders extends Command
 {

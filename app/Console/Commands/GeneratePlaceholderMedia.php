@@ -9,7 +9,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Throwable;
 
-#[Signature('kanyarfotozas:generate-placeholder-media {--force : Meglévő fájlok felülírása is}')]
+#[Signature('roadsidephoto:generate-placeholder-media {--force : Meglévő fájlok felülírása is}')]
 #[Description('Demo/fejlesztői placeholder képek + rövid videók generálása minden Media rekordhoz')]
 class GeneratePlaceholderMedia extends Command
 {

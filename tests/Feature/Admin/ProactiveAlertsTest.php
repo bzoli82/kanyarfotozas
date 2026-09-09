@@ -96,16 +96,16 @@ class ProactiveAlertsTest extends TestCase
     {
         Mail::fake();
 
-        User::factory()->superadmin()->create(['email' => 'boss@kanyarfoto.hu']);
+        User::factory()->superadmin()->create(['email' => 'boss@example.test']);
         Media::factory()->create(['status' => Media::STATUS_FAILED]);
 
-        $this->artisan('kanyarfotozas:scan-alerts')->assertSuccessful();
+        $this->artisan('roadsidephoto:scan-alerts')->assertSuccessful();
 
         Mail::assertQueued(ProactiveAlertDigestMail::class);
 
         // Masodik futas ugyanazzal a keszlettel — nem kuld ujra.
         Mail::fake();
-        $this->artisan('kanyarfotozas:scan-alerts')->assertSuccessful();
+        $this->artisan('roadsidephoto:scan-alerts')->assertSuccessful();
         Mail::assertNothingQueued();
     }
 }

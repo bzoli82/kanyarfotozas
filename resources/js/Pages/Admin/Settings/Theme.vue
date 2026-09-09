@@ -53,7 +53,7 @@ function save() {
 
 function resetOwnPreference() {
     try {
-        localStorage.removeItem('kanyarfotozas.theme');
+        localStorage.removeItem('roadsidephoto.theme');
     } catch (e) { /* localStorage nem elerheto */ }
     window.location.reload();
 }

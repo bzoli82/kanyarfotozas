@@ -13,8 +13,8 @@ use Illuminate\Console\Command;
  */
 class AuditSiteIdentity extends Command
 {
-    protected $signature = 'kanyarfotozas:audit-identity
-        {--token=kanyarfoto : A keresett (régi) szórészlet}';
+    protected $signature = 'roadsidephoto:audit-identity
+        {--token=kanyarfotozas : A keresett (régi) szórészlet}';
 
     protected $description = 'A régi márkanévre utaló nyomok keresése a kódban és a DB-ben';
 
@@ -48,7 +48,7 @@ class AuditSiteIdentity extends Command
         }
 
         $this->newLine();
-        $this->error('Maradtak nyomok — a DB-t a `kanyarfotozas:apply-identity` írja át, a kód-találatokat kézzel.');
+        $this->error('Maradtak nyomok — a DB-t a `roadsidephoto:apply-identity` írja át, a kód-találatokat kézzel.');
 
         return self::FAILURE;
     }

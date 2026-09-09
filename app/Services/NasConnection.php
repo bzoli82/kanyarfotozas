@@ -34,7 +34,7 @@ class NasConnection
             'filesystems.disks.nas.password' => $this->decrypt($settings['nas_password']) ?: config('filesystems.disks.nas.password'),
             'filesystems.disks.nas.privateKey' => $this->decrypt($settings['nas_private_key']) ?: config('filesystems.disks.nas.privateKey'),
             'filesystems.disks.nas.passphrase' => $this->decrypt($settings['nas_private_key_passphrase']) ?: config('filesystems.disks.nas.passphrase'),
-            'filesystems.disks.nas.root' => $settings['nas_root'] ?: config('filesystems.disks.nas.root', '/kanyarfotozas'),
+            'filesystems.disks.nas.root' => $settings['nas_root'] ?: config('filesystems.disks.nas.root', '/roadsidephoto'),
         ]);
     }
 
@@ -58,7 +58,7 @@ class NasConnection
             'host' => $settings['nas_host'] ?? config('filesystems.disks.nas.host'),
             'port' => $settings['nas_port'] ?? (string) config('filesystems.disks.nas.port', 22),
             'username' => $settings['nas_username'] ?? config('filesystems.disks.nas.username'),
-            'root' => $settings['nas_root'] ?? config('filesystems.disks.nas.root', '/kanyarfotozas'),
+            'root' => $settings['nas_root'] ?? config('filesystems.disks.nas.root', '/roadsidephoto'),
             'has_password' => filled($settings['nas_password']) || filled(config('filesystems.disks.nas.password')),
             'has_private_key' => filled($settings['nas_private_key']) || filled(config('filesystems.disks.nas.privateKey')),
         ];

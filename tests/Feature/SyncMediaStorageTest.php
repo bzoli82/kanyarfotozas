@@ -45,7 +45,7 @@ class SyncMediaStorageTest extends TestCase
         Storage::disk('local')->put('downloads/1.jpg', 'jpg');
         Storage::disk('local')->put('downloads/1.webp', 'webp');
 
-        $this->artisan('kanyarfotozas:sync-media-storage', ['--from-public' => 'public', '--from-archive' => 'local'])
+        $this->artisan('roadsidephoto:sync-media-storage', ['--from-public' => 'public', '--from-archive' => 'local'])
             ->assertSuccessful();
 
         Storage::disk('r2_public')->assertExists('thumbnails/1.webp');
@@ -67,7 +67,7 @@ class SyncMediaStorageTest extends TestCase
         ]);
         Storage::disk('public')->put('thumbnails/9.webp', 'x');
 
-        $this->artisan('kanyarfotozas:sync-media-storage', ['--from-public' => 'public', '--dry-run' => true])
+        $this->artisan('roadsidephoto:sync-media-storage', ['--from-public' => 'public', '--dry-run' => true])
             ->assertSuccessful();
 
         Storage::disk('r2_public')->assertMissing('thumbnails/9.webp');

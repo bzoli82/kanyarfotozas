@@ -62,7 +62,7 @@
     <script>
         (function () {
             try {
-                var stored = localStorage.getItem('kanyarfotozas.theme');
+                var stored = localStorage.getItem('roadsidephoto.theme');
                 var mode = stored || '{{ $theme->mode() }}';
                 var resolved = mode === 'system'
                     ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')

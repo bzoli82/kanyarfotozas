@@ -18,7 +18,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Automatikus adatbázis-mentés (kanyarfotozas:backup)
+    | Automatikus adatbázis-mentés (roadsidephoto:backup)
     |--------------------------------------------------------------------------
     |
     | Napi `pg_dump` (gzip-elve) a megadott diskre. A `keep` a megtartott

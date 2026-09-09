@@ -8,11 +8,11 @@ use Illuminate\Support\Str;
 /**
  * Konyvtarstruktura a NAS-on (SFTP disk 'nas'):
  *
- *   kanyarfotozas/{esemeny datuma: YYYY-MM-DD}/{helyszin-slug}/{fotos-slug}/{media_id}_{suffix}.{ext}
+ *   roadsidephoto/{esemeny datuma: YYYY-MM-DD}/{helyszin-slug}/{fotos-slug}/{media_id}_{suffix}.{ext}
  *
- * Pl.: kanyarfotozas/2026-09-04/eger/kovacs-peter/142_original.jpg
+ * Pl.: roadsidephoto/2026-09-04/eger/kovacs-peter/142_original.jpg
  *
- * A gyoker ('kanyarfotozas') maga a 'nas' disk 'root' beallitasabol jon (config/filesystems.php),
+ * A gyoker ('roadsidephoto') maga a 'nas' disk 'root' beallitasabol jon (config/filesystems.php),
  * ezert az itt generalt utvonalak mar a gyokerhez kepest relativak.
  */
 class NasPathGenerator

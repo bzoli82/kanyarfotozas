@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
  * átmásoljuk az archív rétegről (NAS SFTP / R2 privát) egy gyors, mindig elérhető
  * lokális `delivery` diskre. A vásárló-oldali letöltés ezután ettől a disktől
  * függ, nem a lassú/időnként elérhetetlen archívtól. A másolatot a
- * `kanyarfotozas:purge-delivery-cache` parancs takarítja (lejárt/kimerült token).
+ * `roadsidephoto:purge-delivery-cache` parancs takarítja (lejárt/kimerült token).
  *
  * A „forensic" (láthatatlan) jelet NEM itt tesszük a fájlba — a gyorsítótár a
  * tiszta fájlt tárolja, a per-vásárló jel a kiszolgáláskor, memóriában kerül rá.

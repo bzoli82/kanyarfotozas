@@ -45,7 +45,7 @@ class MailSettingsTest extends TestCase
             'username' => 'kf@pelda.hu',
             'password' => 'titok123',
             'from_address' => 'noreply@pelda.hu',
-            'from_name' => 'KanyarFotózás',
+            'from_name' => 'RoadsidePhoto',
         ])->assertRedirect();
 
         $this->assertSame('smtp', SiteSetting::get('mail_mailer'));

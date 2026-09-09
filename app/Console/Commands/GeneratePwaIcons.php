@@ -15,7 +15,7 @@ use Intervention\Image\ImageManager;
  */
 class GeneratePwaIcons extends Command
 {
-    protected $signature = 'kanyarfotozas:generate-pwa-icons';
+    protected $signature = 'roadsidephoto:generate-pwa-icons';
 
     protected $description = 'A mobil PWA ikonok (192/512/maskable/apple-touch) legyartasa a public/ alá';
 

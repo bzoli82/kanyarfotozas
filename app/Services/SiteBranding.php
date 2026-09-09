@@ -39,7 +39,7 @@ class SiteBranding
     }
 
     /**
-     * Az oldal VÉGLEGES domainje (pl. `kanyarfotozas.hu`) — a rendszer-e-mailek
+     * Az oldal VÉGLEGES domainje (pl. `roadsidephoto.eu`) — a rendszer-e-mailek
      * (superadmin / demo fiókok), a megosztási URL-ek és a DB-név ebből képződik.
      * Amíg üres, a `.env` `APP_URL` hosztneve az alapértelmezett.
      */
@@ -56,7 +56,7 @@ class SiteBranding
 
     /**
      * A domain gépnév-barát alakja (TLD nélkül, csak [a-z0-9]) — a javasolt
-     * adatbázisnév és a rendszer-azonosítók alapja. Pl. `kanyarfotozas.hu` → `kanyarfotozas`.
+     * adatbázisnév és a rendszer-azonosítók alapja. Pl. `roadsidephoto.eu` → `roadsidephoto`.
      */
     public function slug(): string
     {
@@ -82,7 +82,7 @@ class SiteBranding
     }
 
     /**
-     * Rendszer-e-mail cím a domainen (pl. `noreply@kanyarfotozas.hu`).
+     * Rendszer-e-mail cím a domainen (pl. `noreply@roadsidephoto.eu`).
      */
     public function systemEmail(string $localPart = 'noreply'): string
     {

@@ -32,7 +32,7 @@ class DataSyncController extends Controller
         $sync->recordPull((string) ($request->ip() ?? '?'));
 
         return response()
-            ->download($path, 'kanyarfotozas-sync-'.now()->format('Y-m-d_His').'.sql.gz', [
+            ->download($path, 'roadsidephoto-sync-'.now()->format('Y-m-d_His').'.sql.gz', [
                 'Content-Type' => 'application/gzip',
             ])
             ->deleteFileAfterSend(true);

@@ -10,7 +10,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
-#[Signature('kanyarfotozas:send-monthly-photographer-reports')]
+#[Signature('roadsidephoto:send-monthly-photographer-reports')]
 #[Description('Havi értékesítési riport CSV melléklettel a bekapcsolt (report_monthly) fotósoknak — 1-jén 08:00 (EPIC-12)')]
 class SendMonthlyPhotographerReports extends Command
 {

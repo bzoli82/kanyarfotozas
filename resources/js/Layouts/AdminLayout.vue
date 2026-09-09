@@ -15,7 +15,7 @@ const isOrganizer = computed(() => user.value?.role === 'organizer');
 const sections = computed(() => page.props.adminNav ?? []);
 
 // Összecsukott szekciók megjegyzése (böngészőnként).
-const STORAGE_KEY = 'kanyarfotozas.admin_nav_collapsed';
+const STORAGE_KEY = 'roadsidephoto.admin_nav_collapsed';
 const collapsed = reactive({});
 try {
     Object.assign(collapsed, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'));

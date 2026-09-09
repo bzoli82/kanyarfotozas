@@ -42,7 +42,7 @@ class AbandonedCartReminderTest extends TestCase
     {
         $order = $this->pendingOrder();
 
-        $this->artisan('kanyarfotozas:send-abandoned-cart-reminders')->assertSuccessful();
+        $this->artisan('roadsidephoto:send-abandoned-cart-reminders')->assertSuccessful();
 
         Mail::assertQueued(AbandonedCartMail::class, fn ($mail) => $mail->order->id === $order->id);
         $this->assertNotNull($order->fresh()->abandoned_reminder_sent_at);
@@ -52,7 +52,7 @@ class AbandonedCartReminderTest extends TestCase
     {
         $this->pendingOrder(['abandoned_reminder_sent_at' => now()->subHour()]);
 
-        $this->artisan('kanyarfotozas:send-abandoned-cart-reminders')->assertSuccessful();
+        $this->artisan('roadsidephoto:send-abandoned-cart-reminders')->assertSuccessful();
 
         Mail::assertNothingQueued();
     }
@@ -62,7 +62,7 @@ class AbandonedCartReminderTest extends TestCase
         $this->pendingOrder(['created_at' => now()->subHours(5)]);
         $this->pendingOrder(['created_at' => now()->subHours(100)]);
 
-        $this->artisan('kanyarfotozas:send-abandoned-cart-reminders')->assertSuccessful();
+        $this->artisan('roadsidephoto:send-abandoned-cart-reminders')->assertSuccessful();
 
         Mail::assertNothingQueued();
     }
@@ -76,7 +76,7 @@ class AbandonedCartReminderTest extends TestCase
             'created_at' => now()->subHours(10),
         ]);
 
-        $this->artisan('kanyarfotozas:send-abandoned-cart-reminders')->assertSuccessful();
+        $this->artisan('roadsidephoto:send-abandoned-cart-reminders')->assertSuccessful();
 
         Mail::assertNothingQueued();
         $this->assertNotNull($order->fresh()->abandoned_reminder_sent_at);

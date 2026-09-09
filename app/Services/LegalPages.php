@@ -98,7 +98,7 @@ class LegalPages
 
     private function defaultImpressum(): string
     {
-        $brand = rescue(fn () => app(SiteBranding::class)->name(), 'KanyarFotózás', false);
+        $brand = rescue(fn () => app(SiteBranding::class)->name(), 'RoadsidePhoto', false);
 
         return <<<MD
         ## Impresszum
@@ -125,7 +125,7 @@ class LegalPages
 
     private function defaultTerms(): string
     {
-        $brand = rescue(fn () => app(SiteBranding::class)->name(), 'KanyarFotózás', false);
+        $brand = rescue(fn () => app(SiteBranding::class)->name(), 'RoadsidePhoto', false);
 
         return <<<MD
         ## Általános Szerződési Feltételek
@@ -167,7 +167,7 @@ class LegalPages
 
     private function defaultPhotographerAgreement(): string
     {
-        $brand = rescue(fn () => app(SiteBranding::class)->name(), 'KanyarFotózás', false);
+        $brand = rescue(fn () => app(SiteBranding::class)->name(), 'RoadsidePhoto', false);
 
         return <<<MD
         ## Fotós Megállapodás

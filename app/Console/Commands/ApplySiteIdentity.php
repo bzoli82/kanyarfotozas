@@ -14,12 +14,12 @@ use Illuminate\Console\Command;
  * végleges domainje" → Előnézet / Átnevezés. A motor: App\Services\SiteIdentity.
  *
  * A DB ÁTNEVEZÉSE + az `.env` módosítása KÉZI — a parancs a végén kiírja.
- * Ellenőrzés: `kanyarfotozas:audit-identity`.
+ * Ellenőrzés: `roadsidephoto:audit-identity`.
  */
 class ApplySiteIdentity extends Command
 {
-    protected $signature = 'kanyarfotozas:apply-identity
-        {domain : Az új végleges domain, pl. kanyarfotozas.hu}
+    protected $signature = 'roadsidephoto:apply-identity
+        {domain : Az új végleges domain, pl. roadsidephoto.eu}
         {--from= : A régi platform-domain (alapból a superadmin e-mail domainje)}
         {--dry-run : Csak kiírja, mit tenne}';
 
@@ -72,7 +72,7 @@ class ApplySiteIdentity extends Command
             $this->line("  .env:  {$key}=\"{$value}\"");
         }
         $this->line('  php artisan config:clear  &&  a queue/scheduler workerek újraindítása');
-        $this->line('  Ellenőrzés:  php artisan kanyarfotozas:audit-identity');
+        $this->line('  Ellenőrzés:  php artisan roadsidephoto:audit-identity');
 
         if ($plan['code_hits'] !== []) {
             $this->newLine();

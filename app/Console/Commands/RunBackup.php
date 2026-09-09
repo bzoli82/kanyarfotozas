@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Mail;
  */
 class RunBackup extends Command
 {
-    protected $signature = 'kanyarfotozas:backup';
+    protected $signature = 'roadsidephoto:backup';
 
     protected $description = 'Adatbázis-mentés készítése (pg_dump, gzip) a beállított diskre';
 

@@ -27,15 +27,15 @@ Becsült teljes havidíj: **~€4–5 + a domain**.
 ## 0. Előfeltételek (a gépeden)
 
 - Egy SSH-kulcs (`~/.ssh/id_ed25519.pub`). Ha nincs: `ssh-keygen -t ed25519`.
-- Hozzáférés a domain DNS-éhez (pl. `kanyarfotozas.hu`).
+- Hozzáférés a domain DNS-éhez (pl. `roadsidephoto.eu`).
 - Cloudflare-fiók (R2-höz).
-- A GitHub repo: `github.com/bzoli82/kanyarfotozas` (privát is jó, Coolify deploy-kulccsal fér hozzá).
+- A GitHub repo: `github.com/bzoli82/roadsidephoto` (privát is jó, Coolify deploy-kulccsal fér hozzá).
 
 ---
 
 ## 1. Hetzner szerver létrehozása
 
-1. Hetzner Cloud Console → **New Project** → „kanyarfotozas".
+1. Hetzner Cloud Console → **New Project** → „roadsidephoto".
 2. **Add Server**:
    - Location: **Nürnberg** vagy **Falkenstein** (közel HU-hoz, alacsony latency).
    - Image: **Ubuntu 24.04**.
@@ -93,13 +93,13 @@ curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
 
 ## 4. Cloudflare R2 (tárhely)
 
-1. Cloudflare Dashboard → **R2** → **Create bucket**: `kanyarfotozas-public`.
-2. Még egy: `kanyarfotozas-private`.
-3. (Opcionális, a tömeges importhoz) még egy: `kanyarfotozas-import` — ide
+1. Cloudflare Dashboard → **R2** → **Create bucket**: `roadsidephoto-public`.
+2. Még egy: `roadsidephoto-private`.
+3. (Opcionális, a tömeges importhoz) még egy: `roadsidephoto-import` — ide
    rclone-nal / S3-klienssel töltöd fel a nagy fotó-mappákat, az admin
    eseményhez importálja. Ld. „Tömeges import (5000+ kép)" szakasz.
 4. A **public** bucket → Settings → **Public access**: engedélyezd az `r2.dev`
-   aldomént, VAGY (ajánlott) köss rá egy **custom domaint** (pl. `media.kanyarfotozas.hu`)
+   aldomént, VAGY (ajánlott) köss rá egy **custom domaint** (pl. `media.roadsidephoto.eu`)
    Cloudflare CDN mögött.
 5. R2 → **Manage API Tokens** → **Create API Token**:
    - Permissions: **Object Read & Write**,
@@ -116,7 +116,7 @@ curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
 
 ## 5. Coolify: projekt + PostgreSQL
 
-1. Coolify → **Projects** → **+ Add** → „kanyarfotozas" → **Environment: production**.
+1. Coolify → **Projects** → **+ Add** → „roadsidephoto" → **Environment: production**.
 2. A projektben → **+ New Resource** → **Databases** → **PostgreSQL 16**.
    - Név: `kf-postgres`.
    - Jegyezd fel a Coolify által generált jelszót és a belső hostnevet
@@ -130,7 +130,7 @@ curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
 
 1. A projektben → **+ New Resource** → **Application** → **Public Repository** vagy
    **GitHub App** (privát repóhoz a GitHub App a kényelmesebb; egyszeri repo-jogosítás).
-   - Repository: `https://github.com/bzoli82/kanyarfotozas`
+   - Repository: `https://github.com/bzoli82/roadsidephoto`
    - Branch: `main`
    - Build Pack: **Nixpacks** (Laravelt felismeri: PHP 8.4 + `composer install` +
      `npm ci && npm run build`).
@@ -167,7 +167,7 @@ APP_NAME="KanyarFotózás"
 APP_ENV=production
 APP_KEY=                         # 6/c-ben generáljuk
 APP_DEBUG=false
-APP_URL=https://kanyarfotozas.hu
+APP_URL=https://roadsidephoto.eu
 APP_LOCALE=hu
 APP_FALLBACK_LOCALE=en
 
@@ -198,10 +198,10 @@ R2_ACCESS_KEY_ID=<...>
 R2_SECRET_ACCESS_KEY=<...>
 R2_DEFAULT_REGION=auto
 R2_ENDPOINT=https://<accountid>.r2.cloudflarestorage.com
-R2_PUBLIC_BUCKET=kanyarfotozas-public
-R2_PRIVATE_BUCKET=kanyarfotozas-private
-R2_IMPORT_BUCKET=kanyarfotozas-import
-R2_PUBLIC_URL=https://media.kanyarfotozas.hu
+R2_PUBLIC_BUCKET=roadsidephoto-public
+R2_PRIVATE_BUCKET=roadsidephoto-private
+R2_IMPORT_BUCKET=roadsidephoto-import
+R2_PUBLIC_URL=https://media.roadsidephoto.eu
 
 # --- Mentés ---
 PG_DUMP_BINARY=pg_dump
@@ -215,7 +215,7 @@ MAIL_HOST=<smtp_host>
 MAIL_PORT=587
 MAIL_USERNAME=<...>
 MAIL_PASSWORD=<...>
-MAIL_FROM_ADDRESS=noreply@kanyarfotozas.hu
+MAIL_FROM_ADDRESS=noreply@roadsidephoto.eu
 MAIL_FROM_NAME="KanyarFotózás"
 
 # A fizetési / számlázási kulcsokat NE ide — a /admin/settings/critical
@@ -269,15 +269,15 @@ riasztás-scan, delivery-cache takarítás, fotós riportok, order-fulfillment r
 ## 8. Domain + SSL
 
 1. **DNS** (a domain szolgáltatójánál / Cloudflare-nél):
-   - `A` rekord: `kanyarfotozas.hu` → `<SZERVER_IP>`
+   - `A` rekord: `roadsidephoto.eu` → `<SZERVER_IP>`
    - `A` rekord: `www` → `<SZERVER_IP>` (opcionális, redirect)
    - `CNAME`/`A`: `media` → a Cloudflare R2 custom domain (ld. 4.3)
-   - Ha Cloudflare-t használsz proxy-nak: a `kanyarfotozas.hu` rekord lehet
+   - Ha Cloudflare-t használsz proxy-nak: a `roadsidephoto.eu` rekord lehet
      „DNS only" (szürke felhő) az első Let's Encrypt-kiállításig, utána
      visszakapcsolható proxyra.
-2. Coolify → Application → **Domains**: `https://kanyarfotozas.hu`
+2. Coolify → Application → **Domains**: `https://roadsidephoto.eu`
    - Coolify automatikusan kér **Let's Encrypt** tanúsítványt.
-3. Deploy után ellenőrizd: `https://kanyarfotozas.hu` → betölt, lakat zöld.
+3. Deploy után ellenőrizd: `https://roadsidephoto.eu` → betölt, lakat zöld.
 
 ---
 
@@ -311,7 +311,7 @@ php artisan tinker --execute "\$u = App\Models\User::create(['name'=>'Zoli','ema
 > **NE** a demo `password123`-mal. A `belepesi-adatok.txt` fejlesztői fájl —
 > élesre nem kerül (gitignore-olt).
 
-Belépés: `https://kanyarfotozas.hu/login` → `/admin/settings/security` → **2FA be**.
+Belépés: `https://roadsidephoto.eu/login` → `/admin/settings/security` → **2FA be**.
 
 ---
 
@@ -321,9 +321,9 @@ Sorban, amíg minden csoport **zöld**:
 
 1. **Fizetés** — Stripe / SimplePay / Barion éles kulcsok (SANDBOX = KI),
    webhook/IPN/callback URL-ek beállítva a szolgáltatók oldalán:
-   - Stripe: `https://kanyarfotozas.hu/api/stripe/webhook`
-   - SimplePay: `https://kanyarfotozas.hu/api/simplepay/ipn`
-   - Barion: `https://kanyarfotozas.hu/api/barion/callback`
+   - Stripe: `https://roadsidephoto.eu/api/stripe/webhook`
+   - SimplePay: `https://roadsidephoto.eu/api/simplepay/ipn`
+   - Barion: `https://roadsidephoto.eu/api/barion/callback`
 2. **Számlázás** — Billingo v3 kulcs + számlatömb-azonosító, auto-számla BE.
 3. **E-mail** — ha nem az env-ből: SMTP itt; küldj tesztlevelet.
 4. **Monitoring** — hiba-webhook (Slack/Discord) vagy e-mail BE.
@@ -342,11 +342,11 @@ Sorban, amíg minden csoport **zöld**:
 ## 12. E-mail deliverability (KRITIKUS)
 
 A visszaigazoló e-mailek spam-be esnek SPF/DKIM/DMARC nélkül. A küldő
-domainre (`kanyarfotozas.hu`):
+domainre (`roadsidephoto.eu`):
 
 - **SPF** TXT: `v=spf1 include:<smtp_szolgáltató_spf> -all`
 - **DKIM**: a szolgáltatónál generált CNAME/TXT rekord(ok)
-- **DMARC** TXT (`_dmarc`): `v=DMARC1; p=quarantine; rua=mailto:dmarc@kanyarfotozas.hu`
+- **DMARC** TXT (`_dmarc`): `v=DMARC1; p=quarantine; rua=mailto:dmarc@roadsidephoto.eu`
 
 Teszt: küldj magadnak egy tesztlevelet a `/admin/settings/critical` gombbal,
 nézd meg a fejlécben `spf=pass` / `dkim=pass`.
@@ -389,14 +389,14 @@ nézd meg a fejlécben `spf=pass` / `dkim=pass`.
 
 ### Egyszeri setup
 
-1. `R2_IMPORT_BUCKET=kanyarfotozas-import` + `MEDIA_IMPORT_DISK=r2_import` az env-ben.
-2. **R2 CORS** az import bucketen (Cloudflare → R2 → `kanyarfotozas-import` →
+1. `R2_IMPORT_BUCKET=roadsidephoto-import` + `MEDIA_IMPORT_DISK=r2_import` az env-ben.
+2. **R2 CORS** az import bucketen (Cloudflare → R2 → `roadsidephoto-import` →
    Settings → **CORS Policy**) — enélkül a böngésző nem tölthet közvetlenül R2-be.
    A **pontos JSON-t** (a mindenkori domainnel) az admin
    `/admin/settings/critical` → „Deploy-emlékeztetők" blokk mutatja, másolás gombbal;
    ez a domain-váltáskor („Oldal neve" fül) automatikusan frissül. Minta:
    ```json
-   [{ "AllowedOrigins": ["https://kanyarfotozas.hu"],
+   [{ "AllowedOrigins": ["https://roadsidephoto.eu"],
       "AllowedMethods": ["PUT"],
       "AllowedHeaders": ["*"],
       "MaxAgeSeconds": 3600 }]
@@ -419,13 +419,13 @@ Az esemény oldalán a **„Média hozzáadása"** blokk:
 
 Ha valaki mégis rclone-nal / S3-klienssel tölt fel egy bucketbe / SFTP-re:
 az esemény oldalán a **„Haladó — import meglévő tárolóból"** panel (`<details>`)
-böngészi a tárolót és importál. Fotós: `r2:kanyarfotozas-import/fotosok/<id>/…`.
+böngészi a tárolót és importál. Fotós: `r2:roadsidephoto-import/fotosok/<id>/…`.
 
 ### Sebesség + takarítás
 
 - 1 worker ~pár fájl/mp (R2-letöltés + thumbnail + vízjel + R2-vissza).
   5000 képhez 2–3 párhuzamos worker (Coolify process-replikák), vagy este indítva.
-- Az ideiglenes `_upload/` mappát az import maga törli; a `kanyarfotozas:purge-import-uploads`
+- Az ideiglenes `_upload/` mappát az import maga törli; a `roadsidephoto:purge-import-uploads`
   (napi cron) az árvákat söpri.
 
 Finomhangolás env-ből: `MEDIA_IMPORT_CHUNK_SIZE` (100), `MEDIA_IMPORT_INLINE_MAX` (25),
@@ -506,23 +506,23 @@ csak a DB-t.
   R2_SECRET_ACCESS_KEY=...
   R2_DEFAULT_REGION=auto
   R2_ENDPOINT=https://<accountid>.r2.cloudflarestorage.com
-  R2_PUBLIC_BUCKET=kanyarfotozas-public
-  R2_PRIVATE_BUCKET=kanyarfotozas-private
-  R2_PUBLIC_URL=https://media.kanyarfotozas.hu
+  R2_PUBLIC_BUCKET=roadsidephoto-public
+  R2_PRIVATE_BUCKET=roadsidephoto-private
+  R2_PUBLIC_URL=https://media.roadsidephoto.eu
   ```
   ```bash
   php artisan config:clear
   ```
 - **Ha már van feltöltött médiád lokálisan**, told fel egyszer:
   ```bash
-  php artisan kanyarfotozas:sync-media-storage --from-public=public --from-archive=local --dry-run
-  php artisan kanyarfotozas:sync-media-storage --from-public=public --from-archive=local
+  php artisan roadsidephoto:sync-media-storage --from-public=public --from-archive=local --dry-run
+  php artisan roadsidephoto:sync-media-storage --from-public=public --from-archive=local
   ```
   Ez a `Media` fájljait viszi. A többi publikus fájlt (hero-képek, fotós
   profilképek, SEO OG-kép) egy sima tükrözéssel:
   ```bash
   # rclone-nal (állítsd be egy `r2` remote-ot az R2 S3 kulcsokkal):
-  rclone copy storage/app/public r2:kanyarfotozas-public --exclude "thumbnails/**" --exclude "watermarked/**" --exclude "sprites/**" --exclude "hls/**"
+  rclone copy storage/app/public r2:roadsidephoto-public --exclude "thumbnails/**" --exclude "watermarked/**" --exclude "sprites/**" --exclude "hls/**"
   ```
   > A legegyszerűbb viszont: **a 3. lépést a tartalomfeltöltés ELŐTT** csináld meg —
   > akkor minden egyből R2-re kerül, és ez a felfele-tükrözés kimarad.
@@ -536,16 +536,16 @@ Miután a Coolify Postgres létezik (5. szakasz) és a kód deployolva van (9.):
 pg_dump --no-owner --no-privileges \
   --exclude-table-data=sessions --exclude-table-data=cache \
   --exclude-table-data=cache_locks --exclude-table-data=jobs \
-  -h 127.0.0.1 -U <helyi_user> kanyarfotozas > kf-content.sql
+  -h 127.0.0.1 -U <helyi_user> roadsidephoto > rsp-content.sql
 ```
 
-Töltsd fel a `kf-content.sql`-t a szerverre (`scp kf-content.sql root@<IP>:/root/`),
+Töltsd fel a `rsp-content.sql`-t a szerverre (`scp rsp-content.sql root@<IP>:/root/`),
 majd a Coolify Postgres konténerébe:
 
 ```bash
 # a szerveren — ürítsd a friss (üres/migrált) éles DB-t, majd töltsd be a dumpot:
 docker exec -i <coolify_pg_konténer> psql -U <db_user> -d <db_név> -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-docker exec -i <coolify_pg_konténer> psql -U <db_user> -d <db_név> < /root/kf-content.sql
+docker exec -i <coolify_pg_konténer> psql -U <db_user> -d <db_név> < /root/rsp-content.sql
 ```
 
 Majd a Coolify App **Terminal**-jából:
@@ -558,7 +558,7 @@ php artisan queue:restart
 
 ### 5. Ellenőrzés
 
-- `https://kanyarfotozas.hu` — a főoldal a helyi tartalommal jön (hero, statisztika).
+- `https://roadsidephoto.eu` — a főoldal a helyi tartalommal jön (hero, statisztika).
 - Belépés a **helyi** superadmin-jelszavaddal (a user átjött a dumpban).
   A 2FA is működik, ha az `APP_KEY` egyezik (1. pont).
 - Egy esemény galériája: a képek betöltenek (az R2 `media.` domainről).
@@ -582,6 +582,6 @@ ne** — onnantól az éles az igazság forrása.
 - **Az ütemező-életjel sárga a `/admin/settings/critical`-on** → a **scheduler**
   (`schedule:run` percenként) nem fut (7. pont).
 - **Fizetés után nincs letöltés** → a delivery-cache kötet efemer, vagy nincs
-  csatolva (6/a). `php artisan kanyarfotozas:retry-order-fulfillment`.
+  csatolva (6/a). `php artisan roadsidephoto:retry-order-fulfillment`.
 - **E-mail nem érkezik** → SMTP hibás VAGY SPF/DKIM hiányzik (12. pont);
   `storage/logs/laravel.log`.

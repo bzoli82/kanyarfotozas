@@ -98,11 +98,11 @@ class SeoTest extends TestCase
     public function test_custom_description_and_title_suffix_reach_the_home_page(): void
     {
         SiteSetting::set('seo_description', 'Egyedi teszt leírás a főoldalhoz.');
-        SiteSetting::set('seo_title_suffix', 'kanyarfotózás egyedi teszt');
+        SiteSetting::set('seo_title_suffix', 'motorsport egyedi teszt');
 
         $this->get('/')
             ->assertSee('content="Egyedi teszt leírás a főoldalhoz."', false)
-            ->assertSee('kanyarfotózás egyedi teszt', false);
+            ->assertSee('motorsport egyedi teszt', false);
     }
 
     public function test_google_verification_meta_is_rendered_when_set(): void

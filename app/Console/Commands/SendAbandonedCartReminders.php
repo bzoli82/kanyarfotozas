@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Mail;
  * Egyszeri emlékeztető azoknak, akik elindítottak egy vásárlást (pending rendelés),
  * de 24 órán belül nem fizettek. Csak egyszer megy ki rendelésenként.
  */
-#[Signature('kanyarfotozas:send-abandoned-cart-reminders')]
+#[Signature('roadsidephoto:send-abandoned-cart-reminders')]
 #[Description('Egyszeri emlékeztető a 24 órán belül félbehagyott (ki nem fizetett) vásárlásokról')]
 class SendAbandonedCartReminders extends Command
 {

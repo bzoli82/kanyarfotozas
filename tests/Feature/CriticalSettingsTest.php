@@ -107,28 +107,28 @@ class CriticalSettingsTest extends TestCase
         $this->actingAs($this->superadmin())->put('/admin/settings/critical/identity', ['domain' => 'nem jó domain'])
             ->assertSessionHasErrors('domain');
 
-        $this->actingAs($this->superadmin())->put('/admin/settings/critical/identity', ['domain' => 'kanyarfotozas.hu'])
+        $this->actingAs($this->superadmin())->put('/admin/settings/critical/identity', ['domain' => 'roadsidephoto.eu'])
             ->assertRedirect();
 
-        $this->assertSame('kanyarfotozas.hu', SiteSetting::get('site_domain'));
+        $this->assertSame('roadsidephoto.eu', SiteSetting::get('site_domain'));
     }
 
     public function test_identity_preview_and_apply_rewrites_platform_emails(): void
     {
-        $sa = User::factory()->create(['role' => User::ROLE_SUPERADMIN, 'email' => 'superadmin@kanyarfoto.hu']);
+        $sa = User::factory()->create(['role' => User::ROLE_SUPERADMIN, 'email' => 'superadmin@example.test']);
 
         $this->actingAs($sa)
-            ->getJson('/admin/settings/critical/identity/preview?domain=kanyarfotozas.hu')
+            ->getJson('/admin/settings/critical/identity/preview?domain=roadsidephoto.eu')
             ->assertOk()
-            ->assertJsonPath('to', 'kanyarfotozas.hu')
-            ->assertJsonPath('emails.0.new', 'superadmin@kanyarfotozas.hu');
+            ->assertJsonPath('to', 'roadsidephoto.eu')
+            ->assertJsonPath('emails.0.new', 'superadmin@roadsidephoto.eu');
 
         $this->actingAs($sa->fresh())
-            ->post('/admin/settings/critical/identity/apply', ['domain' => 'kanyarfotozas.hu'])
+            ->post('/admin/settings/critical/identity/apply', ['domain' => 'roadsidephoto.eu'])
             ->assertRedirect();
 
-        $this->assertSame('superadmin@kanyarfotozas.hu', $sa->fresh()->email);
-        $this->assertSame('kanyarfotozas.hu', SiteSetting::get('site_domain'));
+        $this->assertSame('superadmin@roadsidephoto.eu', $sa->fresh()->email);
+        $this->assertSame('roadsidephoto.eu', SiteSetting::get('site_domain'));
     }
 
     public function test_identity_endpoints_are_superadmin_only(): void

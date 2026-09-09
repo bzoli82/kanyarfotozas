@@ -8,7 +8,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
-#[Signature('kanyarfotozas:retry-order-fulfillment')]
+#[Signature('roadsidephoto:retry-order-fulfillment')]
 #[Description('A kézbesítési gyorsítótárba még be nem másolt (fizetett) rendelések újrapróbálása')]
 class RetryOrderFulfillment extends Command
 {

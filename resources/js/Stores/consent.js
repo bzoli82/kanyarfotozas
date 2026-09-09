@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-const STORAGE_KEY = 'kanyarfotozas.cookie_consent';
+const STORAGE_KEY = 'roadsidephoto.cookie_consent';
 
 /**
  * Cookie-hozzájárulás állapota (localStorage-perzisztált). Jelenleg az oldal

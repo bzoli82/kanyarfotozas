@@ -285,7 +285,7 @@ class SystemReadiness
 
         if ($last['at'] === null) {
             $items[] = $this->item('backup', 'Adatbázis-mentés', self::WARNING,
-                'Még nem futott mentés — a napi `kanyarfotozas:backup` cron-nal fut (vagy indítsd kézzel lent).');
+                'Még nem futott mentés — a napi `roadsidephoto:backup` cron-nal fut (vagy indítsd kézzel lent).');
         } elseif ($last['status'] === 'failed') {
             $items[] = $this->item('backup', 'Adatbázis-mentés', self::CRITICAL,
                 'A legutóbbi mentés HIBÁRA futott ('.$last['at']->diffForHumans().'): '.$last['error']);

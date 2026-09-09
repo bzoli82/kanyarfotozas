@@ -12,7 +12,7 @@ use Illuminate\Console\Command;
  */
 class SchedulerHeartbeat extends Command
 {
-    protected $signature = 'kanyarfotozas:heartbeat';
+    protected $signature = 'roadsidephoto:heartbeat';
 
     protected $description = 'Ütemező életjel — a Kritikus beállítások oldal ellenőrzi';
 

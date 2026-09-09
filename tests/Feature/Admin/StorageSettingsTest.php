@@ -38,15 +38,15 @@ class StorageSettingsTest extends TestCase
         $response = $this->actingAs($superadmin)->put('/admin/settings/storage', [
             'host' => 'nas.example.com',
             'port' => 22,
-            'username' => 'kanyarfoto',
-            'root' => '/kanyarfoto',
+            'username' => 'photouser',
+            'root' => '/media',
             'password' => 'sup3r-secret',
         ]);
 
         $response->assertRedirect();
 
         $this->assertSame('nas.example.com', SiteSetting::get('nas_host'));
-        $this->assertSame('kanyarfoto', SiteSetting::get('nas_username'));
+        $this->assertSame('photouser', SiteSetting::get('nas_username'));
 
         $encrypted = SiteSetting::get('nas_password');
         $this->assertNotSame('sup3r-secret', $encrypted);
@@ -60,20 +60,20 @@ class StorageSettingsTest extends TestCase
         $this->actingAs($superadmin)->put('/admin/settings/storage', [
             'host' => 'nas.example.com',
             'port' => 22,
-            'username' => 'kanyarfoto',
-            'root' => '/kanyarfoto',
+            'username' => 'photouser',
+            'root' => '/media',
             'password' => 'first-secret',
         ]);
 
         $this->actingAs($superadmin)->put('/admin/settings/storage', [
             'host' => 'nas.example.com',
             'port' => 22,
-            'username' => 'kanyarfoto-renamed',
-            'root' => '/kanyarfoto',
+            'username' => 'photouser-renamed',
+            'root' => '/media',
             'password' => '',
         ]);
 
-        $this->assertSame('kanyarfoto-renamed', SiteSetting::get('nas_username'));
+        $this->assertSame('photouser-renamed', SiteSetting::get('nas_username'));
         $this->assertSame('first-secret', Crypt::decryptString(SiteSetting::get('nas_password')));
     }
 }

@@ -19,6 +19,8 @@ class SiteSettingSeeder extends Seeder
             'logo_part2' => 'PHOTO',
             'nav_style' => 'transparent',
             'platform_name' => 'RoadsidePhoto',
+            'site_domain' => 'roadsidephoto.eu',
+            'mail_from_address' => 'noreply@roadsidephoto.eu',
             'base_price_huf' => '1490',
             'watermark_text' => 'ROADSIDEPHOTO',
             'watermark_font' => WatermarkSettings::DEFAULT_FONT,
@@ -26,8 +28,11 @@ class SiteSettingSeeder extends Seeder
             'watermark_density' => (string) WatermarkSettings::DEFAULT_DENSITY,
         ];
 
+        // SiteSetting::set() a `Cache::forget`-et is elvégzi — enélkül egy korábban
+        // (a seeder előtt) beolvasott üres default 300 mp-ig eltakarná az új értéket
+        // (pl. a DemoDataSeeder `mailDomain()`-je ilyenkor `example.test`-et adna).
         foreach ($defaults as $key => $value) {
-            SiteSetting::query()->updateOrCreate(['key' => $key], ['value' => $value]);
+            SiteSetting::set($key, $value);
         }
     }
 }

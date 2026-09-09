@@ -52,7 +52,7 @@ function save() {
             Szolgáltató: Plate Recognizer — ingyenes szint havi 2500 lekéréssel
             (<a href="https://platerecognizer.com/" target="_blank" rel="noopener" class="text-accent hover:underline">platerecognizer.com</a>,
             regisztráció után a „Snapshot Cloud" API kulcs). Videónál a felismerés csak jelzés (nincs automatikus homályosítás,
-            mert a rendszám mozog). A már korábban feldolgozott fotókra: <code class="text-accent">php artisan kanyarfotozas:analyze-plates</code>.
+            mert a rendszám mozog). A már korábban feldolgozott fotókra: <code class="text-accent">php artisan roadsidephoto:analyze-plates</code>.
         </p>
 
         <form class="mt-6 max-w-xl space-y-5 rounded-[var(--radius-base)] border border-border bg-surface-1 p-5" @submit.prevent="save">

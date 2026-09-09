@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-const STORAGE_KEY = 'kanyarfotozas.theme';
+const STORAGE_KEY = 'roadsidephoto.theme';
 
 function readStoredMode() {
     try {

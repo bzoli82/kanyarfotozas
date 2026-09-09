@@ -51,7 +51,7 @@ return [
          * Kézbesítési gyorsítótár (delivery cache) — a megvásárolt, letölthető
          * fájlok másolata egy gyors, mindig elérhető lokális diskre, hogy a
          * vásárló-oldali letöltés független legyen a lassú/törékeny archív
-         * rétegtől (NAS SFTP / R2). Efemer: a `kanyarfotozas:purge-delivery-cache`
+         * rétegtől (NAS SFTP / R2). Efemer: a `roadsidephoto:purge-delivery-cache`
          * takarítja (lejárt/kimerült token után). Lásd App\Services\OrderFulfillment.
          */
         'delivery' => [
@@ -145,7 +145,7 @@ return [
             'password' => env('NAS_PASSWORD'),
             'privateKey' => env('NAS_PRIVATE_KEY'),
             'passphrase' => env('NAS_PRIVATE_KEY_PASSPHRASE'),
-            'root' => env('NAS_ROOT', '/kanyarfotozas'),
+            'root' => env('NAS_ROOT', '/roadsidephoto'),
             'timeout' => 30,
             'throw' => true,
         ],

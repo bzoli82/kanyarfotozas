@@ -53,14 +53,14 @@ class MonitoringTest extends TestCase
 
     public function test_new_error_notifies_superadmins_once_within_the_cooldown(): void
     {
-        User::factory()->create(['role' => User::ROLE_SUPERADMIN, 'email' => 'boss@kanyarfoto.hu']);
+        User::factory()->create(['role' => User::ROLE_SUPERADMIN, 'email' => 'boss@example.test']);
 
         $e = new RuntimeException('once please');
         app(ErrorReporter::class)->report($e);
         app(ErrorReporter::class)->report($e);
 
         Mail::assertQueuedCount(1);
-        Mail::assertQueued(ErrorNotificationMail::class, fn ($mail) => $mail->hasTo('boss@kanyarfoto.hu'));
+        Mail::assertQueued(ErrorNotificationMail::class, fn ($mail) => $mail->hasTo('boss@example.test'));
     }
 
     public function test_webhook_is_called_when_configured_and_email_can_be_disabled(): void
@@ -114,7 +114,7 @@ class MonitoringTest extends TestCase
         Storage::fake('local');
         Process::fake(['*pg_dump*' => Process::result(output: '', errorOutput: 'connection refused', exitCode: 1)]);
 
-        $this->artisan('kanyarfotozas:backup')->assertFailed();
+        $this->artisan('roadsidephoto:backup')->assertFailed();
 
         $this->assertSame('failed', SiteSetting::get('backup_last_status'));
         $this->assertStringContainsString('connection refused', (string) SiteSetting::get('backup_last_error'));

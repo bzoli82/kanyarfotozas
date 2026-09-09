@@ -114,11 +114,11 @@ class DownloadTest extends TestCase
     {
         $media = Media::factory()->photo()->create([
             'status' => Media::STATUS_READY,
-            'download_jpeg_s3_key' => 'kanyarfoto/photo.jpg',
-            'download_webp_s3_key' => 'kanyarfoto/photo.webp',
+            'download_jpeg_s3_key' => 'archive/photo.jpg',
+            'download_webp_s3_key' => 'archive/photo.webp',
             'original_storage' => Media::STORAGE_NAS,
         ]);
-        Storage::disk('nas')->put('kanyarfoto/photo.jpg', 'jpeg-on-nas');
+        Storage::disk('nas')->put('archive/photo.jpg', 'jpeg-on-nas');
 
         $order = Order::factory()->paid()->create();
         $order->media()->attach($media->id, ['price_cents' => $media->price_cents]);

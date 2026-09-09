@@ -42,7 +42,7 @@ class PublicPhotographersTest extends TestCase
     {
         User::factory()->photographer()->create([
             'name' => 'Elérhető Fotós', 'is_active' => true, 'is_public' => true,
-            'public_email' => 'peter@kanyarfotozas.hu', 'social_facebook' => 'https://facebook.com/peterfoto',
+            'public_email' => 'peter@roadsidephoto.eu', 'social_facebook' => 'https://facebook.com/peterfoto',
         ]);
 
         $this->get('/photographers')
@@ -56,7 +56,7 @@ class PublicPhotographersTest extends TestCase
     {
         User::factory()->photographer()->create([
             'name' => 'Elérhető Fotós', 'is_active' => true, 'is_public' => true,
-            'public_email' => 'peter@kanyarfotozas.hu',
+            'public_email' => 'peter@roadsidephoto.eu',
             'website' => 'peterfoto.hu',
             'social_facebook' => 'https://facebook.com/peterfoto',
             'social_tiktok' => 'tiktok.com/@peterfoto',
@@ -69,7 +69,7 @@ class PublicPhotographersTest extends TestCase
         $this->get('/photographers')
             ->assertInertia(fn ($page) => $page
                 ->where('contactsPublic', true)
-                ->where('photographers.0.contacts.email', 'peter@kanyarfotozas.hu')
+                ->where('photographers.0.contacts.email', 'peter@roadsidephoto.eu')
                 ->where('photographers.0.contacts.website', 'https://peterfoto.hu')
                 ->where('photographers.0.contacts.tiktok', 'https://tiktok.com/@peterfoto'));
     }

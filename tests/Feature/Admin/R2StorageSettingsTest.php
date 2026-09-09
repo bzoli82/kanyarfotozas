@@ -30,7 +30,7 @@ class R2StorageSettingsTest extends TestCase
             'public_bucket' => 'kf-public',
             'private_bucket' => 'kf-private',
             'import_bucket' => 'kf-import',
-            'public_url' => 'https://media.kanyarfotozas.hu',
+            'public_url' => 'https://media.roadsidephoto.eu',
         ], $overrides);
     }
 
@@ -56,7 +56,7 @@ class R2StorageSettingsTest extends TestCase
         app(R2Storage::class)->applyRuntimeConfig();
         $this->assertSame('kf-private', config('filesystems.disks.r2_private.bucket'));
         $this->assertSame('kf-import', config('filesystems.disks.r2_import.bucket'));
-        $this->assertSame('https://media.kanyarfotozas.hu', config('filesystems.disks.r2_public.url'));
+        $this->assertSame('https://media.roadsidephoto.eu', config('filesystems.disks.r2_public.url'));
         $this->assertTrue(app(R2Storage::class)->isConfigured());
     }
 

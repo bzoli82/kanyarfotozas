@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Mail;
  */
 class ScanProactiveAlerts extends Command
 {
-    protected $signature = 'kanyarfotozas:scan-alerts';
+    protected $signature = 'roadsidephoto:scan-alerts';
 
     protected $description = 'Kritikus dashboard-figyelmeztetések ellenőrzése és e-mail értesítés a superadminoknak';
 

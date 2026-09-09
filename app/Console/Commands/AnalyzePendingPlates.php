@@ -20,7 +20,7 @@ use Illuminate\Support\Str;
  */
 class AnalyzePendingPlates extends Command
 {
-    protected $signature = 'kanyarfotozas:analyze-plates {--limit=200 : Legfeljebb ennyi médiafájl egy futásban}';
+    protected $signature = 'roadsidephoto:analyze-plates {--limit=200 : Legfeljebb ennyi médiafájl egy futásban}';
 
     protected $description = 'Rendszámfelismerés a még feldolgozatlan (pending) kész fotókra';
 

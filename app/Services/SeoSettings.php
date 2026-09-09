@@ -13,9 +13,9 @@ use Illuminate\Support\Str;
  */
 class SeoSettings
 {
-    public const DEFAULT_TITLE_SUFFIX = 'kanyarfotózás motorsport eseményeken';
+    public const DEFAULT_TITLE_SUFFIX = 'motorsport fotózás';
 
-    public const DEFAULT_DESCRIPTION = 'Profi kanyarfotók és -videók autós és motoros pályanapokról, versenyekről. Keresd meg a saját köreidet helyszín és időpont szerint, és töltsd le vízjel nélkül.';
+    public const DEFAULT_DESCRIPTION = 'Profi fotók és videók autós és motoros pályanapokról, versenyekről. Keresd meg a saját köreidet helyszín és időpont szerint, és töltsd le vízjel nélkül.';
 
     public function description(): string
     {

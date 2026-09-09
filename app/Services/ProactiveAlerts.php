@@ -16,7 +16,7 @@ use Illuminate\Support\Collection;
  * figyelmeztetes stabil `key`-t kap (szabaly + targy), igy elrejtheto
  * (`dismissed_alerts` tabla) egy idoszakra.
  *
- * A 15 percenkent futo `kanyarfotozas:scan-alerts` parancs a kritikus, el nem
+ * A 15 percenkent futo `roadsidephoto:scan-alerts` parancs a kritikus, el nem
  * rejtett figyelmeztetesekrol e-mail-osszefoglalot kuld a superadminoknak.
  */
 class ProactiveAlerts

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-const STORAGE_KEY = 'kanyarfotozas.cart';
+const STORAGE_KEY = 'roadsidephoto.cart';
 
 function loadFromStorage() {
     try {

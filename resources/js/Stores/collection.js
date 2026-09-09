@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-const STORAGE_KEY = 'kanyarfotozas.collection';
+const STORAGE_KEY = 'roadsidephoto.collection';
 
 function trackAdd(mediaId) {
     try {

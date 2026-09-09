@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Storage;
  */
 class PurgeImportUploads extends Command
 {
-    protected $signature = 'kanyarfotozas:purge-import-uploads {--hours=48 : Ennél régebbi feltöltő-mappák törlése}';
+    protected $signature = 'roadsidephoto:purge-import-uploads {--hours=48 : Ennél régebbi feltöltő-mappák törlése}';
 
     protected $description = 'Árva közvetlen-feltöltés mappák törlése az import-tárolóból';
 

@@ -340,7 +340,7 @@ function applyIdentity() {
                     <p class="mt-1">
                         A böngészőből közvetlen feltöltéshez (Média hozzáadása → nagy köteg) az
                         <code>{{ deployReminders.cors_origin ? deployReminders.cors_origin.replace('https://', '') : '' }}</code>
-                        domainnek engednie kell a <code>PUT</code>-ot. Cloudflare → R2 → <code>kanyarfotozas-import</code> bucket
+                        domainnek engednie kell a <code>PUT</code>-ot. Cloudflare → R2 → <code>roadsidephoto-import</code> bucket
                         → Settings → <strong class="text-content">CORS Policy</strong>. Ez az érték az „Oldal neve" fülön
                         történő domain-váltáskor automatikusan frissül itt:
                     </p>
@@ -871,7 +871,7 @@ function applyIdentity() {
                     </li>
                     <li>
                         <strong class="text-content">Ellenőrizd, hogy nem maradt régi nyom.</strong><br />
-                        Parancs: <code>php artisan kanyarfotozas:audit-identity</code><br />
+                        Parancs: <code>php artisan roadsidephoto:audit-identity</code><br />
                         Ha „nincs nyom" üzenettel tér vissza → kész.
                         Ha fájlokat sorol fel → azokat a fenti „említés a forráskódban" doboz szerint egy fejlesztő javítja.
                     </li>

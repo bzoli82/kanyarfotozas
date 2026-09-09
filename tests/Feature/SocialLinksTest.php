@@ -33,14 +33,14 @@ class SocialLinksTest extends TestCase
         $superadmin = User::factory()->superadmin()->create();
 
         $this->actingAs($superadmin)->put('/admin/settings/social', [
-            'facebook' => 'facebook.com/kanyarfotozas',
-            'instagram' => 'https://instagram.com/kanyarfotozas',
+            'facebook' => 'facebook.com/roadsidephoto',
+            'instagram' => 'https://instagram.com/roadsidephoto',
             'youtube' => '',
             'tiktok' => '',
         ])->assertRedirect();
 
-        $this->assertSame('https://facebook.com/kanyarfotozas', SiteSetting::get('social_facebook'));
-        $this->assertSame('https://instagram.com/kanyarfotozas', SiteSetting::get('social_instagram'));
+        $this->assertSame('https://facebook.com/roadsidephoto', SiteSetting::get('social_facebook'));
+        $this->assertSame('https://instagram.com/roadsidephoto', SiteSetting::get('social_instagram'));
         $this->assertSame('', SiteSetting::get('social_youtube'));
 
         $links = app(SocialLinks::class)->all();

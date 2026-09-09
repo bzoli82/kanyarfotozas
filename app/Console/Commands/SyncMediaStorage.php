@@ -17,14 +17,14 @@ use Throwable;
  *   - nagy fájlok (eredeti + letölthető JPEG/WebP/MP4)                     -> `MediaStorage::archive()`
  *
  * Használat (miután az .env-ben beállítottad az R2 diskeket):
- *   php artisan kanyarfotozas:sync-media-storage --from-public=public --from-archive=local --dry-run
- *   php artisan kanyarfotozas:sync-media-storage --from-public=public --from-archive=local
+ *   php artisan roadsidephoto:sync-media-storage --from-public=public --from-archive=local --dry-run
+ *   php artisan roadsidephoto:sync-media-storage --from-public=public --from-archive=local
  *
  * Idempotens: a célon már meglévő (azonos méretű) fájlt kihagyja, kivéve --force.
  */
 class SyncMediaStorage extends Command
 {
-    protected $signature = 'kanyarfotozas:sync-media-storage
+    protected $signature = 'roadsidephoto:sync-media-storage
         {--from-public=public : Forrás disk a kis publikus fájloknak}
         {--from-archive= : Forrás disk a nagy fájloknak (üres = a media.original_storage szerinti)}
         {--force : A célon már meglévő fájlok felülírása is}

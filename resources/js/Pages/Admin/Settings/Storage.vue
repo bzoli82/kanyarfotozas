@@ -48,7 +48,7 @@ const connectionForm = useForm({
     host: props.connection.host ?? '',
     port: props.connection.port ?? '22',
     username: props.connection.username ?? '',
-    root: props.connection.root ?? '/kanyarfotozas',
+    root: props.connection.root ?? '/roadsidephoto',
     password: '',
     private_key: '',
     private_key_passphrase: '',
@@ -117,7 +117,7 @@ MEDIA_ARCHIVE_DISK=…   # nagy fájlok: eredeti + letölthető változatok</pre
             <h3>3. Váltás (bármikor, később is)</h3>
             <ol class="mt-1 list-decimal space-y-1 pl-5">
                 <li>Átírod a 2 sort a <code>.env</code>-ben.</li>
-                <li>Lefuttatod: <code>php artisan kanyarfotozas:sync-media-storage</code> — átmásolja a meglévő fájlokat az új diskre (a forrást nem törli), és frissíti, melyik hol van.</li>
+                <li>Lefuttatod: <code>php artisan roadsidephoto:sync-media-storage</code> — átmásolja a meglévő fájlokat az új diskre (a forrást nem törli), és frissíti, melyik hol van.</li>
                 <li><code>php artisan config:clear</code></li>
             </ol>
             <p class="mt-1">Visszaváltani ugyanígy lehet.</p>
@@ -184,30 +184,30 @@ MEDIA_ARCHIVE_DISK=…   # nagy fájlok: eredeti + letölthető változatok</pre
 
                 <label class="block">
                     <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">Publikus bucket</span>
-                    <input v-model="r2Form.public_bucket" type="text" placeholder="kanyarfotozas-public" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                    <input v-model="r2Form.public_bucket" type="text" placeholder="roadsidephoto-public" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
                     <p v-if="r2Form.errors.public_bucket" class="mt-1 text-xs text-accent">{{ r2Form.errors.public_bucket }}</p>
                 </label>
 
                 <label class="block">
                     <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">Privát bucket</span>
-                    <input v-model="r2Form.private_bucket" type="text" placeholder="kanyarfotozas-private" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                    <input v-model="r2Form.private_bucket" type="text" placeholder="roadsidephoto-private" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
                     <p v-if="r2Form.errors.private_bucket" class="mt-1 text-xs text-accent">{{ r2Form.errors.private_bucket }}</p>
                 </label>
 
                 <label class="block">
                     <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">Import bucket <span class="normal-case text-muted">(tömeges import, opcionális)</span></span>
-                    <input v-model="r2Form.import_bucket" type="text" placeholder="kanyarfotozas-import" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                    <input v-model="r2Form.import_bucket" type="text" placeholder="roadsidephoto-import" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
                 </label>
 
                 <label class="block">
                     <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">Publikus domain (R2_PUBLIC_URL)</span>
-                    <input v-model="r2Form.public_url" type="text" placeholder="https://media.kanyarfotozas.hu" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                    <input v-model="r2Form.public_url" type="text" placeholder="https://media.roadsidephoto.eu" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
                     <p v-if="r2Form.errors.public_url" class="mt-1 text-xs text-accent">{{ r2Form.errors.public_url }}</p>
                 </label>
             </div>
 
             <p class="mt-3 text-[11px] text-muted">
-                Mentés után futtasd egyszer: <code>php artisan kanyarfotozas:sync-media-storage</code> — a meglévő fájlokat átmásolja az R2-re.
+                Mentés után futtasd egyszer: <code>php artisan roadsidephoto:sync-media-storage</code> — a meglévő fájlokat átmásolja az R2-re.
                 A publikus/archív disk szerepét (<code>MEDIA_PUBLIC_DISK</code> / <code>MEDIA_ARCHIVE_DISK</code> / <code>MEDIA_IMPORT_DISK</code>) továbbra is a <code>.env</code> dönti el.
             </p>
 

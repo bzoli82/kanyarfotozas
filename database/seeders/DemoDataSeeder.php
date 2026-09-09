@@ -50,7 +50,7 @@ class DemoDataSeeder extends Seeder
 
         $photographerProfiles = [
             ['name' => 'Kovács Péter', 'bio' => 'Rali- és túraautó-fókusz. A meredek emelkedők és a technikás szakaszok specialistája, 8 éve a pálya mellett.', 'public_email' => 'peter', 'website' => 'kovacspeterfoto.example', 'social_instagram' => 'https://instagram.com/kovacspeterfoto', 'social_facebook' => 'https://facebook.com/kovacspeterfoto'],
-            ['name' => 'Nagy Anna', 'bio' => 'Motoros kanyarfotózás, alacsony szögből. A dőlésszög és a fény a szenvedélye.', 'public_email' => 'anna', 'social_instagram' => 'https://instagram.com/annakanyar', 'social_tiktok' => 'https://tiktok.com/@annakanyar'],
+            ['name' => 'Nagy Anna', 'bio' => 'Motorosok a kanyarban, alacsony szögből. A dőlésszög és a fény a szenvedélye.', 'public_email' => 'anna', 'social_instagram' => 'https://instagram.com/annakanyar', 'social_tiktok' => 'https://tiktok.com/@annakanyar'],
             ['name' => 'Tóth Bence', 'bio' => 'Sprint- és hegyi versenyek, nagy telefotó. Szereti az egészen közeli, drámai kompozíciókat.', 'public_email' => 'bence', 'social_youtube' => 'https://youtube.com/@tothbencefoto'],
         ];
         $photographers = collect($photographerProfiles)->map(function (array $profile, int $i) use ($mailDomain) {
@@ -129,10 +129,10 @@ class DemoDataSeeder extends Seeder
         // Cég szintű közösségi média linkek (a Kapcsolat oldal „Kövess minket" + a lábléc) —
         // demó/placeholder URL-ek, hogy a szekció ne tűnjön el egy friss telepítés után.
         app(SocialLinks::class)->update([
-            'facebook' => 'https://facebook.com/kanyarfotozas',
-            'instagram' => 'https://instagram.com/kanyarfotozas',
-            'youtube' => 'https://youtube.com/@kanyarfotozas',
-            'tiktok' => 'https://tiktok.com/@kanyarfotozas',
+            'facebook' => 'https://facebook.com/roadsidephoto',
+            'instagram' => 'https://instagram.com/roadsidephoto',
+            'youtube' => 'https://youtube.com/@roadsidephoto',
+            'tiktok' => 'https://tiktok.com/@roadsidephoto',
         ]);
 
         $this->generatePlaceholderImages();

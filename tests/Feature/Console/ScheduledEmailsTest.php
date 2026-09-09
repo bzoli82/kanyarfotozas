@@ -40,7 +40,7 @@ class ScheduledEmailsTest extends TestCase
         $soon = $this->paidOrderExpiringIn(24);
         $notSoon = $this->paidOrderExpiringIn(96);
 
-        $this->artisan('kanyarfotozas:send-download-reminders')->assertSuccessful();
+        $this->artisan('roadsidephoto:send-download-reminders')->assertSuccessful();
 
         Mail::assertQueued(DownloadReminderMail::class, 1);
         Mail::assertQueued(DownloadReminderMail::class, fn ($m) => $m->order->id === $soon->id);
@@ -49,7 +49,7 @@ class ScheduledEmailsTest extends TestCase
 
         // masodik futas nem kuld ujra
         Mail::fake();
-        $this->artisan('kanyarfotozas:send-download-reminders')->assertSuccessful();
+        $this->artisan('roadsidephoto:send-download-reminders')->assertSuccessful();
         Mail::assertNothingQueued();
     }
 
@@ -62,7 +62,7 @@ class ScheduledEmailsTest extends TestCase
 
         $expired = $this->paidOrderExpiringIn(-5);
 
-        $this->artisan('kanyarfotozas:send-download-reminders')->assertSuccessful();
+        $this->artisan('roadsidephoto:send-download-reminders')->assertSuccessful();
 
         Mail::assertNothingQueued();
     }
@@ -79,7 +79,7 @@ class ScheduledEmailsTest extends TestCase
         $order = Order::factory()->paid()->create(['created_at' => now()->subDays(3)]);
         $order->media()->attach($media->id, ['price_cents' => 2000]);
 
-        $this->artisan('kanyarfotozas:send-weekly-photographer-reports')->assertSuccessful();
+        $this->artisan('roadsidephoto:send-weekly-photographer-reports')->assertSuccessful();
 
         Mail::assertQueued(WeeklyPhotographerReportMail::class, 1);
         Mail::assertQueued(WeeklyPhotographerReportMail::class, fn ($m) => $m->photographer->id === $optedIn->id && $m->report['revenue_cents'] === 2000);
@@ -94,7 +94,7 @@ class ScheduledEmailsTest extends TestCase
         $order = Order::factory()->paid()->create(['created_at' => now()->subMonthNoOverflow()->startOfMonth()->addDays(2)]);
         $order->media()->attach($media->id, ['price_cents' => 1500]);
 
-        $this->artisan('kanyarfotozas:send-monthly-photographer-reports')->assertSuccessful();
+        $this->artisan('roadsidephoto:send-monthly-photographer-reports')->assertSuccessful();
 
         Mail::assertQueued(MonthlyPhotographerReportMail::class, function ($mail) {
             $attachments = $mail->attachments();

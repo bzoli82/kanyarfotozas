@@ -132,7 +132,7 @@ class DirectUploadTest extends TestCase
         $fresh = now()->format('Ymd-His').'-fresh1234';
         Storage::disk('r2_import')->put("_upload/9/{$fresh}/b.jpg", 'x');
 
-        $this->artisan('kanyarfotozas:purge-import-uploads')->assertSuccessful();
+        $this->artisan('roadsidephoto:purge-import-uploads')->assertSuccessful();
 
         $this->assertFalse(Storage::disk('r2_import')->exists('_upload/9/20200101-000000-old12345/a.jpg'));
         $this->assertTrue(Storage::disk('r2_import')->exists("_upload/9/{$fresh}/b.jpg"));

@@ -10,7 +10,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
-#[Signature('kanyarfotozas:send-weekly-photographer-reports')]
+#[Signature('roadsidephoto:send-weekly-photographer-reports')]
 #[Description('Heti értékesítési riport a bekapcsolt (report_weekly) fotósoknak — hétfő 08:00 (EPIC-12)')]
 class SendWeeklyPhotographerReports extends Command
 {

@@ -119,7 +119,7 @@ class SiteIdentity
                     'MAIL_FROM_ADDRESS' => 'noreply@'.$to,
                 ],
             ],
-            'code_hits' => $noop ? [] : $this->scanCode($fromSlug ?: 'kanyarfoto', $toSlug),
+            'code_hits' => $noop ? [] : $this->scanCode($fromSlug ?: 'kanyarfotozas', $toSlug),
         ];
     }
 
@@ -216,7 +216,7 @@ class SiteIdentity
                 $new = str_ireplace($from, $to, $new);
             }
             // A slug-cserét csak akkor, ha a régi slug önmagában szerepel ÉS az új
-            // slug még nem — így a `kanyarfotozas.hu` (= már az új azonosító) nem sérül.
+            // slug még nem — így a `roadsidephoto.eu` (= már az új azonosító) nem sérül.
             if (
                 $fromSlug !== '' && $fromSlug !== $toSlug
                 && stripos($new, $fromSlug) !== false
@@ -245,7 +245,7 @@ class SiteIdentity
 
     /**
      * A régi név nyomai a forráskódban (csak olvasás). A `$exclude` (az ÚJ slug)
-     * előfordulásait előbb kivágja, hogy az új `kanyarfotozas:*` hivatkozások ne
+     * előfordulásait előbb kivágja, hogy az új `roadsidephoto:*` hivatkozások ne
      * legyenek fals találatok. A `SiteIdentity` + a két identitás-parancs saját
      * fájljait kihagyja.
      *
@@ -299,7 +299,7 @@ class SiteIdentity
 
     /**
      * A régi név nyomai az adatbázisban (a parancshoz — CI-barát). Az `$exclude`
-     * (az új slug) előfordulásait kivágja, hogy pl. a `site_domain=kanyarfotozas.hu`
+     * (az új slug) előfordulásait kivágja, hogy pl. a `site_domain=roadsidephoto.eu`
      * ne legyen fals találat.
      *
      * @return list<string>
