@@ -190,9 +190,14 @@ function roleLabel(role) {
                             <span v-else class="text-muted">—</span>
                         </td>
                         <td class="px-4 py-3">
-                            <span class="rounded-full border px-2 py-0.5 text-[11px] font-medium" :class="user.is_active ? 'border-accent text-accent' : 'border-border text-muted'">
-                                {{ user.is_active ? 'Aktív' : 'Inaktív' }}
-                            </span>
+                            <div class="flex flex-wrap gap-1">
+                                <span class="rounded-full border px-2 py-0.5 text-[11px] font-medium" :class="user.is_active ? 'border-accent text-accent' : 'border-border text-muted'">
+                                    {{ user.is_active ? 'Aktív' : 'Inaktív' }}
+                                </span>
+                                <span v-if="user.role !== 'organizer' && !user.is_public" class="rounded-full border border-border px-2 py-0.5 text-[11px] font-medium text-muted" title="Nem látszik a nyilvános Fotósaink oldalon">
+                                    Rejtett
+                                </span>
+                            </div>
                         </td>
                         <td class="px-4 py-3 text-right">
                             <Link :href="user.role === 'organizer' ? '/admin/organizer-payouts' : `/admin/photographers/${user.id}`" class="text-xs font-semibold uppercase tracking-wide text-muted hover:text-content">

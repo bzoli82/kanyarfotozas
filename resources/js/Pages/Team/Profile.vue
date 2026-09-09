@@ -78,8 +78,11 @@ function submit() {
                 <label class="flex items-start gap-2.5 text-sm text-content">
                     <input v-model="form.is_public" type="checkbox" class="mt-0.5 accent-[var(--color-accent)]" />
                     <span>
-                        <strong>Megjelenek a Fotósaink oldalon.</strong>
-                        <span class="mt-0.5 block text-xs text-muted">Ha kiveszed a pipát, a profilod nem látszik a nyilvános oldalon.</span>
+                        <strong>Látszódjak a fotósok között.</strong>
+                        <span class="mt-0.5 block text-xs text-muted">
+                            Ha kiveszed a pipát, nem jelensz meg a nyilvános „Fotósaink" oldalon és az esemény-kereső fotós-szűrőjében sem —
+                            de a rendszer tagja maradsz, feltölthetsz és eladhatsz képeket.
+                        </span>
                     </span>
                 </label>
 

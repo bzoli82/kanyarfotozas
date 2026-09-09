@@ -249,9 +249,12 @@ function deleteDraft(id) {
                         <input v-model="form.is_active" type="checkbox" class="accent-[var(--color-accent)]" />
                         Aktív fiók
                     </label>
-                    <label class="flex items-center gap-2 text-sm text-content">
-                        <input v-model="form.is_public" type="checkbox" class="accent-[var(--color-accent)]" />
-                        Nyilvános profil (megjelenik a „Fotósok" oldalon)
+                    <label class="flex items-start gap-2 text-sm text-content">
+                        <input v-model="form.is_public" type="checkbox" class="mt-0.5 accent-[var(--color-accent)]" />
+                        <span>
+                            Látszódjon a fotósok között
+                            <span class="mt-0.5 block text-xs text-muted">A nyilvános „Fotósaink" oldalon és az esemény-kereső fotós-szűrőjében. Kikapcsolva is a rendszer tagja marad, tölthet fel és adhat el képeket.</span>
+                        </span>
                     </label>
 
                     <div class="flex items-center gap-3 pt-1">

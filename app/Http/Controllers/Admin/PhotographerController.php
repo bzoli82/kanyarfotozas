@@ -59,6 +59,7 @@ class PhotographerController extends Controller
                 'revenue_cents' => $this->revenueFor($user->id),
                 'outstanding_cents' => (int) ($payoutSummary->get($user->id)['outstanding_cents'] ?? 0),
                 'is_active' => $user->is_active,
+                'is_public' => (bool) $user->is_public,
             ]);
 
         $pendingInvitations = Invitation::query()
