@@ -47,20 +47,30 @@ class SocialLinksTest extends TestCase
         $this->assertSame(['facebook', 'instagram'], collect($links)->pluck('platform')->all());
     }
 
-    public function test_configured_links_are_shared_and_shown_on_the_contact_page(): void
+    public function test_community_page_renders_and_lists_configured_links(): void
     {
         SiteSetting::set('social_youtube', 'https://youtube.com/@kanyar');
 
-        $this->get('/contact')->assertInertia(fn ($p) => $p
-            ->component('Info/Contact')
+        $this->get('/social')->assertOk()->assertInertia(fn ($p) => $p
+            ->component('Info/Community')
             ->where('social', fn ($s) => count($s) === 1
                 && $s[0]['url'] === 'https://youtube.com/@kanyar'
                 && $s[0]['label'] === 'YouTube'
                 && $s[0]['display'] === 'youtube.com/@kanyar'));
     }
 
-    public function test_no_social_links_by_default(): void
+    public function test_community_page_renders_with_no_links_configured(): void
     {
-        $this->get('/contact')->assertInertia(fn ($p) => $p->where('social', []));
+        $this->get('/social')->assertOk()->assertInertia(fn ($p) => $p->component('Info/Community')->where('social', []));
+    }
+
+    public function test_community_page_is_in_the_sitemap(): void
+    {
+        $this->get('/sitemap.xml')->assertOk()->assertSee(url('/social'));
+    }
+
+    public function test_contact_page_still_renders(): void
+    {
+        $this->get('/contact')->assertOk()->assertInertia(fn ($p) => $p->component('Info/Contact'));
     }
 }

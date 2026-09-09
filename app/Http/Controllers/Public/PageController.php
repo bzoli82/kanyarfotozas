@@ -20,6 +20,16 @@ class PageController extends Controller
         return Inertia::render('Info/About');
     }
 
+    /**
+     * „Közösség" (EN: „Social") — a cég közösségi média elérhetőségei külön oldalon.
+     * A linkek az Inertia shared `social` propból jönnek (App\Services\SocialLinks),
+     * amit a superadmin a /admin/settings/social oldalon állít.
+     */
+    public function community(): Response
+    {
+        return Inertia::render('Info/Community');
+    }
+
     public function privacy(): Response
     {
         return Inertia::render('Info/Privacy');

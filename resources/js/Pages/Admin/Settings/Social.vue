@@ -31,8 +31,8 @@ function save() {
     <AdminLayout>
         <h1 class="font-display text-xl font-bold uppercase tracking-tight text-content">Közösségi média</h1>
         <p class="mt-1 max-w-2xl text-sm text-muted">
-            A kitöltött linkek megjelennek a publikus <strong class="text-content">láblécben</strong> és a
-            <strong class="text-content">Kapcsolat</strong> oldalon. Az üresen hagyott platform sehol nem jelenik meg.
+            A kitöltött linkek megjelennek a publikus <strong class="text-content">„Közösség" oldalon</strong> (fejléc-menü) és a
+            <strong class="text-content">láblécben</strong>. Az üresen hagyott platform sehol nem jelenik meg.
             Elég a profil URL-je — a <code>https://</code> automatikusan bekerül.
         </p>
 

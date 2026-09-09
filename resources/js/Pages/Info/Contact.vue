@@ -1,8 +1,7 @@
 <script setup>
 import { computed } from 'vue';
-import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
-import SocialIcon from '@/Components/SocialIcon.vue';
 import { useI18n } from '@/Composables/useI18n';
 import { useFormGuard } from '@/Composables/useFormGuard';
 import { useHcaptcha } from '@/Composables/useHcaptcha';
@@ -15,7 +14,6 @@ const props = defineProps({
 const { t } = useI18n();
 const page = usePage();
 const success = computed(() => page.props.flash?.success);
-const social = computed(() => page.props.social ?? []);
 
 const { question, fields: guardFields } = useFormGuard(() => props.guard);
 const { token: hcToken, el: hcEl, reset: hcReset, isEnabled: hcIsEnabled } = useHcaptcha(() => props.hcaptcha);
@@ -131,22 +129,10 @@ async function submit() {
                     </button>
                 </form>
 
-                <div v-if="social.length" class="mt-12 border-t border-border pt-8">
-                    <h2 class="text-sm font-semibold uppercase tracking-wide text-content">{{ t('contact.follow_us') }}</h2>
-                    <ul class="mt-4 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
-                        <li v-for="s in social" :key="s.platform" class="min-w-0">
-                            <a
-                                :href="s.url"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="group flex items-center gap-3 text-sm hover:text-accent"
-                            >
-                                <SocialIcon :platform="s.platform" class="h-6 w-6 shrink-0 text-content group-hover:text-accent" />
-                                <span class="truncate font-medium text-content group-hover:text-accent">{{ s.display }}</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                <p class="mt-12 border-t border-border pt-8 text-sm text-muted">
+                    {{ t('contact.social_moved') }}
+                    <Link href="/social" class="font-medium text-accent hover:underline">{{ t('nav.community') }}</Link>
+                </p>
             </div>
         </section>
     </PublicLayout>

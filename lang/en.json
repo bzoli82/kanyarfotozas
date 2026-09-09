@@ -9,6 +9,7 @@
     "nav.photographers": "Photographers",
     "nav.pricing": "Pricing",
     "nav.about": "About",
+    "nav.community": "Social",
     "nav.faq": "FAQ",
     "nav.contact": "Contact",
     "nav.search": "Search",
@@ -264,7 +265,13 @@
     "contact.captcha_label": "Security question: :question",
     "contact.hcaptcha_required": "Please confirm that you are not a robot.",
     "contact.submit": "Send message",
-    "contact.follow_us": "Follow us",
+    "contact.social_moved": "Our social channels:",
+
+    "community.title": "Social",
+    "community.subtitle": "Follow us on social media — fresh shots from events, behind the scenes and upcoming shoots.",
+    "community.empty": "Coming soon.",
+    "community.contact_title": "Got a question?",
+    "community.contact_body": "For anything specific (an order, a complaint, a partnership), use the contact form.",
 
     "auth.login_title": "Sign in",
     "auth.login_subtitle": "Admin / photographer login",

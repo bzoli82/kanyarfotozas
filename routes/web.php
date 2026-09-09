@@ -142,6 +142,7 @@ Route::post('/my-purchases/logout', [MyPurchasesController::class, 'logout'])->n
 
 // Informacios aloldalak — EPIC-11
 Route::get('/about', [PageController::class, 'about'])->name('public.about');
+Route::get('/social', [PageController::class, 'community'])->name('public.community');
 Route::get('/photographers', [PublicPhotographerController::class, 'index'])->name('public.photographers');
 Route::get('/privacy', [PageController::class, 'privacy'])->name('public.privacy');
 Route::get('/shop', [PageController::class, 'shop'])->name('public.shop');

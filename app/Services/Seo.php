@@ -73,6 +73,7 @@ class Seo
                 'description' => 'Böngészd a lefotózott pályanapokat és versenyeket. Szűrj helyszínre, országra, dátumra vagy a saját GPS-pozíciódra.',
             ],
             'public.about' => [...$seo, 'title' => 'Rólunk — '.$brand, 'description' => 'Kik vagyunk, hogyan dolgozunk, és hogyan lehetsz te is fotósunk.'],
+            'public.community' => [...$seo, 'title' => 'Közösség — '.$brand, 'description' => 'Kövess minket a közösségi oldalainkon: friss képek az eseményekről és a következő fotózások.'],
             'public.shop' => [...$seo, 'title' => 'Árak és letöltés — '.$brand, 'description' => 'Egységes árazás, azonnali letöltés vízjel nélkül, JPEG és WebP formátum, videók MP4-ben.'],
             'public.faq' => [...$seo, 'title' => 'Gyakori kérdések — '.$brand, 'description' => 'Válaszok a vásárlással, letöltéssel, rendszám-homályosítással és a fotósoknak szóló kérdésekre.'],
             'public.contact' => [...$seo, 'title' => 'Kapcsolat — '.$brand, 'description' => 'Írj nekünk kérdéssel, panasszal vagy együttműködési ajánlattal.'],

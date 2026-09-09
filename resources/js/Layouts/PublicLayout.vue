@@ -32,6 +32,7 @@ const nav = computed(() => [
     { label: t('nav.pricing'), href: '/shop' },
     { label: t('nav.faq'), href: '/faq' },
     { label: t('nav.about'), href: '/about' },
+    { label: t('nav.community'), href: '/social' },
     { label: t('nav.contact'), href: '/contact' },
 ]);
 
@@ -155,6 +156,7 @@ function setLocale(code) {
                 <div class="flex flex-wrap gap-x-8 gap-y-2 text-sm text-muted lg:justify-center">
                     <Link href="/about" class="hover:text-content">{{ t('nav.about') }}</Link>
                     <Link href="/faq" class="hover:text-content">{{ t('footer.faq') }}</Link>
+                    <Link href="/social" class="hover:text-content">{{ t('nav.community') }}</Link>
                     <Link href="/contact" class="hover:text-content">{{ t('nav.contact') }}</Link>
                     <Link href="/shop" class="hover:text-content">{{ t('nav.pricing') }}</Link>
                     <Link href="/my-purchases" class="hover:text-content">Korábbi vásárlásaim</Link>

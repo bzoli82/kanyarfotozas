@@ -9,6 +9,7 @@
     "nav.photographers": "Fotósok",
     "nav.pricing": "Árak",
     "nav.about": "Rólunk",
+    "nav.community": "Közösség",
     "nav.faq": "GY.I.K.",
     "nav.contact": "Kapcsolat",
     "nav.search": "Keresés",
@@ -264,7 +265,13 @@
     "contact.captcha_label": "Biztonsági kérdés: :question",
     "contact.hcaptcha_required": "Erősítsd meg, hogy nem vagy robot.",
     "contact.submit": "Üzenet küldése",
-    "contact.follow_us": "Kövess minket",
+    "contact.social_moved": "Közösségi oldalaink:",
+
+    "community.title": "Közösség",
+    "community.subtitle": "Kövess minket a közösségi oldalainkon — friss képek az eseményekről, a színfalak mögött és a következő fotózások.",
+    "community.empty": "Hamarosan.",
+    "community.contact_title": "Van kérdésed?",
+    "community.contact_body": "Ha konkrét ügyben írnál (rendelés, panasz, együttműködés), használd a kapcsolati űrlapot.",
 
     "auth.login_title": "Bejelentkezés",
     "auth.login_subtitle": "Admin / fotós belépés",
