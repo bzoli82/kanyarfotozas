@@ -85,6 +85,7 @@ class EventGalleryTest extends TestCase
 
     public function test_gallery_media_includes_photographer_name_for_the_lightbox(): void
     {
+        SiteSetting::set('photographer_attribution_public', '1');
         $photographer = User::factory()->photographer()->create(['name' => 'Teszt Fotós']);
         $event = Event::factory()->create(['status' => Event::STATUS_LIVE]);
         Media::factory()->create(['event_id' => $event->id, 'status' => Media::STATUS_READY, 'photographer_id' => $photographer->id]);
@@ -231,6 +232,7 @@ class EventGalleryTest extends TestCase
 
     public function test_events_index_filters_by_photographer(): void
     {
+        SiteSetting::set('photographer_attribution_public', '1');
         $anna = User::factory()->photographer()->create(['name' => 'Anna Fotós']);
         $bela = User::factory()->photographer()->create(['name' => 'Béla Fotós']);
 
@@ -253,6 +255,7 @@ class EventGalleryTest extends TestCase
 
         // Ugyanaz a helyszín, két külön esemény, két külön fotós — a térkép-modalból
         // egy pinre kattintva a fotós-szűrésnek is érvényesülnie kell.
+        SiteSetting::set('photographer_attribution_public', '1');
         $annaEvent = Event::factory()->create(['status' => Event::STATUS_LIVE, 'name' => 'Sopron Anna', 'location' => 'Sopron']);
         $belaEvent = Event::factory()->create(['status' => Event::STATUS_LIVE, 'name' => 'Sopron Béla', 'location' => 'Sopron']);
         Media::factory()->photo()->create(['event_id' => $annaEvent->id, 'status' => Media::STATUS_READY, 'photographer_id' => $anna->id]);
@@ -283,6 +286,7 @@ class EventGalleryTest extends TestCase
 
     public function test_api_events_filters_markers_by_photographer_and_type(): void
     {
+        SiteSetting::set('photographer_attribution_public', '1');
         $anna = User::factory()->photographer()->create(['name' => 'Anna Fotós']);
         $bela = User::factory()->photographer()->create(['name' => 'Béla Fotós']);
 

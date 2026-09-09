@@ -1,6 +1,10 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import 'leaflet/dist/leaflet.css';
+
+// Fotós-szűrő — a superadmin kikapcsolhatja (fotós-attribúció rejtése).
+const photographerSearchEnabled = computed(() => usePage().props.photographerSearch !== false);
 
 const props = defineProps({
     open: { type: Boolean, default: false },
@@ -131,6 +135,7 @@ async function initMap() {
 }
 
 async function loadPhotographers() {
+    if (!photographerSearchEnabled.value) return;
     try {
         const res = await fetch('/api/photographers');
         const json = await res.json();
@@ -305,7 +310,7 @@ onBeforeUnmount(() => {
                             class="rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
                         />
                     </label>
-                    <label class="block">
+                    <label v-if="photographerSearchEnabled" class="block">
                         <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">Fotós</span>
                         <select
                             v-model="photographerId"

@@ -28,11 +28,12 @@ class PhotographerVisibility
 
     /**
      * A KÉP-szintű fotós-attribúció („Fotós: X" a lightboxban / média-oldalon)
-     * + az esemény-kereső „Fotós" szűrője. Alap: BE (a jelenlegi viselkedés).
+     * + az esemény-kereső „Fotós" szűrője. Alap: KI (anti-disintermediation) —
+     * a superadmin bekapcsolhatja a `/admin/photographers` oldalon.
      */
     public function attributionPublic(): bool
     {
-        return (bool) SiteSetting::get('photographer_attribution_public', true);
+        return (bool) SiteSetting::get('photographer_attribution_public', false);
     }
 
     public function setAttributionPublic(bool $enabled): void

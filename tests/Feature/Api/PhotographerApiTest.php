@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\SiteSetting;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,6 +17,8 @@ class PhotographerApiTest extends TestCase
         parent::setUp();
 
         $this->seed(RolePermissionSeeder::class);
+        // A kereső fotós-listája csak akkor működik, ha a superadmin engedélyezte az attribúciót.
+        SiteSetting::set('photographer_attribution_public', '1');
     }
 
     public function test_it_only_lists_active_and_public_photographers(): void
