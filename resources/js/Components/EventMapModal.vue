@@ -282,7 +282,7 @@ onBeforeUnmount(() => {
                     </div>
                     <button
                         type="button"
-                        class="grid h-8 w-8 place-items-center rounded-lg border border-border text-muted hover:text-content"
+                        class="grid h-8 w-8 place-items-center rounded-[var(--radius-base)] border border-border text-muted hover:text-content"
                         aria-label="Bezárás"
                         @click="emit('close')"
                     >
@@ -299,7 +299,7 @@ onBeforeUnmount(() => {
                         <input
                             v-model="dateFrom"
                             type="date"
-                            class="rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
+                            class="rounded-[var(--radius-base)] border border-border bg-surface-2 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
                         />
                     </label>
                     <label class="block">
@@ -307,24 +307,24 @@ onBeforeUnmount(() => {
                         <input
                             v-model="dateUntil"
                             type="date"
-                            class="rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
+                            class="rounded-[var(--radius-base)] border border-border bg-surface-2 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
                         />
                     </label>
                     <label v-if="photographerSearchEnabled" class="block">
                         <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">Fotós</span>
                         <select
                             v-model="photographerId"
-                            class="rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
+                            class="rounded-[var(--radius-base)] border border-border bg-surface-2 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
                         >
                             <option value="">Összes fotós</option>
                             <option v-for="p in photographers" :key="p.id" :value="p.id">{{ p.name }}</option>
                         </select>
                     </label>
                     <label class="block">
-                        <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">Típus</span>
+                        <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">Média</span>
                         <select
                             v-model="mediaType"
-                            class="rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
+                            class="rounded-[var(--radius-base)] border border-border bg-surface-2 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
                         >
                             <option v-for="opt in typeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                         </select>
@@ -351,13 +351,13 @@ onBeforeUnmount(() => {
                     <div v-if="!loading && errorMessage" class="pointer-events-none absolute inset-0 grid place-items-center bg-surface-1/60 text-sm text-muted">
                         {{ errorMessage }}
                     </div>
-                    <div v-if="!loading && !errorMessage && filteredEvents.length === 0" class="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-lg border border-border bg-surface-1/95 px-3 py-2 text-xs text-muted">
+                    <div v-if="!loading && !errorMessage && filteredEvents.length === 0" class="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-[var(--radius-base)] border border-border bg-surface-1/95 px-3 py-2 text-xs text-muted">
                         Nincs a szűrésnek megfelelő fotózás.
                     </div>
 
                     <div
                         v-if="hasUpcoming && !loading && !errorMessage"
-                        class="pointer-events-none absolute bottom-3 left-3 flex flex-col gap-1 rounded-lg border border-border bg-surface-1/95 px-3 py-2 text-[11px] text-muted"
+                        class="pointer-events-none absolute bottom-3 left-3 flex flex-col gap-1 rounded-[var(--radius-base)] border border-border bg-surface-1/95 px-3 py-2 text-[11px] text-muted"
                     >
                         <span class="flex items-center gap-1.5"><span class="inline-block h-3 w-3 rounded-full border-2 border-white bg-[#e63946]"></span> Élő fotózás (van kép)</span>
                         <span class="flex items-center gap-1.5"><span class="inline-block h-3 w-3 rounded-full border-2 border-dashed border-white bg-[#f59e0b]"></span> Hamarosan (előhirdetve)</span>
@@ -372,14 +372,14 @@ onBeforeUnmount(() => {
                         <button
                             v-if="allowAreaSearch"
                             type="button"
-                            class="rounded-lg border border-border px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-content hover:border-accent hover:text-accent"
+                            class="rounded-[var(--radius-base)] border border-border px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-content hover:border-accent hover:text-accent"
                             @click="searchCurrentArea"
                         >
                             Keress itt
                         </button>
                         <button
                             type="button"
-                            class="rounded-lg bg-accent px-6 py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover"
+                            class="rounded-[var(--radius-base)] bg-accent px-6 py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover"
                             @click="emit('search')"
                         >
                             Keresés

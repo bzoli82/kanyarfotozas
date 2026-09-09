@@ -58,7 +58,7 @@ function formatDate(value) {
                     <select
                         id="events-per-page"
                         v-model.number="perPage"
-                        class="rounded-lg border border-border bg-surface-1 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
+                        class="rounded-[var(--radius-base)] border border-border bg-surface-1 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
                         @change="changePerPage"
                     >
                         <option v-for="opt in perPageOptions" :key="opt" :value="opt">{{ opt }}</option>
@@ -113,7 +113,7 @@ function formatDate(value) {
                         :key="i"
                         :href="link.url ?? ''"
                         v-html="link.label"
-                        class="rounded-lg border px-3 py-1.5 text-xs"
+                        class="rounded-[var(--radius-base)] border px-3 py-1.5 text-xs"
                         :class="[
                             link.active ? 'border-accent text-accent' : 'border-border text-muted hover:text-content',
                             !link.url && 'pointer-events-none opacity-40',

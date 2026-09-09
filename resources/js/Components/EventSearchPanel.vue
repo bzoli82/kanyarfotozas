@@ -246,7 +246,7 @@ function submitSearch() {
                     </span>
                     <button
                         type="button"
-                        class="flex w-full items-center justify-between rounded-lg border bg-surface-2 px-3 py-2.5 text-left text-sm hover:border-accent focus:outline-none"
+                        class="flex w-full items-center justify-between rounded-[var(--radius-base)] border bg-surface-2 px-3 py-2.5 text-left text-sm hover:border-accent focus:outline-none"
                         :class="search.countries.length ? 'border-accent text-accent' : 'border-border text-content'"
                         @click="countryPanelOpen = !countryPanelOpen"
                     >
@@ -272,7 +272,7 @@ function submitSearch() {
                             </label>
                             <p v-if="!countries.length" class="px-2 py-1.5 text-xs text-muted">{{ t('common.loading') }}</p>
                         </div>
-                        <button type="button" class="mt-2 w-full rounded-lg bg-accent py-2 text-[11px] font-semibold uppercase tracking-wide text-white hover:bg-accent-hover" @click="countryPanelOpen = false">
+                        <button type="button" class="mt-2 w-full rounded-[var(--radius-base)] bg-accent py-2 text-[11px] font-semibold uppercase tracking-wide text-white hover:bg-accent-hover" @click="countryPanelOpen = false">
                             {{ t('home.search.done') }}
                         </button>
                     </div>
@@ -288,13 +288,13 @@ function submitSearch() {
                         type="text"
                         autocomplete="off"
                         :placeholder="search.countries.length ? t('home.search.location_placeholder_countries') : t('home.search.location_placeholder')"
-                        class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none"
+                        class="w-full rounded-[var(--radius-base)] border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none"
                         @focus="locationDropdownOpen = true"
                         @blur="setTimeout(() => (locationDropdownOpen = false), 150)"
                     />
                     <div
                         v-if="locationDropdownOpen && (locationsLoading || filteredLocations.length > 0 || search.location)"
-                        class="absolute left-0 top-full z-20 mt-1 w-full overflow-hidden rounded-lg border border-border bg-surface-2 shadow-xl shadow-black/40"
+                        class="absolute left-0 top-full z-20 mt-1 w-full overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-2 shadow-xl shadow-black/40"
                     >
                         <p v-if="locationsLoading" class="px-3 py-2 text-xs text-muted">{{ t('common.loading') }}</p>
                         <template v-else-if="filteredLocations.length > 0">
@@ -320,28 +320,34 @@ function submitSearch() {
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
                         {{ t('home.search.date') }}
                     </span>
-                    <input v-model="search.dateFrom" type="date" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
+                    <input v-model="search.dateFrom" type="date" class="w-full rounded-[var(--radius-base)] border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
                 </label>
                 <label v-if="photographerSearchEnabled" class="block">
                     <span class="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6" /></svg>
                         {{ t('home.search.photographer') }}
                     </span>
-                    <select v-model="search.photographerId" class="w-full appearance-none rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none">
-                        <option value="">{{ t('home.search.all_photographers') }}</option>
-                        <option v-for="p in photographers" :key="p.id" :value="p.id">{{ p.name }}</option>
-                    </select>
+                    <div class="relative">
+                        <select v-model="search.photographerId" class="w-full appearance-none rounded-[var(--radius-base)] border border-border bg-surface-2 px-3 py-2.5 pr-9 text-sm text-content focus:border-accent focus:outline-none">
+                            <option value="">{{ t('home.search.all_photographers') }}</option>
+                            <option v-for="p in photographers" :key="p.id" :value="p.id">{{ p.name }}</option>
+                        </select>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted"><path d="m6 9 6 6 6-6" /></svg>
+                    </div>
                 </label>
                 <label class="block">
                     <span class="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="m9 8 5 4-5 4V8Z" /></svg>
                         {{ t('home.search.type') }}
                     </span>
-                    <select v-model="search.type" class="w-full appearance-none rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none">
-                        <option value="all">{{ t('home.search.type_all') }}</option>
-                        <option value="photo">{{ t('home.search.type_photo') }}</option>
-                        <option value="video">{{ t('home.search.type_video') }}</option>
-                    </select>
+                    <div class="relative">
+                        <select v-model="search.type" class="w-full appearance-none rounded-[var(--radius-base)] border border-border bg-surface-2 px-3 py-2.5 pr-9 text-sm text-content focus:border-accent focus:outline-none">
+                            <option value="all">{{ t('home.search.type_all') }}</option>
+                            <option value="photo">{{ t('home.search.type_photo') }}</option>
+                            <option value="video">{{ t('home.search.type_video') }}</option>
+                        </select>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted"><path d="m6 9 6 6 6-6" /></svg>
+                    </div>
                 </label>
             </div>
 
@@ -349,19 +355,19 @@ function submitSearch() {
                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <label class="block">
                         <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">{{ t('home.search.latitude') }}</span>
-                        <input v-model="search.lat" type="number" step="0.0001" placeholder="47.9025" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                        <input v-model="search.lat" type="number" step="0.0001" placeholder="47.9025" class="w-full rounded-[var(--radius-base)] border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
                     </label>
                     <label class="block">
                         <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">{{ t('home.search.longitude') }}</span>
-                        <input v-model="search.lon" type="number" step="0.0001" placeholder="20.3772" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
+                        <input v-model="search.lon" type="number" step="0.0001" placeholder="20.3772" class="w-full rounded-[var(--radius-base)] border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
                     </label>
                     <label class="block">
                         <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">{{ t('home.search.date_from') }}</span>
-                        <input v-model="search.dateFrom" type="date" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
+                        <input v-model="search.dateFrom" type="date" class="w-full rounded-[var(--radius-base)] border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
                     </label>
                     <label class="block">
                         <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">{{ t('home.search.date_to') }}</span>
-                        <input v-model="search.dateUntil" type="date" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
+                        <input v-model="search.dateUntil" type="date" class="w-full rounded-[var(--radius-base)] border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
                     </label>
                 </div>
 
@@ -377,7 +383,7 @@ function submitSearch() {
                     <button
                         type="button"
                         :disabled="locating"
-                        class="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-content hover:border-accent hover:text-accent disabled:opacity-60"
+                        class="flex items-center gap-1.5 rounded-[var(--radius-base)] border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-content hover:border-accent hover:text-accent disabled:opacity-60"
                         @click="useMyLocation"
                     >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>
@@ -393,7 +399,7 @@ function submitSearch() {
             </div>
 
             <div class="mt-4 flex justify-end border-t border-border pt-4">
-                <button type="submit" class="rounded-lg bg-accent px-8 py-3 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover">
+                <button type="submit" class="rounded-[var(--radius-base)] bg-accent px-8 py-3 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover">
                     {{ t('home.search.submit') }}
                 </button>
             </div>
