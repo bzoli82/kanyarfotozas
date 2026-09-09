@@ -22,6 +22,8 @@ class AnimationSettings
 
     public const DEFAULT_HERO = 'full';
 
+    public const DEFAULT_CARDS = 'lift';
+
     /**
      * @var array<string, array{label: string, duration: int, distance: int, stagger: int}>
      */
@@ -34,6 +36,9 @@ class AnimationSettings
     public const PAGE_MODES = ['none', 'fade', 'slide'];
 
     public const HERO_MODES = ['none', 'kenburns', 'full'];
+
+    /** Galéria- / kereső-eredmény kártyák hover-viselkedése. */
+    public const CARD_MODES = ['none', 'lift', 'shine', 'tilt'];
 
     public function enabled(): bool
     {
@@ -59,6 +64,13 @@ class AnimationSettings
         $value = (string) SiteSetting::get('anim_hero', self::DEFAULT_HERO);
 
         return in_array($value, self::HERO_MODES, true) ? $value : self::DEFAULT_HERO;
+    }
+
+    public function cards(): string
+    {
+        $value = (string) SiteSetting::get('anim_cards', self::DEFAULT_CARDS);
+
+        return in_array($value, self::CARD_MODES, true) ? $value : self::DEFAULT_CARDS;
     }
 
     public function scrollReveal(): bool
@@ -104,6 +116,7 @@ class AnimationSettings
             'preset' => $this->preset(),
             'page' => $this->pageTransition(),
             'hero' => $this->hero(),
+            'cards' => $this->cards(),
             'reveal' => $this->scrollReveal(),
             'counters' => $this->counters(),
         ];
@@ -141,6 +154,7 @@ class AnimationSettings
             'anim_preset' => ['sometimes', Rule::in(array_keys(self::PRESETS))],
             'anim_page' => ['sometimes', Rule::in(self::PAGE_MODES)],
             'anim_hero' => ['sometimes', Rule::in(self::HERO_MODES)],
+            'anim_cards' => ['sometimes', Rule::in(self::CARD_MODES)],
             'anim_reveal' => ['sometimes', 'boolean'],
             'anim_counters' => ['sometimes', 'boolean'],
         ];
@@ -156,7 +170,7 @@ class AnimationSettings
                 SiteSetting::set($key, $data[$key] ? '1' : '0');
             }
         }
-        foreach (['anim_preset', 'anim_page', 'anim_hero'] as $key) {
+        foreach (['anim_preset', 'anim_page', 'anim_hero', 'anim_cards'] as $key) {
             if (array_key_exists($key, $data)) {
                 SiteSetting::set($key, (string) $data[$key]);
             }

@@ -5,6 +5,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
     data-anim="{{ $anim->enabled() ? 'on' : 'off' }}"
     data-anim-page="{{ $anim->enabled() ? $anim->pageTransition() : 'none' }}"
+    data-anim-cards="{{ $anim->enabled() ? $anim->cards() : 'none' }}"
     data-anim-reveal="{{ $anim->enabled() && $anim->scrollReveal() ? 'on' : 'off' }}">
 <head>
     <meta charset="utf-8">

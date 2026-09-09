@@ -11,6 +11,7 @@ const props = defineProps({
     animation: Object,
     animationPageModes: Array,
     animationHeroModes: Array,
+    animationCardModes: Array,
 });
 
 const form = useForm({
@@ -27,6 +28,7 @@ const form = useForm({
     anim_preset: props.animation.preset,
     anim_page: props.animation.page,
     anim_hero: props.animation.hero,
+    anim_cards: props.animation.cards,
     anim_reveal: props.animation.reveal,
     anim_counters: props.animation.counters,
 });
@@ -38,6 +40,20 @@ const animPreset = computed(
 const demoKey = ref(0);
 function replayDemo() {
     demoKey.value++;
+}
+
+// A kártya-hover előnézet 3D-dőlése (a v-tilt direktíva a MENTETT értéket nézi,
+// itt a még nem mentett választásra kell reagálni).
+const previewCard = ref(null);
+function previewTilt(e) {
+    if (form.anim_cards !== 'tilt' || !previewCard.value) return;
+    const r = previewCard.value.getBoundingClientRect();
+    previewCard.value.style.setProperty('--tx', `${(((e.clientX - r.left) / r.width - 0.5) * 6).toFixed(2)}deg`);
+    previewCard.value.style.setProperty('--ty', `${((-((e.clientY - r.top) / r.height - 0.5)) * 6).toFixed(2)}deg`);
+}
+function previewTiltReset() {
+    previewCard.value?.style.setProperty('--tx', '0deg');
+    previewCard.value?.style.setProperty('--ty', '0deg');
 }
 
 const presetByKey = (key) => props.settings.presets.find((p) => p.key === key);
@@ -253,6 +269,29 @@ function previewVars(palette) {
                                 <option v-for="o in animationHeroModes" :key="o.value" :value="o.value">{{ o.label }}</option>
                             </select>
                         </label>
+
+                        <div>
+                            <label class="block">
+                                <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">Galéria- / kereső-kártyák (hover)</span>
+                                <select v-model="form.anim_cards" class="w-full appearance-none rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content focus:border-accent focus:outline-none">
+                                    <option v-for="o in animationCardModes" :key="o.value" :value="o.value">{{ o.label }}</option>
+                                </select>
+                            </label>
+                            <!-- Élő kártya-előnézet: vidd rá a kurzort -->
+                            <div :data-anim-cards="form.anim_cards" class="mt-2">
+                                <div
+                                    ref="previewCard"
+                                    class="hover-card mx-auto w-40 overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-2"
+                                    @mousemove="previewTilt"
+                                    @mouseleave="previewTiltReset"
+                                >
+                                    <div class="aspect-[4/3] overflow-hidden">
+                                        <div class="hover-card__media h-full w-full" :style="{ background: `linear-gradient(135deg, ${form.accent_color}, var(--color-surface-1))` }"></div>
+                                    </div>
+                                    <div class="p-2 text-[10px] text-muted">Próba kártya — hover</div>
+                                </div>
+                            </div>
+                        </div>
 
                         <label class="flex items-center gap-2 text-xs text-content">
                             <input v-model="form.anim_reveal" type="checkbox" class="accent-[var(--color-accent)]" />

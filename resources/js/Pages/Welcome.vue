@@ -241,8 +241,9 @@ const stats = computed(() => [
                         v-for="(ev, i) in recentEvents"
                         :key="ev.slug"
                         v-reveal="i"
+                        v-tilt
                         :href="`/events/${ev.slug}`"
-                        class="group overflow-hidden rounded-[var(--radius-base)] border bg-surface-1 transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-lg hover:shadow-black/20"
+                        class="hover-card group overflow-hidden rounded-[var(--radius-base)] border bg-surface-1"
                         :class="ev.comingSoon ? 'border-accent/50' : 'border-border'"
                     >
                         <div class="relative aspect-[4/3] overflow-hidden bg-surface-2">
@@ -252,7 +253,7 @@ const stats = computed(() => [
                                 loading="lazy"
                                 decoding="async"
                                 alt=""
-                                class="h-full w-full object-cover transition-transform duration-[600ms] ease-out group-hover:scale-[1.05]"
+                                class="hover-card__media h-full w-full object-cover"
                                 :class="{ 'opacity-60': ev.comingSoon }"
                             />
                             <div v-else class="absolute inset-0 grid place-items-center text-border">

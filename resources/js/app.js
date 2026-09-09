@@ -7,6 +7,7 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { useThemeStore } from '@/Stores/theme';
 import reveal from '@/directives/reveal';
+import tilt from '@/directives/tilt';
 
 /**
  * Elavult build utáni chunk-hiba kezelése. Ha a felhasználó tabja nyitva marad
@@ -59,6 +60,7 @@ createInertiaApp({
             .use(createPinia());
 
         app.directive('reveal', reveal);
+        app.directive('tilt', tilt);
 
         app.mount(el);
 

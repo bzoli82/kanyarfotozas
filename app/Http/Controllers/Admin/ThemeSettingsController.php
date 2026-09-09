@@ -33,6 +33,12 @@ class ThemeSettingsController extends Controller
                 ['value' => 'kenburns', 'label' => 'Ken Burns (lassú ráközelítés)'],
                 ['value' => 'full', 'label' => 'Ken Burns + címsor-belépő'],
             ],
+            'animationCardModes' => [
+                ['value' => 'none', 'label' => 'Nincs'],
+                ['value' => 'lift', 'label' => 'Emelkedés + kép-ráközelítés'],
+                ['value' => 'shine', 'label' => 'Emelkedés + fény-suhanás'],
+                ['value' => 'tilt', 'label' => '3D-dőlés a kurzor felé'],
+            ],
             'modes' => [
                 ['value' => 'dark', 'label' => 'Sötét'],
                 ['value' => 'light', 'label' => 'Világos'],

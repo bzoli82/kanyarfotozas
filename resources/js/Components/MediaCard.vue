@@ -97,7 +97,8 @@ function toggleCollection() {
 
 <template>
     <div
-        class="group relative overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-1 transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-lg hover:shadow-black/20"
+        v-tilt
+        class="hover-card group relative overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-1"
         @mouseenter="onEnterCard"
         @mouseleave="onLeaveCard"
     >
@@ -126,7 +127,7 @@ function toggleCollection() {
                 <img
                     v-if="media.thumbnail_s3_key"
                     :src="mediaUrl(media.thumbnail_s3_key)"
-                    class="h-full w-full object-cover transition-transform duration-[600ms] ease-out group-hover:scale-[1.05]"
+                    class="hover-card__media h-full w-full object-cover"
                     :class="{ invisible: isHovering && media.type === 'video' && canHoverPreview }"
                     loading="lazy"
                     decoding="async"
@@ -137,7 +138,7 @@ function toggleCollection() {
                     v-if="media.type === 'video' && media.watermarked_s3_key && canHoverPreview"
                     ref="videoEl"
                     :src="mediaUrl(media.watermarked_s3_key)"
-                    class="absolute inset-0 h-full w-full object-cover"
+                    class="hover-card__media absolute inset-0 h-full w-full object-cover"
                     :class="{ invisible: !isHovering }"
                     muted
                     loop
