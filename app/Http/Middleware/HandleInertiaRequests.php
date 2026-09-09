@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use App\Services\GeoSearchSettings;
 use App\Services\MediaStorage;
 use App\Services\PhotographerVisibility;
@@ -9,6 +10,7 @@ use App\Services\Seo;
 use App\Services\SiteBranding;
 use App\Services\SocialLinks;
 use App\Services\ThemeSettings;
+use App\Support\AdminNavigation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Inertia\Middleware;
@@ -65,6 +67,11 @@ class HandleInertiaRequests extends Middleware
                     ? $request->user()->only('id', 'name', 'email', 'role')
                     : null,
             ],
+            // A csapat-felület oldalsáv menüje (szekciókba rendezve, magyarázatokkal).
+            // Csak bejelentkezett csapattagnak; a látogatói oldalakon null.
+            'adminNav' => fn () => $request->user() && in_array($request->user()->role, [
+                User::ROLE_SUPERADMIN, User::ROLE_ADMIN, User::ROLE_PHOTOGRAPHER, User::ROLE_ORGANIZER,
+            ], true) ? AdminNavigation::sections($request->user()) : null,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

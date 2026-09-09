@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ErrorEventController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\ForensicController;
 use App\Http\Controllers\Admin\GeoController;
+use App\Http\Controllers\Admin\GuideController;
 use App\Http\Controllers\Admin\HeroSlideController;
 use App\Http\Controllers\Admin\LegalSettingsController;
 use App\Http\Controllers\Admin\LocationSearchController;
@@ -330,6 +331,7 @@ Route::middleware(['auth', 'role:superadmin', '2fa'])->prefix('admin')->name('ad
 // Admin + photographer kozos utvonalak: esemeny CRUD + media feltoltes/kezeles.
 // A fotos is letrehozhat/szerkeszthet esemenyt, de csak a sajatjat — lasd EventController.
 Route::middleware(['auth', 'role:superadmin|admin|photographer', '2fa'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/guide', [GuideController::class, 'index'])->name('guide');
     Route::get('/events', [EventController::class, 'index'])->name('events.index');
     Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
