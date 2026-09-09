@@ -23,6 +23,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Éles környezetben egy fordított proxy (Coolify/Traefik, Forge/nginx, CDN) áll
+        // az app előtt — enélkül a Laravel http-nek látná a https kérést (rossz signed
+        // URL / redirect / mixed content) és a proxy IP-jét venné kliens IP-nek (rate
+        // limit, failed-login hash, forensic ujjlenyomat). Lokálisan nincs proxy → hatástalan.
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             SetLocale::class,
             HandleInertiaRequests::class,
