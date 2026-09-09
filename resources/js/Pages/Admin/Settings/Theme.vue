@@ -42,7 +42,13 @@ function pickPreset(key) {
 }
 
 function save() {
-    form.put('/admin/settings/theme', { preserveScroll: true });
+    // A séma színeit az app.blade.php <head>-jébe injektált <style> adja, ami csak
+    // teljes oldalbetöltéskor frissül — ezért mentés után újratöltünk, hogy a
+    // változás azonnal látszódjon (nem csak a következő hard refresh után).
+    form.put('/admin/settings/theme', {
+        preserveScroll: true,
+        onSuccess: () => window.location.reload(),
+    });
 }
 
 function resetOwnPreference() {
