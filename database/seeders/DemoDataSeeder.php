@@ -40,7 +40,8 @@ class DemoDataSeeder extends Seeder
                 'password' => 'password',
                 'role' => User::ROLE_ADMIN,
                 'is_active' => true,
-                'is_public' => true,
+                // Egy „Admin" nevű koordinátor-fiók ne legyen kint a nyilvános Fotósok oldalon.
+                'is_public' => false,
                 'bio' => 'A csapat koordinátora — a helyszínek szervezése és a képek gondozása.',
                 'email_verified_at' => now(),
             ],
