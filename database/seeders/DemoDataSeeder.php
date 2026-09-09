@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Country;
 use App\Models\Event;
 use App\Models\Media;
+use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\PlaceholderMediaGenerator;
 use App\Services\SiteBranding;
@@ -119,6 +120,9 @@ class DemoDataSeeder extends Seeder
                     ->create();
             }
         }
+
+        // A demóban látszódjanak a fotós-elérhetőségek (éles alap: KI — anti-disintermediation).
+        SiteSetting::set('photographer_contacts_public', '1');
 
         // Cég szintű közösségi média linkek (a Kapcsolat oldal „Kövess minket" + a lábléc) —
         // demó/placeholder URL-ek, hogy a szekció ne tűnjön el egy friss telepítés után.

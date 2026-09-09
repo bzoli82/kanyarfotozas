@@ -7,6 +7,7 @@ use App\Mail\PhotographerInvitationMail;
 use App\Mail\TemporaryPasswordMail;
 use App\Models\Invitation;
 use App\Models\Media;
+use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\DashboardStatsService;
 use App\Services\ImageProcessingService;
@@ -85,7 +86,24 @@ class PhotographerController extends Controller
                 'outstanding_cents' => (int) $payoutSummary->sum('outstanding_cents'),
                 'paid_cents' => (int) $payoutSummary->sum('total_paid_cents'),
             ],
+            'contactsPublic' => (bool) SiteSetting::get('photographer_contacts_public', false),
         ]);
+    }
+
+    /**
+     * A fotósok nyilvános elérhetőségeinek megjelenítése a „Fotósok" oldalon
+     * (céges e-mail / weboldal / közösségi linkek). Alap: KI — hogy a vásárló ne
+     * tudja megkerülni az oldalt a fotós közvetlen megkeresésével.
+     */
+    public function updateSettings(Request $request): RedirectResponse
+    {
+        $data = $request->validate(['contacts_public' => ['required', 'boolean']]);
+
+        SiteSetting::set('photographer_contacts_public', $data['contacts_public'] ? '1' : '0');
+
+        return back()->with('success', $data['contacts_public']
+            ? 'A fotósok elérhetőségei mostantól megjelennek a nyilvános „Fotósok" oldalon.'
+            : 'A fotósok elérhetőségei rejtve — csak a profilkép, név és bemutatkozó látszik.');
     }
 
     private function revenueFor(string $userId): int

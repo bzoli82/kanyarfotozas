@@ -310,6 +310,7 @@ Route::middleware(['auth', 'role:superadmin', '2fa'])->prefix('admin')->name('ad
     Route::delete('/organizer-payouts/{organizerPayout}', [OrganizerPayoutController::class, 'destroy'])->name('organizer-payouts.destroy');
 
     Route::get('/photographers', [PhotographerController::class, 'index'])->name('photographers.index');
+    Route::put('/photographers/settings', [PhotographerController::class, 'updateSettings'])->name('photographers.settings');
     Route::post('/photographers/invite', [PhotographerController::class, 'storeInvitation'])->name('photographers.invite');
     Route::post('/photographers/invitations/{invitation}/resend', [PhotographerController::class, 'resendInvitation'])->name('photographers.invitations.resend');
     Route::delete('/photographers/invitations/{invitation}', [PhotographerController::class, 'destroyInvitation'])->name('photographers.invitations.destroy');

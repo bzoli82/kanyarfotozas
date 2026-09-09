@@ -7,6 +7,7 @@ import { useMediaUrl } from '@/Composables/useMediaUrl';
 const props = defineProps({
     profile: { type: Object, required: true },
     publicUrl: { type: String, default: '/photographers' },
+    contactsPublic: { type: Boolean, default: false },
 });
 
 const { mediaUrl } = useMediaUrl();
@@ -126,6 +127,9 @@ function submit() {
             <div class="rounded-[var(--radius-base)] border border-border bg-surface-1 p-5">
                 <h2 class="text-sm font-semibold uppercase tracking-wide text-content">Elérhetőségek</h2>
                 <p class="mt-1 text-xs text-muted">Csak a kitöltöttek jelennek meg. A linkeknél elég a cím, a <code>https://</code>-t hozzátesszük.</p>
+                <p v-if="!contactsPublic" class="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2.5 text-xs text-content">
+                    ⚠️ Az üzemeltető jelenleg <strong>nem jeleníti meg</strong> a fotósok elérhetőségeit a nyilvános oldalon. Amit ide beírsz, elmentődik, de csak akkor lesz látható, ha az üzemeltető bekapcsolja.
+                </p>
 
                 <div class="mt-4 grid gap-3 sm:grid-cols-2">
                     <label class="block">

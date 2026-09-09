@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\SiteSetting;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -37,25 +38,49 @@ class PublicPhotographersTest extends TestCase
         $this->get('/photographers')->assertDontSee($shown->email)->assertDontSee($adminShown->email);
     }
 
-    public function test_photographers_page_exposes_public_contacts_with_normalised_links(): void
+    public function test_photographer_contacts_are_hidden_on_the_public_page_by_default(): void
     {
         User::factory()->photographer()->create([
-            'name' => 'Elérhető Fotós',
-            'is_active' => true,
-            'is_public' => true,
+            'name' => 'Elérhető Fotós', 'is_active' => true, 'is_public' => true,
+            'public_email' => 'peter@kanyarfotozas.hu', 'social_facebook' => 'https://facebook.com/peterfoto',
+        ]);
+
+        $this->get('/photographers')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('contactsPublic', false)
+                ->where('photographers.0.contacts', []));
+    }
+
+    public function test_superadmin_can_reveal_photographer_contacts_and_they_are_normalised(): void
+    {
+        User::factory()->photographer()->create([
+            'name' => 'Elérhető Fotós', 'is_active' => true, 'is_public' => true,
             'public_email' => 'peter@kanyarfotozas.hu',
             'website' => 'peterfoto.hu',
             'social_facebook' => 'https://facebook.com/peterfoto',
             'social_tiktok' => 'tiktok.com/@peterfoto',
         ]);
 
+        $this->actingAs(User::factory()->superadmin()->create())
+            ->put('/admin/photographers/settings', ['contacts_public' => true])
+            ->assertRedirect();
+
         $this->get('/photographers')
-            ->assertOk()
             ->assertInertia(fn ($page) => $page
+                ->where('contactsPublic', true)
                 ->where('photographers.0.contacts.email', 'peter@kanyarfotozas.hu')
                 ->where('photographers.0.contacts.website', 'https://peterfoto.hu')
-                ->where('photographers.0.contacts.facebook', 'https://facebook.com/peterfoto')
                 ->where('photographers.0.contacts.tiktok', 'https://tiktok.com/@peterfoto'));
+    }
+
+    public function test_contacts_toggle_is_superadmin_only(): void
+    {
+        $this->actingAs(User::factory()->admin()->create())
+            ->put('/admin/photographers/settings', ['contacts_public' => true])
+            ->assertForbidden();
+
+        $this->assertFalse((bool) SiteSetting::get('photographer_contacts_public', false));
     }
 
     public function test_admin_can_save_photographer_public_contacts(): void

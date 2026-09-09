@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SiteSetting;
 use App\Services\ImageProcessingService;
 use App\Services\MediaStorage;
 use Illuminate\Http\RedirectResponse;
@@ -40,6 +41,7 @@ class TeamProfileController extends Controller
                 'social_tiktok' => $user->social_tiktok,
             ],
             'publicUrl' => url('/photographers'),
+            'contactsPublic' => (bool) SiteSetting::get('photographer_contacts_public', false),
         ]);
     }
 

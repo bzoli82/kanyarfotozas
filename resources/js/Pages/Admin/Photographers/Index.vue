@@ -8,7 +8,15 @@ const props = defineProps({
     pendingInvitations: Array,
     filters: Object,
     payoutTotals: { type: Object, default: () => ({ outstanding_cents: 0, paid_cents: 0 }) },
+    contactsPublic: { type: Boolean, default: false },
 });
+
+const contactsForm = useForm({ contacts_public: props.contactsPublic });
+
+function toggleContacts() {
+    contactsForm.contacts_public = !props.contactsPublic;
+    contactsForm.put('/admin/photographers/settings', { preserveScroll: true });
+}
 
 const search = ref(props.filters?.search ?? '');
 const status = ref(props.filters?.status ?? '');
@@ -61,6 +69,28 @@ function roleLabel(role) {
             <h1 class="font-display text-xl font-bold uppercase tracking-tight text-content">Fotósok</h1>
             <button type="button" class="rounded-lg bg-accent px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover" @click="showInviteForm = !showInviteForm">
                 + Új fotós meghívása
+            </button>
+        </div>
+
+        <!-- Nyilvános elérhetőségek kapcsoló (csak superadmin) -->
+        <div class="mt-4 flex flex-wrap items-start justify-between gap-3 rounded-[var(--radius-base)] border border-border bg-surface-1 p-4">
+            <div class="max-w-xl">
+                <p class="text-sm font-semibold text-content">Fotós-elérhetőségek a nyilvános „Fotósok" oldalon</p>
+                <p class="mt-1 text-xs text-muted">
+                    Ha bekapcsolod, a fotósok céges e-mailje, weboldala és közösségi linkjei megjelennek a
+                    <a href="/photographers" target="_blank" class="text-accent hover:underline">Fotósaink</a> oldalon.
+                    <strong class="text-content">Kikapcsolva</strong> csak a profilkép, a név és a bemutatkozó látszik —
+                    így a vásárló nem tudja megkerülni az oldalt a fotós közvetlen megkeresésével.
+                </p>
+            </div>
+            <button
+                type="button"
+                :disabled="contactsForm.processing"
+                class="shrink-0 rounded-lg px-4 py-2 text-xs font-semibold uppercase tracking-wide"
+                :class="contactsPublic ? 'bg-accent text-white hover:bg-accent-hover' : 'border border-border text-content hover:border-accent'"
+                @click="toggleContacts"
+            >
+                {{ contactsPublic ? '● Megjelennek' : '○ Rejtve' }}
             </button>
         </div>
 
