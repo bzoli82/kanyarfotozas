@@ -60,7 +60,7 @@ class HcaptchaTest extends TestCase
         Mail::fake();
 
         $this->post('/contact', [
-            'name' => 'Teszt', 'email' => 't@t.hu', 'subject' => 'x', 'message' => 'x',
+            'name' => 'Teszt', 'email' => 't@t.hu', 'subject' => 'Kérdés', 'message' => 'Ez egy próbaüzenet a teszthez.',
             'h-captcha-response' => 'bad-token',
             ...$this->guardFields(),
         ])->assertSessionHasErrors('hcaptcha');
@@ -75,7 +75,7 @@ class HcaptchaTest extends TestCase
         Mail::fake();
 
         $this->post('/contact', [
-            'name' => 'Teszt', 'email' => 't@t.hu', 'subject' => 'x', 'message' => 'x',
+            'name' => 'Teszt', 'email' => 't@t.hu', 'subject' => 'Kérdés', 'message' => 'Ez egy próbaüzenet a teszthez.',
             'h-captcha-response' => 'good-token',
             // NINCS guard_answer — a hCaptcha váltja
             ...$this->guardFields(),

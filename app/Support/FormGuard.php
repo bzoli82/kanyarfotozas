@@ -86,31 +86,31 @@ class FormGuard
         $payload = $this->decode((string) $request->input('guard_token'));
 
         if ($payload === null) {
-            $this->fail('A biztonsági ellenőrzés érvénytelen — töltsd újra az oldalt.');
+            $this->fail('tampered');
         }
 
         $age = now()->timestamp - (int) $payload['t'];
 
         if ($age < (int) config('formguard.min_fill_seconds', 3)) {
-            $this->fail('Túl gyorsan küldted be az űrlapot. Várj egy pillanatot, és próbáld újra.');
+            $this->fail('too_fast');
         }
 
         if ($age > (int) config('formguard.max_age_seconds', 7200)) {
-            $this->fail('Az űrlap érvényessége lejárt — töltsd újra az oldalt.');
+            $this->fail('expired');
         }
 
         if (! $skipArithmetic && (int) $request->input('guard_answer') !== (int) $payload['a'] + (int) $payload['b']) {
-            $this->fail('Hibás válasz a biztonsági kérdésre.', 'guard_answer');
+            $this->fail('wrong_answer', 'guard_answer');
         }
 
         if (! $this->powValid((string) $payload['s'], (int) $payload['d'], (int) $request->input('guard_pow'))) {
-            $this->fail('A biztonsági ellenőrzés nem sikerült — töltsd újra az oldalt.');
+            $this->fail('pow_failed');
         }
 
         $usedKey = 'formguard:used:'.$payload['n'];
 
         if (Cache::has($usedKey)) {
-            $this->fail('Ezt az űrlapot már beküldted. Ha újat szeretnél írni, töltsd újra az oldalt.');
+            $this->fail('replay');
         }
 
         Cache::put($usedKey, true, (int) config('formguard.max_age_seconds', 7200));
@@ -210,8 +210,8 @@ class FormGuard
     /**
      * @throws ValidationException
      */
-    private function fail(string $message, string $field = 'guard'): never
+    private function fail(string $key, string $field = 'guard'): never
     {
-        throw ValidationException::withMessages([$field => $message]);
+        throw ValidationException::withMessages([$field => __("formguard.$key")]);
     }
 }

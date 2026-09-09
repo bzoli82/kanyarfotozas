@@ -1,7 +1,8 @@
 <script setup>
-import { computed } from 'vue';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
+import FeedbackModal from '@/Components/FeedbackModal.vue';
 import { useI18n } from '@/Composables/useI18n';
 import { useFormGuard } from '@/Composables/useFormGuard';
 import { useHcaptcha } from '@/Composables/useHcaptcha';
@@ -12,8 +13,15 @@ const props = defineProps({
 });
 
 const { t } = useI18n();
-const page = usePage();
-const success = computed(() => page.props.flash?.success);
+
+const showSuccess = ref(false);
+const showError = ref(false);
+const errorList = ref([]);
+const modalOpen = computed(() => showSuccess.value || showError.value);
+function closeModal() {
+    showSuccess.value = false;
+    showError.value = false;
+}
 
 const { question, fields: guardFields } = useFormGuard(() => props.guard);
 const { token: hcToken, el: hcEl, reset: hcReset, isEnabled: hcIsEnabled } = useHcaptcha(() => props.hcaptcha);
@@ -40,10 +48,18 @@ async function submit() {
     const g = await guardFields();
     form.transform((data) => ({ ...data, ...g, 'h-captcha-response': hcToken.value })).post('/contact', {
         preserveScroll: true,
-        onSuccess: () => { form.reset(); hcReset(); },
+        onSuccess: () => {
+            form.reset();
+            hcReset();
+            showError.value = false;
+            showSuccess.value = true;
+        },
         onError: (errors) => {
             form.reset('guard_answer');
             hcReset();
+            errorList.value = [...new Set(Object.values(errors).filter(Boolean))];
+            showSuccess.value = false;
+            showError.value = true;
             // Lejárt / elhasznált challenge → friss token kérése.
             if (errors.guard) {
                 router.reload({ only: ['guard'] });
@@ -66,11 +82,7 @@ async function submit() {
 
         <section>
             <div class="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
-                <div v-if="success" class="rounded-[var(--radius-base)] border border-accent/40 bg-accent/10 p-6 text-sm text-content">
-                    {{ success }}
-                </div>
-
-                <form v-else class="relative space-y-5" @submit.prevent="submit">
+                <form class="relative space-y-5" @submit.prevent="submit">
                     <div class="grid gap-4 sm:grid-cols-2">
                         <label class="block">
                             <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">{{ t('contact.name') }}</span>
@@ -135,5 +147,14 @@ async function submit() {
                 </p>
             </div>
         </section>
+
+        <FeedbackModal
+            :open="modalOpen"
+            :type="showSuccess ? 'success' : 'error'"
+            :title="showSuccess ? t('contact.success_title') : t('contact.error_title')"
+            :message="showSuccess ? t('contact.success_body') : errorList"
+            :close-label="showSuccess ? t('common.ok') : t('common.close')"
+            @close="closeModal"
+        />
     </PublicLayout>
 </template>

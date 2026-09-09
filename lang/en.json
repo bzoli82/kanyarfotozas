@@ -43,6 +43,7 @@
     "common.in_cart_long": "In your cart",
     "common.loading": "Loading…",
     "common.close": "Close",
+    "common.ok": "OK",
     "common.back": "Back",
     "common.previous": "Previous",
     "common.next": "Next",
@@ -265,6 +266,9 @@
     "contact.message": "Message",
     "contact.captcha_label": "Security question: :question",
     "contact.hcaptcha_required": "Please confirm that you are not a robot.",
+    "contact.success_title": "Message sent",
+    "contact.success_body": "Thank you! We'll reply soon, and a confirmation has been sent to your email.",
+    "contact.error_title": "Message not sent",
     "contact.submit": "Send message",
     "contact.social_moved": "Our social channels:",
 

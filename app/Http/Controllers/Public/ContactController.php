@@ -33,20 +33,20 @@ class ContactController extends Controller
         // Honeypot: a rejtett mezőt ember nem tölti ki, csak bot. Ha kitöltötte,
         // úgy csinálunk, mintha sikerült volna (a botnak ne adjunk visszajelzést).
         if ($this->guard->isBot($request)) {
-            return back()->with('success', 'Köszönjük az üzeneted!');
+            return back()->with('success', __('contact.sent'));
         }
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'min:2', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
-            'subject' => ['required', 'string', 'max:255'],
-            'message' => ['required', 'string', 'max:5000'],
+            'subject' => ['required', 'string', 'min:2', 'max:255'],
+            'message' => ['required', 'string', 'min:10', 'max:5000'],
         ]);
 
         $hcaptcha = $this->captcha->enabled();
 
         if ($hcaptcha && ! $this->captcha->verify($request->input('h-captcha-response'), $request->ip())) {
-            throw ValidationException::withMessages(['hcaptcha' => 'Erősítsd meg, hogy nem vagy robot.']);
+            throw ValidationException::withMessages(['hcaptcha' => __('formguard.hcaptcha')]);
         }
 
         $this->guard->verify($request, skipArithmetic: $hcaptcha);
@@ -66,6 +66,6 @@ class ContactController extends Controller
             Mail::to($recipients->all())->send(new ContactNotificationMail($contactMessage));
         }
 
-        return back()->with('success', 'Köszönjük az üzeneted! Hamarosan válaszolunk, a visszaigazolást e-mailben is elküldtük.');
+        return back()->with('success', __('contact.sent'));
     }
 }

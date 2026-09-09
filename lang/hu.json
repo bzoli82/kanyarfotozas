@@ -43,6 +43,7 @@
     "common.in_cart_long": "A kosárban van",
     "common.loading": "Betöltés…",
     "common.close": "Bezárás",
+    "common.ok": "Rendben",
     "common.back": "Vissza",
     "common.previous": "Előző",
     "common.next": "Következő",
@@ -265,6 +266,9 @@
     "contact.message": "Üzenet",
     "contact.captcha_label": "Biztonsági kérdés: :question",
     "contact.hcaptcha_required": "Erősítsd meg, hogy nem vagy robot.",
+    "contact.success_title": "Üzenet elküldve",
+    "contact.success_body": "Köszönjük! Hamarosan válaszolunk, a visszaigazolást e-mailben is elküldtük.",
+    "contact.error_title": "Az üzenet nem ment el",
     "contact.submit": "Üzenet küldése",
     "contact.social_moved": "Közösségi oldalaink:",
 

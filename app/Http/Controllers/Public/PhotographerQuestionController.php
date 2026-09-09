@@ -42,7 +42,7 @@ class PhotographerQuestionController extends Controller
         $hcaptcha = $this->captcha->enabled();
 
         if ($hcaptcha && ! $this->captcha->verify($request->input('h-captcha-response'), $request->ip())) {
-            throw ValidationException::withMessages(['hcaptcha' => 'Erősítsd meg, hogy nem vagy robot.']);
+            throw ValidationException::withMessages(['hcaptcha' => __('formguard.hcaptcha')]);
         }
 
         $this->guard->verify($request, skipArithmetic: $hcaptcha);

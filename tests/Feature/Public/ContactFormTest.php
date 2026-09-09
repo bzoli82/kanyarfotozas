@@ -94,7 +94,7 @@ class ContactFormTest extends TestCase
 
         // NINCS ->travel() — azonnali beküldés.
         $this->post('/contact', [
-            'name' => 'Bot', 'email' => 'b@b.hu', 'subject' => 'x', 'message' => 'x',
+            'name' => 'Bot', 'email' => 'b@b.hu', 'subject' => 'Gyors kérdés', 'message' => 'Ez egy elég hosszú próbaüzenet.',
             'guard_token' => $guard['token'], 'guard_answer' => (int) $m[1] + (int) $m[2], 'guard_pow' => $pow,
         ])->assertSessionHasErrors('guard');
 
