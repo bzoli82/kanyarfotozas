@@ -445,6 +445,15 @@ amíg élesbe nem állsz. **Élesítés (első valódi rendelés) UTÁN** ez meg
 éles admin lesz a mester, és egy újabb „helyi → éles" felülírná a valódi
 rendeléseket. Onnantól a tartalmat közvetlenül az éles adminban szerkeszted.
 
+> **Élesítés UTÁN — az éles adatok visszahozása a fejlesztői gépre (gombbal):**
+> `/admin/settings/data-sync` („Éles ↔ helyi szinkron" nav, superadmin). Az éles
+> adminon bekapcsolod a „szinkron-forrást" → kapsz egy titkos kulcsot; a helyi
+> adminon megadod az éles URL-t + kulcsot, és egy gombbal letöltöd + visszaállítod
+> az éles adatbázist (megerősítő mezővel; „biztonságos másolat" módban a titkok
+> törlődnek és a vásárlói e-mailek anonimizálódnak). A média külön gombbal jön az
+> R2-ről (vagy ha a helyi géped is az éles R2-t használja, automatikus).
+> **Egyirányú: éles → helyi.** Ez váltja ki a lenti kézi `pg_dump` → restore lépéseket.
+
 ### 1. Rögzítsd az `APP_KEY`-t — MOST, mindkét helyre ugyanazt
 
 A `site_settings` titkosított mezői (fizetési kulcsok, SMTP-jelszó, webhook-URL,

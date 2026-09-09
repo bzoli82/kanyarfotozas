@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CollectionController;
 use App\Http\Controllers\Api\CountryController;
 use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\DataSyncController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\PhotographerController;
 use App\Http\Controllers\Api\SubscriptionController;
@@ -39,6 +40,15 @@ Route::post('/subscriptions', [SubscriptionController::class, 'store'])->middlew
 Route::match(['get', 'post'], '/ops/scheduler/{token}', WebSchedulerController::class)
     ->middleware('throttle:30,1')
     ->name('api.ops.scheduler');
+
+// Eles ↔ helyi adat-szinkron FORRAS vegpontjai — a helyi gep hivja `Bearer <token>`-nel.
+// Ld. App\Services\DataSync. Kikapcsolt forras / rossz kulcs = 404.
+Route::get('/sync/manifest', [DataSyncController::class, 'manifest'])
+    ->middleware('throttle:20,1')
+    ->name('api.sync.manifest');
+Route::get('/sync/database', [DataSyncController::class, 'database'])
+    ->middleware('throttle:6,1')
+    ->name('api.sync.database');
 
 // Fizetesi szolgaltatok szerver-szerver ertesitesei — nem session-alapu, nincs CSRF.
 Route::middleware('payment.settings')->group(function () {

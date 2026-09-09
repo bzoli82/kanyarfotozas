@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\BrandingSettingsController;
 use App\Http\Controllers\Admin\CriticalSettingsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DataRequestController as AdminDataRequestController;
+use App\Http\Controllers\Admin\DataSyncController;
 use App\Http\Controllers\Admin\ErrorEventController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\ForensicController;
@@ -262,6 +263,15 @@ Route::middleware(['auth', 'role:superadmin', '2fa'])->prefix('admin')->name('ad
 
     Route::get('/settings/pricing', [PricingSettingsController::class, 'index'])->name('settings.pricing');
     Route::put('/settings/pricing', [PricingSettingsController::class, 'update'])->name('settings.pricing.update');
+
+    // Éles ↔ helyi adat-szinkron (forrás-kulcs + a helyi gépen: letöltés/visszaállítás gombok)
+    Route::get('/settings/data-sync', [DataSyncController::class, 'index'])->name('settings.data-sync');
+    Route::put('/settings/data-sync/source', [DataSyncController::class, 'updateSource'])->name('settings.data-sync.source');
+    Route::put('/settings/data-sync/remote', [DataSyncController::class, 'saveRemote'])->name('settings.data-sync.remote');
+    Route::delete('/settings/data-sync/remote', [DataSyncController::class, 'forgetRemote'])->name('settings.data-sync.remote.forget');
+    Route::post('/settings/data-sync/test', [DataSyncController::class, 'testRemote'])->middleware('throttle:20,1')->name('settings.data-sync.test');
+    Route::post('/settings/data-sync/pull-database', [DataSyncController::class, 'pullDatabase'])->middleware('throttle:6,1')->name('settings.data-sync.pull-database');
+    Route::post('/settings/data-sync/pull-media', [DataSyncController::class, 'pullMedia'])->middleware('throttle:30,1')->name('settings.data-sync.pull-media');
 
     // Hibanapló + monitoring/mentés
     Route::get('/errors', [ErrorEventController::class, 'index'])->name('errors.index');
