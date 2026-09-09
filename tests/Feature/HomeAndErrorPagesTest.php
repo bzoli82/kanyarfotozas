@@ -45,6 +45,19 @@ class HomeAndErrorPagesTest extends TestCase
                 ->where('translations', fn ($t) => ($t['errors.404_title'] ?? null) === 'Nincs ilyen oldal'));
     }
 
+    public function test_matched_route_404_still_gets_translations_and_branding(): void
+    {
+        // A route-model-binding a SubstituteBindings-ben bukik el (a HandleInertiaRequests
+        // előtt) — a respond() handler kézzel pótolja a megosztott propokat.
+        $this->get('/events/nincs-ilyen-esemeny')
+            ->assertStatus(404)
+            ->assertInertia(fn ($page) => $page
+                ->component('Error')
+                ->where('status', 404)
+                ->where('translations', fn ($t) => ($t['errors.404_title'] ?? null) === 'Nincs ilyen oldal')
+                ->has('branding'));
+    }
+
     public function test_forbidden_area_renders_the_styled_error_page(): void
     {
         $photographer = User::factory()->photographer()->create();

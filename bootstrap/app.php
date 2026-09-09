@@ -77,7 +77,17 @@ return Application::configure(basePath: dirname(__DIR__))
                 return $response;
             }
 
-            return Inertia::render('Error', ['status' => $status])
+            // A route-model-binding (pl. `/events/{event:slug}`) a SubstituteBindings
+            // middleware-ben bukhat el, ami ELŐBB fut, mint a SetLocale / HandleInertiaRequests —
+            // ilyenkor a locale és a megosztott propok (fordítások, branding) még nincsenek
+            // beállítva, és a hibaoldal nyers `t()` kulcsokat mutatna. Kézzel pótoljuk.
+            $locale = rescue(fn () => $request->session()->get('app_locale'), null, false);
+            if (in_array($locale, SetLocale::SUPPORTED, true)) {
+                app()->setLocale($locale);
+            }
+            $shared = rescue(fn () => app(HandleInertiaRequests::class)->share($request), [], false);
+
+            return Inertia::render('Error', [...$shared, 'status' => $status])
                 ->toResponse($request)
                 ->setStatusCode($status);
         });
