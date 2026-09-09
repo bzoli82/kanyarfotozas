@@ -104,4 +104,24 @@ class TeamProfileTest extends TestCase
 
         $this->assertSame('admin.hu', $admin->fresh()->website);
     }
+
+    public function test_photographer_can_accept_the_agreement_from_the_dashboard(): void
+    {
+        $photographer = User::factory()->photographer()->create();
+        $this->assertNull($photographer->agreed_terms_at);
+
+        $this->actingAs($photographer)->post('/profil/megallapodas', ['accepted' => true])->assertRedirect();
+
+        $this->assertNotNull($photographer->fresh()->agreed_terms_at);
+    }
+
+    public function test_agreement_accept_requires_the_checkbox(): void
+    {
+        $photographer = User::factory()->photographer()->create();
+
+        $this->actingAs($photographer)->post('/profil/megallapodas', ['accepted' => false])
+            ->assertSessionHasErrors('accepted');
+
+        $this->assertNull($photographer->fresh()->agreed_terms_at);
+    }
 }

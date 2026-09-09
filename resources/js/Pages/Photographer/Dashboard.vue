@@ -1,15 +1,25 @@
 <script setup>
-import { reactive } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { reactive, ref } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
 const props = defineProps({
     stats: Object,
     reportPrefs: Object,
     earnings: Object,
+    commissionBonus: { type: Object, default: () => ({ enabled: false }) },
+    agreementPending: { type: Boolean, default: false },
+    agreementHtml: { type: String, default: null },
 });
 
 const prefs = reactive({ ...props.reportPrefs });
+
+const agreementForm = useForm({ accepted: false });
+const agreementOpen = ref(false);
+
+function acceptAgreement() {
+    agreementForm.post('/profil/megallapodas', { preserveScroll: true });
+}
 
 function huf(cents) {
     return new Intl.NumberFormat('hu-HU').format(cents ?? 0) + ' Ft';
@@ -35,6 +45,32 @@ function saveReports() {
             </Link>
         </div>
 
+        <!-- Fotós Megállapodás — egyszeri elfogadás a régi fotósoknak -->
+        <div v-if="agreementPending && agreementHtml" class="mt-4 rounded-[var(--radius-base)] border-2 border-accent/50 bg-accent/5 p-4">
+            <p class="text-sm font-semibold text-content">Kérjük, fogadd el a Fotós Megállapodást</p>
+            <p class="mt-1 text-xs text-muted">Ez rögzíti az elszámolást és tartalmazza az oldalon kívüli értékesítést tiltó záradékot. Egyszeri elfogadás.</p>
+            <button type="button" class="mt-2 text-xs font-semibold uppercase tracking-wide text-accent hover:text-accent-hover" @click="agreementOpen = !agreementOpen">
+                {{ agreementOpen ? 'Elrejtés' : 'Megállapodás elolvasása' }}
+            </button>
+            <div
+                v-if="agreementOpen"
+                class="mt-2 max-h-72 space-y-2 overflow-y-auto rounded-lg border border-border bg-surface-2 p-3 text-xs leading-relaxed text-muted [&_h2]:mt-2 [&_h2]:text-sm [&_h2]:font-bold [&_h2]:text-content [&_h3]:mt-2 [&_h3]:font-semibold [&_h3]:text-content [&_li]:ml-4 [&_li]:list-disc [&_p]:mt-1"
+                v-html="agreementHtml"
+            ></div>
+            <label class="mt-3 flex gap-2 text-xs text-content">
+                <input v-model="agreementForm.accepted" type="checkbox" class="mt-0.5 accent-[var(--color-accent)]" />
+                <span>Elolvastam és elfogadom a Fotós Megállapodást.</span>
+            </label>
+            <button
+                type="button"
+                :disabled="!agreementForm.accepted || agreementForm.processing"
+                class="mt-3 rounded-lg bg-accent px-5 py-2 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+                @click="acceptAgreement"
+            >
+                Elfogadom
+            </button>
+        </div>
+
         <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div class="rounded-[var(--radius-base)] border border-border bg-surface-1 p-5">
                 <div class="text-2xl font-bold text-content">{{ stats.media_total }}</div>
@@ -58,6 +94,17 @@ function saveReports() {
             <div class="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 class="text-sm font-semibold uppercase tracking-wide text-content">Elszámolás</h2>
                 <span class="text-xs text-muted">Jutalék: {{ earnings.revenue_share_percent }}% az eladási árból</span>
+            </div>
+
+            <div v-if="commissionBonus.enabled" class="mt-3 rounded-lg border border-accent/40 bg-accent/5 p-3 text-xs text-content">
+                <span class="font-semibold">Havi volumen-bónusz:</span>
+                ebben a hónapban <strong>{{ commissionBonus.sales_this_month }}</strong> eladásod van —
+                a jelenlegi kulcsod <strong>{{ commissionBonus.current_percent }}%</strong>.
+                <template v-if="commissionBonus.next">
+                    Még <strong>{{ commissionBonus.next.needed }}</strong> eladás, és a következő eladásaidtól
+                    <strong>{{ Math.min(95, commissionBonus.base_percent + commissionBonus.next.bonus_percent) }}%</strong>-ot kapsz.
+                </template>
+                <template v-else>Elérted a legmagasabb sávot. 🎉</template>
             </div>
             <div class="mt-3 grid gap-4 sm:grid-cols-2">
                 <div>

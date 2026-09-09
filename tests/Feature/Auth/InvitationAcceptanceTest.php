@@ -48,6 +48,7 @@ class InvitationAcceptanceTest extends TestCase
         $response = $this->post("/invitations/{$invitation->token}", [
             'password' => 'uj-jelszo-123',
             'password_confirmation' => 'uj-jelszo-123',
+            'agreement_accepted' => true,
         ]);
 
         $response->assertRedirect('/photographer/dashboard');
@@ -56,8 +57,21 @@ class InvitationAcceptanceTest extends TestCase
         $this->assertSame($invitation->name, $user->name);
         $this->assertSame(75, $user->revenue_share_percent);
         $this->assertTrue($user->is_active);
+        $this->assertNotNull($user->agreed_terms_at);
         $this->assertAuthenticatedAs($user);
         $this->assertNotNull($invitation->fresh()->accepted_at);
+    }
+
+    public function test_invitation_cannot_be_accepted_without_the_agreement(): void
+    {
+        $invitation = Invitation::factory()->create(['role' => User::ROLE_PHOTOGRAPHER]);
+
+        $this->post("/invitations/{$invitation->token}", [
+            'password' => 'uj-jelszo-123',
+            'password_confirmation' => 'uj-jelszo-123',
+        ])->assertSessionHasErrors('agreement_accepted');
+
+        $this->assertDatabaseMissing('users', ['email' => $invitation->email]);
     }
 
     public function test_expired_invitation_cannot_be_accepted(): void

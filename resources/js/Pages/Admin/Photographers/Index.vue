@@ -227,6 +227,9 @@ function roleLabel(role) {
                                 <span v-if="user.role !== 'organizer' && !user.is_public" class="rounded-full border border-border px-2 py-0.5 text-[11px] font-medium text-muted" title="Nem látszik a nyilvános Fotósaink oldalon">
                                     Rejtett
                                 </span>
+                                <span v-if="user.agreed_terms === false" class="rounded-full border border-amber-500/50 px-2 py-0.5 text-[11px] font-medium text-amber-500" title="Még nem fogadta el a Fotós Megállapodást">
+                                    Megállapodás –
+                                </span>
                             </div>
                         </td>
                         <td class="px-4 py-3 text-right">

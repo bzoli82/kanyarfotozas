@@ -17,6 +17,7 @@ const props = defineProps({
     mediaHealth: { type: Object, default: () => ({ samples: [], plate_recognition: {} }) },
     forecast: { type: Object, default: () => ({ week: {}, month: {} }) },
     photographerComparison: { type: Array, default: () => [] },
+    conversionWatch: { type: Array, default: () => [] },
 });
 
 // --- Proaktiv figyelmeztetesek ---
@@ -387,6 +388,24 @@ function resendEmail(orderId) {
                 </table>
             </div>
             <p v-else class="mt-3 text-sm text-muted">Minden médiafájl rendben.</p>
+        </div>
+
+        <!-- Konverzió-figyelő (csak superadmin) — oldalon kívüli értékesítés lehetséges jelei -->
+        <div v-if="conversionWatch.length" class="mt-6 rounded-[var(--radius-base)] border border-amber-500/50 bg-amber-500/10 p-5">
+            <h2 class="text-sm font-semibold uppercase tracking-wide text-content">Fotós-figyelmeztetések</h2>
+            <p class="mt-1 text-xs text-muted">
+                Ezeknél a fotósoknál a konverzió elmarad az átlagtól, vagy sok a kérdés eladás nélkül.
+                Lehet ártalmatlan (új fotós, gyenge esemény), de érdemes ránézni — előfordulhat oldalon kívüli értékesítés.
+            </p>
+            <ul class="mt-3 space-y-2">
+                <li v-for="p in conversionWatch" :key="p.id" class="rounded-lg border border-border bg-surface-1 p-3 text-sm">
+                    <a :href="`/admin/photographers/${p.id}`" class="font-semibold text-content hover:text-accent">{{ p.name }}</a>
+                    <span class="ml-2 text-xs text-muted">{{ p.media_ready }} kész · {{ p.media_sold }} eladás · {{ p.inquiries }} kérdés</span>
+                    <ul class="mt-1 list-disc pl-5 text-xs text-muted">
+                        <li v-for="(r, i) in p.flag_reasons" :key="i">{{ r }}</li>
+                    </ul>
+                </li>
+            </ul>
         </div>
 
         <!-- Fotos osszehasonlito tablazat -->

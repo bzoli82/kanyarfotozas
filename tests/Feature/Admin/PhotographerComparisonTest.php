@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\ContactMessage;
 use App\Models\Event;
 use App\Models\Media;
 use App\Models\Order;
@@ -78,5 +79,38 @@ class PhotographerComparisonTest extends TestCase
         $this->actingAs(User::factory()->photographer()->create())
             ->get('/admin/dashboard/photographers/export')
             ->assertForbidden();
+    }
+
+    public function test_watchlist_flags_a_photographer_with_inquiries_but_no_sales(): void
+    {
+        $flagged = User::factory()->photographer()->create(['name' => 'Gyanús Fotós']);
+        $healthy = User::factory()->photographer()->create(['name' => 'Rendes Fotós']);
+
+        Media::factory()->count(20)->create(['photographer_id' => $flagged->id, 'status' => Media::STATUS_READY]);
+        ContactMessage::factory()->count(4)->forPhotographer($flagged)->create();
+
+        $healthyMedia = Media::factory()->count(20)->create(['photographer_id' => $healthy->id, 'status' => Media::STATUS_READY]);
+        $order = Order::factory()->paid()->create();
+        foreach ($healthyMedia->take(6) as $m) {
+            $order->media()->attach($m->id, ['price_cents' => 1000]);
+        }
+
+        $watch = app(PhotographerComparison::class)->watchlist();
+
+        $this->assertSame(['Gyanús Fotós'], collect($watch)->pluck('name')->all());
+        $this->assertNotEmpty($watch[0]['flag_reasons']);
+    }
+
+    public function test_conversion_watch_prop_is_superadmin_only(): void
+    {
+        $flagged = User::factory()->photographer()->create();
+        Media::factory()->count(20)->create(['photographer_id' => $flagged->id, 'status' => Media::STATUS_READY]);
+        ContactMessage::factory()->count(4)->forPhotographer($flagged)->create();
+
+        $this->actingAs(User::factory()->admin()->create())->get('/admin/dashboard')
+            ->assertInertia(fn ($p) => $p->where('conversionWatch', []));
+
+        $this->actingAs(User::factory()->superadmin()->create())->get('/admin/dashboard')
+            ->assertInertia(fn ($p) => $p->where('conversionWatch', fn ($w) => count($w) === 1));
     }
 }

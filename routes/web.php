@@ -99,6 +99,7 @@ Route::middleware(['auth', 'role:superadmin|admin|photographer'])->group(functio
     // Saját nyilvános profil (a „Fotósok" oldalon megjelenő adatok) — a fotós maga szerkeszti
     Route::get('/profil', [TeamProfileController::class, 'edit'])->name('team.profile.edit');
     Route::post('/profil', [TeamProfileController::class, 'update'])->name('team.profile.update');
+    Route::post('/profil/megallapodas', [TeamProfileController::class, 'acceptAgreement'])->name('team.profile.agreement');
 });
 
 // Nyilvanos galeria + kosar — EPIC-06

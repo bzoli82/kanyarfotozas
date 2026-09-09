@@ -9,6 +9,7 @@ const props = defineProps({
 const form = useForm({
     impressum: props.legal.impressum,
     terms: props.legal.terms,
+    photographer_agreement: props.legal.photographer_agreement,
 });
 
 function save() {
@@ -52,6 +53,16 @@ function save() {
                 </span>
                 <textarea v-model="form.terms" rows="20" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 font-mono text-xs text-content focus:border-accent focus:outline-none"></textarea>
                 <p v-if="form.errors.terms" class="mt-1 text-xs text-red-500">{{ form.errors.terms }}</p>
+            </label>
+
+            <label class="block">
+                <span class="mb-1.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted">
+                    <span>Fotós Megállapodás (a meghíváskor kötelező elfogadni)</span>
+                    <span v-if="legal.photographer_agreement_is_default" class="normal-case text-amber-400">alapértelmezett váz — töltsd ki</span>
+                </span>
+                <textarea v-model="form.photographer_agreement" rows="18" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 font-mono text-xs text-content focus:border-accent focus:outline-none"></textarea>
+                <p class="mt-1 text-[11px] text-muted">A meghívott fotós a fiók-aktiváláskor kötelező pipával fogadja el; a régi fotósok a dashboardjukon egy egyszeri gombbal. Tartalmazza az oldalon kívüli értékesítést tiltó záradékot.</p>
+                <p v-if="form.errors.photographer_agreement" class="mt-1 text-xs text-red-500">{{ form.errors.photographer_agreement }}</p>
             </label>
 
             <button type="submit" :disabled="form.processing" class="rounded-lg bg-accent px-6 py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover disabled:opacity-60">

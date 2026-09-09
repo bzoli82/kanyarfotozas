@@ -44,6 +44,7 @@ class User extends Authenticatable
             'report_weekly' => 'boolean',
             'report_monthly' => 'boolean',
             'last_login_at' => 'datetime',
+            'agreed_terms_at' => 'datetime',
             'invitation_expires_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
         ];

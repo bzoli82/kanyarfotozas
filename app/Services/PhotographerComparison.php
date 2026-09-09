@@ -15,12 +15,16 @@ use Illuminate\Support\Facades\DB;
  */
 class PhotographerComparison
 {
+    /** Ennyi kész média fölött nézzük a konverziót (kevés médiánál a jel zajos). */
+    private const WATCH_MIN_READY = 15;
+
     /**
      * @return list<array{
      *     id: int, name: string, is_active: bool, revenue_share_percent: int,
-     *     media_total: int, media_ready: int, media_sold: int,
+     *     media_total: int, media_ready: int, media_sold: int, inquiries: int,
      *     revenue_cents: int, photographer_share_cents: int,
-     *     conversion_rate: float, avg_price_cents: int
+     *     conversion_rate: float, avg_price_cents: int,
+     *     flag: string|null, flag_reasons: list<string>
      * }>
      */
     public function rows(): array
@@ -47,7 +51,14 @@ class PhotographerComparison
             ->get()
             ->keyBy('photographer_id');
 
-        return $photographers->map(function (User $p) use ($mediaCounts, $sales) {
+        $inquiries = DB::table('contact_messages')
+            ->where('contact_type', 'photographer')
+            ->whereNotNull('photographer_id')
+            ->groupBy('photographer_id')
+            ->selectRaw('photographer_id, COUNT(*) as cnt')
+            ->pluck('cnt', 'photographer_id');
+
+        $base = $photographers->map(function (User $p) use ($mediaCounts, $sales, $inquiries) {
             $mc = $mediaCounts->get($p->id);
             $sale = $sales->get($p->id);
 
@@ -64,12 +75,79 @@ class PhotographerComparison
                 'media_total' => (int) ($mc->total ?? 0),
                 'media_ready' => $ready,
                 'media_sold' => $sold,
+                'inquiries' => (int) ($inquiries[$p->id] ?? 0),
                 'revenue_cents' => $revenue,
                 'photographer_share_cents' => (int) round($revenue * $share / 100),
                 'conversion_rate' => $ready > 0 ? round($sold / $ready * 100, 1) : 0.0,
                 'avg_price_cents' => $sold > 0 ? (int) round($revenue / $sold) : 0,
             ];
+        });
+
+        // A platform mediánja azoknál, akiknél van értelmes mennyiségű kész média.
+        $medianConversion = $this->median(
+            $base->where('media_ready', '>=', self::WATCH_MIN_READY)->pluck('conversion_rate')->all()
+        );
+
+        return $base->map(function (array $row) use ($medianConversion) {
+            $reasons = $this->flagReasons($row, $medianConversion);
+
+            return [...$row, 'flag' => $reasons === [] ? null : 'watch', 'flag_reasons' => $reasons];
         })->all();
+    }
+
+    /**
+     * Csak a „megnézendő" fotósok — az oldalon kívüli értékesítés lehetséges jelei.
+     * SOFT jel: lehet ártalmatlan (új fotós, gyenge esemény), de érdemes ránézni.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function watchlist(): array
+    {
+        return collect($this->rows())->where('flag', 'watch')->values()->all();
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     * @return list<string>
+     */
+    private function flagReasons(array $row, ?float $medianConversion): array
+    {
+        $reasons = [];
+        $ready = (int) $row['media_ready'];
+        $sold = (int) $row['media_sold'];
+        $inq = (int) $row['inquiries'];
+
+        if ($inq >= 3 && $sold === 0) {
+            $reasons[] = "{$inq} kérdés a fotóshoz, de egyetlen eladás sincs";
+        }
+
+        if ($inq >= 5 && $inq / max(1, $sold) >= 3) {
+            $reasons[] = "sok kérdés ({$inq}), kevés eladás ({$sold})";
+        }
+
+        if ($ready >= self::WATCH_MIN_READY && $medianConversion !== null && $medianConversion > 0
+            && $row['conversion_rate'] < $medianConversion * 0.4) {
+            $reasons[] = 'a konverzió jóval a platform-átlag alatt ('.$row['conversion_rate'].'% vs ~'.$medianConversion.'%)';
+        }
+
+        return $reasons;
+    }
+
+    /**
+     * @param  list<float|int>  $values
+     */
+    private function median(array $values): ?float
+    {
+        if ($values === []) {
+            return null;
+        }
+
+        sort($values);
+        $mid = intdiv(count($values), 2);
+
+        return count($values) % 2 === 0
+            ? round(($values[$mid - 1] + $values[$mid]) / 2, 1)
+            : (float) $values[$mid];
     }
 
     public function toCsv(): string

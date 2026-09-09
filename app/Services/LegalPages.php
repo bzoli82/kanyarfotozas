@@ -26,6 +26,16 @@ class LegalPages
         return (string) (SiteSetting::get('legal_terms') ?? $this->defaultTerms());
     }
 
+    public function photographerAgreementMarkdown(): string
+    {
+        return (string) (SiteSetting::get('legal_photographer_agreement') ?? $this->defaultPhotographerAgreement());
+    }
+
+    public function photographerAgreementHtml(): string
+    {
+        return $this->render($this->photographerAgreementMarkdown());
+    }
+
     public function impressumHtml(): string
     {
         return $this->render($this->impressumMarkdown());
@@ -50,14 +60,16 @@ class LegalPages
             // A textarea a vázzal töltődik elő, ha még nincs mentve semmi.
             'impressum' => $this->impressumMarkdown(),
             'terms' => $this->termsMarkdown(),
+            'photographer_agreement' => $this->photographerAgreementMarkdown(),
             'terms_updated_at' => $this->termsUpdatedAt(),
             'impressum_is_default' => blank(SiteSetting::get('legal_impressum')),
             'terms_is_default' => blank(SiteSetting::get('legal_terms')),
+            'photographer_agreement_is_default' => blank(SiteSetting::get('legal_photographer_agreement')),
         ];
     }
 
     /**
-     * @param  array{impressum?: string, terms?: string}  $data
+     * @param  array{impressum?: string, terms?: string, photographer_agreement?: string}  $data
      */
     public function update(array $data): void
     {
@@ -69,6 +81,7 @@ class LegalPages
 
         SiteSetting::set('legal_impressum', (string) ($data['impressum'] ?? ''));
         SiteSetting::set('legal_terms', $newTerms);
+        SiteSetting::set('legal_photographer_agreement', (string) ($data['photographer_agreement'] ?? ''));
     }
 
     private function render(string $markdown): string
@@ -149,6 +162,47 @@ class LegalPages
         ### 7. Szellemi tulajdon
         A megvásárolt felvétel a vásárló személyes célú felhasználására szolgál. A felvételen szereplő
         szerzői jogok a fotóst / a szolgáltatót illetik; a megvásárlás nem ruházza át a szerzői jogokat.
+        MD;
+    }
+
+    private function defaultPhotographerAgreement(): string
+    {
+        $brand = rescue(fn () => app(SiteBranding::class)->name(), 'KanyarFotózás', false);
+
+        return <<<MD
+        ## Fotós Megállapodás
+
+        *Ez egy vázlat – az üzemeltetőnek (szükség szerint ügyvéddel) véglegesítenie kell.*
+
+        ### 1. A felek
+        Egyrészről a(z) {$brand} üzemeltetője (a továbbiakban: Platform), másrészről a regisztráló fotós
+        (a továbbiakban: Fotós).
+
+        ### 2. A Fotós által feltöltött tartalom
+        A Fotós szavatolja, hogy a feltöltött felvételek a saját szellemi alkotásai, és jogosult azokat
+        értékesítésre kínálni.
+
+        ### 3. Értékesítés a Platformon keresztül
+        A Fotós a Platformra feltöltött felvételeket **kizárólag a Platformon keresztül** értékesíti.
+        A Fotós vállalja, hogy ugyanezeket a felvételeket (vagy azok lényegében azonos változatait)
+        a feltöltéstől számított **[kitöltendő – pl. 6] hónapon belül nem értékesíti** közvetlenül a
+        vásárlónak vagy más csatornán a Platform megkerülésével, és a Platformon érdeklődő vásárlót
+        nem irányítja a Platformon kívüli vásárlásra.
+
+        ### 4. Elszámolás
+        A Platform az eladási árból a megállapodás szerinti százalékot fizeti ki a Fotósnak
+        (a Fotós admin-profilján rögzített részesedés). A kifizetés a Platform elszámolási rendje szerint történik.
+
+        ### 5. A záradék megsértése
+        A 3. pont megsértése esetén a Platform jogosult a Fotós fiókját felfüggeszteni, a kifizetetlen
+        jutalékokat visszatartani, és a Fotóssal fennálló együttműködést azonnali hatállyal megszüntetni.
+
+        ### 6. Megszűnés
+        A megállapodást bármelyik fél felmondhatja **[kitöltendő – pl. 30] napos** határidővel. A már
+        feltöltött és értékesített felvételekre vonatkozó elszámolási kötelezettség a megszűnés után is fennáll.
+
+        A Fotós a fiók aktiválásával / az elfogadó gomb megnyomásával kijelenti, hogy a jelen
+        megállapodást elolvasta és magára nézve kötelezőnek fogadja el.
         MD;
     }
 }

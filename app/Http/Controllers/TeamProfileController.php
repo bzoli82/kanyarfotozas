@@ -81,4 +81,20 @@ class TeamProfileController extends Controller
 
         return back()->with('success', 'Profil elmentve.');
     }
+
+    /**
+     * A Fotós Megállapodás egyszeri elfogadása a régi (meghívás előtti) fotósoknak.
+     */
+    public function acceptAgreement(Request $request): RedirectResponse
+    {
+        $request->validate(['accepted' => ['accepted']]);
+
+        $user = $request->user();
+
+        if ($user->agreed_terms_at === null) {
+            $user->forceFill(['agreed_terms_at' => now()])->save();
+        }
+
+        return back()->with('success', 'Köszönjük — a Fotós Megállapodást elfogadottként rögzítettük.');
+    }
 }

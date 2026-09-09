@@ -27,6 +27,7 @@ class LegalSettingsController extends Controller
         $data = $request->validate([
             'impressum' => ['nullable', 'string', 'max:20000'],
             'terms' => ['nullable', 'string', 'max:60000'],
+            'photographer_agreement' => ['nullable', 'string', 'max:40000'],
         ]);
 
         $legal->update($data);

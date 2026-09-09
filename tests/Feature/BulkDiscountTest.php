@@ -161,6 +161,7 @@ class BulkDiscountTest extends TestCase
         $this->actingAs($superadmin)->put('/admin/settings/pricing', [
             'base_price' => 1990,
             'tiers' => [['min' => 4, 'percent' => 15]],
+            'commission_bonus_tiers' => [],
         ])->assertRedirect();
 
         $this->assertSame([['min' => 4, 'percent' => 15]], app(BulkDiscount::class)->tiers());

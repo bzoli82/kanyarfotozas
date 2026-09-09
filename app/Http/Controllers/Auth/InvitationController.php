@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Invitation;
 use App\Models\User;
+use App\Services\LegalPages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +16,7 @@ use Inertia\Response as InertiaResponse;
 
 class InvitationController extends Controller
 {
-    public function show(string $token): InertiaResponse
+    public function show(string $token, LegalPages $legal): InertiaResponse
     {
         $invitation = Invitation::query()->where('token', $token)->firstOrFail();
 
@@ -26,6 +27,7 @@ class InvitationController extends Controller
             'name' => $invitation->name,
             'email' => $invitation->email,
             'isExpired' => $invitation->isExpired(),
+            'agreementHtml' => $legal->photographerAgreementHtml(),
         ]);
     }
 
@@ -41,6 +43,7 @@ class InvitationController extends Controller
 
         $data = $request->validate([
             'password' => ['required', 'confirmed', 'min:8'],
+            'agreement_accepted' => ['accepted'],
         ]);
 
         $user = User::create([
@@ -52,6 +55,8 @@ class InvitationController extends Controller
             'is_active' => true,
             'email_verified_at' => now(),
         ]);
+
+        $user->forceFill(['agreed_terms_at' => now()])->save();
 
         $invitation->forceFill(['accepted_at' => now()])->save();
 

@@ -5,11 +5,13 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 const props = defineProps({
     basePrice: { type: Number, default: 1490 },
     tiers: { type: Array, default: () => [] },
+    commissionBonusTiers: { type: Array, default: () => [] },
 });
 
 const form = useForm({
     base_price: props.basePrice,
     tiers: props.tiers.map((t) => ({ ...t })),
+    commission_bonus_tiers: props.commissionBonusTiers.map((t) => ({ ...t })),
 });
 
 function addTier() {
@@ -20,6 +22,14 @@ function removeTier(i) {
     form.tiers.splice(i, 1);
 }
 
+function addBonusTier() {
+    form.commission_bonus_tiers.push({ min_sales: 20, bonus_percent: 5 });
+}
+
+function removeBonusTier(i) {
+    form.commission_bonus_tiers.splice(i, 1);
+}
+
 function submit() {
     form
         .transform((d) => ({
@@ -28,6 +38,10 @@ function submit() {
                 .map((t) => ({ min: Number(t.min), percent: Number(t.percent) }))
                 .filter((t) => t.min >= 2 && t.percent >= 1)
                 .sort((a, b) => a.min - b.min),
+            commission_bonus_tiers: [...d.commission_bonus_tiers]
+                .map((t) => ({ min_sales: Number(t.min_sales), bonus_percent: Number(t.bonus_percent) }))
+                .filter((t) => t.min_sales >= 2 && t.bonus_percent >= 1)
+                .sort((a, b) => a.min_sales - b.min_sales),
         }))
         .put('/admin/settings/pricing', { preserveScroll: true });
 }
@@ -84,6 +98,40 @@ function submit() {
 
                 <p v-if="form.tiers.length === 0" class="mt-3 text-xs text-muted">Nincs sáv — a mennyiségi kedvezmény ki van kapcsolva.</p>
                 <p class="mt-2 text-[11px] text-muted">Példa: <code>5 db → 10%</code>, <code>10 db → 15%</code>, <code>20 db → 20%</code>. A legmagasabb elért sáv számít.</p>
+            </div>
+
+            <!-- Fotós jutalék-bónusz (havi volumen) -->
+            <div class="rounded-[var(--radius-base)] border border-border bg-surface-1 p-5">
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-content">Fotós jutalék-bónusz (havi volumen)</h2>
+                <p class="mt-1 text-xs text-muted">
+                    A fotós részesedése nő, ha egy naptári hónapban sokat ad el a platformon: „N. havi eladástól +X százalékpont".
+                    <strong class="text-content">Előre hat</strong> — az N. eladástól a magasabb kulcs rögzül (a korábbiak változatlanok).
+                    Így a platformon maradás aktívan jobban éri meg, mint az oldalon kívüli eladás.
+                    A részesedés soha nem lépi túl a <strong class="text-content">95%</strong>-ot. <strong class="text-content">Üres lista = kikapcsolva.</strong>
+                </p>
+
+                <div class="mt-4 space-y-2">
+                    <div v-for="(tier, i) in form.commission_bonus_tiers" :key="i" class="flex flex-wrap items-center gap-2 text-sm">
+                        <label class="flex items-center gap-1.5 text-muted">
+                            <input v-model.number="tier.min_sales" type="number" min="2" class="w-20 rounded-lg border border-border bg-surface-2 px-2 py-1.5 text-sm text-content focus:border-accent focus:outline-none" />
+                            <span>havi eladástól</span>
+                        </label>
+                        <span class="text-muted">→</span>
+                        <label class="flex items-center gap-1.5 text-muted">
+                            <span>+</span>
+                            <input v-model.number="tier.bonus_percent" type="number" min="1" max="25" class="w-20 rounded-lg border border-border bg-surface-2 px-2 py-1.5 text-sm text-content focus:border-accent focus:outline-none" />
+                            <span>százalékpont</span>
+                        </label>
+                        <button type="button" class="text-xs font-semibold uppercase tracking-wide text-muted hover:text-accent" @click="removeBonusTier(i)">Törlés</button>
+                    </div>
+                </div>
+
+                <button type="button" class="mt-3 text-xs font-semibold uppercase tracking-wide text-accent hover:text-accent-hover" @click="addBonusTier">
+                    + Sáv hozzáadása
+                </button>
+
+                <p v-if="form.commission_bonus_tiers.length === 0" class="mt-3 text-xs text-muted">Nincs sáv — a jutalék-bónusz ki van kapcsolva (mindenki a saját alap %-át kapja).</p>
+                <p class="mt-2 text-[11px] text-muted">Példa: alap 70%, <code>20 eladástól → +5</code> (75%), <code>50-től → +10</code> (80%). A fotós a dashboardján látja, hol tart.</p>
             </div>
 
             <div class="flex items-center gap-3">

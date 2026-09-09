@@ -7,11 +7,13 @@ const props = defineProps({
     name: String,
     email: String,
     isExpired: Boolean,
+    agreementHtml: { type: String, default: '' },
 });
 
 const form = useForm({
     password: '',
     password_confirmation: '',
+    agreement_accepted: false,
 });
 
 function submit() {
@@ -22,8 +24,8 @@ function submit() {
 <template>
     <Head title="Meghívó elfogadása" />
 
-    <div class="grid min-h-screen place-items-center bg-surface-0 px-4">
-        <div class="w-full max-w-sm">
+    <div class="grid min-h-screen place-items-center bg-surface-0 px-4 py-10">
+        <div class="w-full max-w-lg">
             <Link href="/" class="font-display block text-center text-lg font-bold tracking-tight text-content">
                 <BrandLogo />
             </Link>
@@ -61,10 +63,20 @@ function submit() {
                     />
                 </label>
 
+                <div v-if="agreementHtml" class="mt-5">
+                    <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">Fotós Megállapodás</span>
+                    <div class="max-h-60 space-y-2 overflow-y-auto rounded-lg border border-border bg-surface-2 p-3 text-xs leading-relaxed text-muted [&_h2]:mt-2 [&_h2]:text-sm [&_h2]:font-bold [&_h2]:text-content [&_h3]:mt-2 [&_h3]:font-semibold [&_h3]:text-content [&_li]:ml-4 [&_li]:list-disc [&_p]:mt-1" v-html="agreementHtml"></div>
+                    <label class="mt-2 flex gap-2 text-xs text-content">
+                        <input v-model="form.agreement_accepted" type="checkbox" class="mt-0.5 accent-[var(--color-accent)]" />
+                        <span>Elolvastam és elfogadom a Fotós Megállapodást (benne az oldalon kívüli értékesítést tiltó záradékkal).</span>
+                    </label>
+                    <p v-if="form.errors.agreement_accepted" class="mt-1 text-xs text-accent">A megállapodás elfogadása kötelező.</p>
+                </div>
+
                 <button
                     type="submit"
-                    :disabled="form.processing"
-                    class="mt-6 w-full rounded-lg bg-accent py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover disabled:opacity-60"
+                    :disabled="form.processing || (agreementHtml && !form.agreement_accepted)"
+                    class="mt-6 w-full rounded-lg bg-accent py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
                 >
                     Fiók aktiválása
                 </button>

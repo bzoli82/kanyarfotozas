@@ -103,7 +103,8 @@ class PhotographerPayoutService
             }
 
             $gross = (int) $media->pivot->price_cents;
-            $share = (int) (User::query()->whereKey($media->photographer_id)->value('revenue_share_percent') ?? 0);
+            $baseShare = (int) (User::query()->whereKey($media->photographer_id)->value('revenue_share_percent') ?? 0);
+            $share = app(CommissionBonus::class)->effectiveShare((string) $media->photographer_id, $baseShare);
 
             PhotographerEarning::create([
                 'photographer_id' => $media->photographer_id,

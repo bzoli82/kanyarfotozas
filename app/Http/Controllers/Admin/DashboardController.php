@@ -9,7 +9,9 @@ use App\Mail\OrderConfirmationMail;
 use App\Models\Media;
 use App\Models\Order;
 use App\Models\PhotographerPayout;
+use App\Services\CommissionBonus;
 use App\Services\DashboardStatsService;
+use App\Services\LegalPages;
 use App\Services\PeriodicStatsExport;
 use App\Services\PhotographerComparison;
 use App\Services\PhotographerPayoutService;
@@ -29,7 +31,7 @@ class DashboardController extends Controller
      * Teljes superadmin/admin dashboard: KPI kartyak + diagramok + legfrissebb
      * esemenyek/rendelesek + biztonsagi figyelmeztetes — lasd master.txt 9.1.
      */
-    public function admin(DashboardStatsService $stats, ProactiveAlerts $alerts, PhotographerComparison $comparison): Response
+    public function admin(Request $request, DashboardStatsService $stats, ProactiveAlerts $alerts, PhotographerComparison $comparison): Response
     {
         return Inertia::render('Admin/Dashboard', [
             'kpis' => $stats->kpis(),
@@ -48,6 +50,8 @@ class DashboardController extends Controller
             'mediaHealth' => $stats->mediaHealth(),
             'forecast' => $stats->revenueForecast(),
             'photographerComparison' => $comparison->rows(),
+            // Csak superadminnak: fotósok, akiknél az oldalon kívüli értékesítés jelei lehetnek.
+            'conversionWatch' => $request->user()?->role === 'superadmin' ? $comparison->watchlist() : [],
         ]);
     }
 
@@ -170,6 +174,9 @@ class DashboardController extends Controller
                 'report_weekly' => (bool) $user->report_weekly,
                 'report_monthly' => (bool) $user->report_monthly,
             ],
+            'commissionBonus' => app(CommissionBonus::class)->progressFor($user),
+            'agreementPending' => $user->agreed_terms_at === null,
+            'agreementHtml' => $user->agreed_terms_at === null ? app(LegalPages::class)->photographerAgreementHtml() : null,
             'earnings' => [
                 'revenue_share_percent' => (int) $user->revenue_share_percent,
                 'outstanding_cents' => $outstanding['amount_cents'],
