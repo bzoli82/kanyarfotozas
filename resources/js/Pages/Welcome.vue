@@ -73,6 +73,7 @@ onBeforeUnmount(() => {
 
 // Friss fotozasok — valodi esemenyek a /api/events-bol (a legfrissebb 4, boritokeppel)
 const recentEvents = ref([]);
+const loadingRecent = ref(true);
 
 async function loadRecentEvents() {
     try {
@@ -89,6 +90,8 @@ async function loadRecentEvents() {
         }));
     } catch (e) {
         recentEvents.value = [];
+    } finally {
+        loadingRecent.value = false;
     }
 }
 
@@ -180,7 +183,21 @@ const stats = computed(() => [
                     </Link>
                 </div>
 
-                <div v-if="recentEvents.length === 0" class="mt-5 text-sm text-muted">
+                <div v-if="loadingRecent" class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-hidden="true">
+                    <div
+                        v-for="n in 4"
+                        :key="n"
+                        class="animate-pulse overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-1"
+                    >
+                        <div class="aspect-[4/3] bg-surface-2"></div>
+                        <div class="space-y-2 p-3">
+                            <span class="block h-4 w-3/4 rounded bg-surface-2"></span>
+                            <span class="block h-3 w-1/2 rounded bg-surface-2"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-else-if="recentEvents.length === 0" class="mt-5 text-sm text-muted">
                     {{ t('home.recent.empty') }}
                 </div>
 

@@ -216,18 +216,32 @@ onBeforeUnmount(() => observer?.disconnect());
                 </div>
 
                 <div ref="sentinel" class="h-4"></div>
-                <p v-if="loadingMore" class="mt-4 text-center text-xs text-muted">{{ t('common.loading') }}</p>
+                <div v-if="loadingMore" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-hidden="true">
+                    <div
+                        v-for="n in 4"
+                        :key="n"
+                        class="animate-pulse overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-1"
+                    >
+                        <div class="aspect-[4/3] bg-surface-2"></div>
+                        <div class="flex items-center justify-between gap-2 p-3">
+                            <span class="h-4 w-16 rounded bg-surface-2"></span>
+                            <span class="h-6 w-20 rounded bg-surface-2"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <MediaLightbox
-            v-if="lightboxIndex !== null"
-            :items="items"
-            :index="lightboxIndex"
-            :event="event"
-            @update:index="lightboxIndex = $event"
-            @close="lightboxIndex = null"
-            @load-more="loadMore"
-        />
+        <Transition name="lb">
+            <MediaLightbox
+                v-if="lightboxIndex !== null"
+                :items="items"
+                :index="lightboxIndex"
+                :event="event"
+                @update:index="lightboxIndex = $event"
+                @close="lightboxIndex = null"
+                @load-more="loadMore"
+            />
+        </Transition>
     </PublicLayout>
 </template>

@@ -97,7 +97,7 @@ function toggleCollection() {
 
 <template>
     <div
-        class="group relative overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-1"
+        class="group relative overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-1 transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-lg hover:shadow-black/20"
         @mouseenter="onEnterCard"
         @mouseleave="onLeaveCard"
     >
@@ -126,7 +126,7 @@ function toggleCollection() {
                 <img
                     v-if="media.thumbnail_s3_key"
                     :src="mediaUrl(media.thumbnail_s3_key)"
-                    class="h-full w-full object-cover"
+                    class="h-full w-full object-cover transition-transform duration-[600ms] ease-out group-hover:scale-[1.05]"
                     :class="{ invisible: isHovering && media.type === 'video' && canHoverPreview }"
                     loading="lazy"
                     decoding="async"

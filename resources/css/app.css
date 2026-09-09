@@ -147,6 +147,18 @@ html[data-anim='off'] [data-reveal] {
     transform: translateY(-8px);
 }
 
+/* Lightbox nyitas/zaras (Events/Show.vue <Transition name="lb">) */
+.lb-enter-active {
+    transition: opacity 200ms ease-out;
+}
+.lb-leave-active {
+    transition: opacity 150ms ease-in;
+}
+.lb-enter-from,
+.lb-leave-to {
+    opacity: 0;
+}
+
 /* Hero cimsor-belepo (data-anim-hero='full', Welcome.vue) */
 @keyframes hero-rise {
     from {
