@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
@@ -8,6 +8,9 @@ const props = defineProps({
     modes: Array,
     fonts: Array,
     paletteKeys: Array,
+    animation: Object,
+    animationPageModes: Array,
+    animationHeroModes: Array,
 });
 
 const form = useForm({
@@ -20,7 +23,22 @@ const form = useForm({
         light: { ...props.settings.custom.light },
         dark: { ...props.settings.custom.dark },
     },
+    anim_enabled: props.animation.enabled,
+    anim_preset: props.animation.preset,
+    anim_page: props.animation.page,
+    anim_hero: props.animation.hero,
+    anim_reveal: props.animation.reveal,
+    anim_counters: props.animation.counters,
 });
+
+// Animáció-előnézet: a kiválasztott (még nem mentett) stílus numerikus értékei.
+const animPreset = computed(
+    () => props.animation.presetOptions.find((o) => o.value === form.anim_preset) ?? props.animation.presetOptions[1],
+);
+const demoKey = ref(0);
+function replayDemo() {
+    demoKey.value++;
+}
 
 const presetByKey = (key) => props.settings.presets.find((p) => p.key === key);
 
@@ -192,6 +210,80 @@ function previewVars(palette) {
                     </select>
                 </label>
 
+                <!-- Animációk -->
+                <div class="rounded-lg border border-border">
+                    <div class="flex items-center justify-between border-b border-border px-3 py-2">
+                        <span class="text-[11px] font-semibold uppercase tracking-wide text-muted">Animációk</span>
+                        <label class="flex items-center gap-2 text-[11px] text-content">
+                            <input v-model="form.anim_enabled" type="checkbox" class="accent-[var(--color-accent)]" />
+                            Bekapcsolva
+                        </label>
+                    </div>
+                    <div class="space-y-3 px-3 py-3" :class="{ 'pointer-events-none opacity-40': !form.anim_enabled }">
+                        <p class="text-[11px] text-muted">
+                            A <code>prefers-reduced-motion</code> beállítású látogatóknál minden animáció automatikusan kikapcsol.
+                        </p>
+
+                        <div>
+                            <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">Stílus</span>
+                            <div class="flex gap-1.5">
+                                <button
+                                    v-for="o in animation.presetOptions"
+                                    :key="o.value"
+                                    type="button"
+                                    class="flex-1 rounded-md border px-2 py-1.5 text-[11px] transition-colors"
+                                    :class="form.anim_preset === o.value ? 'border-accent text-accent' : 'border-border text-muted hover:border-accent/50'"
+                                    @click="form.anim_preset = o.value; replayDemo()"
+                                >
+                                    {{ o.label }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <label class="block">
+                            <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">Oldalváltás</span>
+                            <select v-model="form.anim_page" class="w-full appearance-none rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content focus:border-accent focus:outline-none">
+                                <option v-for="o in animationPageModes" :key="o.value" :value="o.value">{{ o.label }}</option>
+                            </select>
+                        </label>
+
+                        <label class="block">
+                            <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">Főoldali hero</span>
+                            <select v-model="form.anim_hero" class="w-full appearance-none rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content focus:border-accent focus:outline-none">
+                                <option v-for="o in animationHeroModes" :key="o.value" :value="o.value">{{ o.label }}</option>
+                            </select>
+                        </label>
+
+                        <label class="flex items-center gap-2 text-xs text-content">
+                            <input v-model="form.anim_reveal" type="checkbox" class="accent-[var(--color-accent)]" />
+                            Görgetéses megjelenés (a blokkok beúsznak, ahogy a képernyőre érnek)
+                        </label>
+                        <label class="flex items-center gap-2 text-xs text-content">
+                            <input v-model="form.anim_counters" type="checkbox" class="accent-[var(--color-accent)]" />
+                            Statisztika-számlálók (0-ról felszámolnak)
+                        </label>
+
+                        <div class="rounded-md border border-border bg-surface-2 p-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-semibold uppercase tracking-wide text-muted">Előnézet</span>
+                                <button type="button" class="text-[11px] font-semibold text-accent hover:text-accent-hover" @click="replayDemo">▸ Lejátszás</button>
+                            </div>
+                            <div
+                                :key="demoKey"
+                                class="mt-2 flex gap-2"
+                                :style="{ '--d': animPreset.duration + 'ms', '--y': animPreset.distance + 'px', '--s': animPreset.stagger + 'ms' }"
+                            >
+                                <span
+                                    v-for="n in 3"
+                                    :key="n"
+                                    class="anim-demo-bar h-8 flex-1 rounded"
+                                    :style="{ background: form.accent_color, animationDelay: `calc(${n - 1} * var(--s))` }"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex items-center gap-3 pt-2">
                     <button type="submit" :disabled="form.processing" class="rounded-lg bg-accent px-6 py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover disabled:opacity-60">
                         Mentés
@@ -236,3 +328,17 @@ function previewVars(palette) {
         </div>
     </AdminLayout>
 </template>
+
+<style scoped>
+.anim-demo-bar {
+    opacity: 0;
+    transform: translateY(var(--y, 16px));
+    animation: anim-demo var(--d, 480ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes anim-demo {
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+</style>

@@ -18,6 +18,15 @@ const props = defineProps({
 
 const page = usePage();
 const social = computed(() => page.props.social ?? []);
+
+// Oldalváltás-átmenet — a <html data-anim-page> (blade / AnimationSettings) dönt.
+const pageTransition = computed(() => {
+    if (typeof document === 'undefined') return '';
+    const mode = document.documentElement.dataset.animPage;
+    if (!mode || mode === 'none') return '';
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return '';
+    return mode === 'slide' ? 'page-slide' : 'page-fade';
+});
 const mobileOpen = ref(false);
 const cart = useCartStore();
 const collection = useCollectionStore();
@@ -140,7 +149,9 @@ function setLocale(code) {
         </header>
 
         <main id="main" tabindex="-1" class="flex-1 focus:outline-none">
-            <slot />
+            <Transition :name="pageTransition" mode="out-in">
+                <div :key="page.component"><slot /></div>
+            </Transition>
         </main>
 
         <footer class="border-t border-border bg-surface-1">

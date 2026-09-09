@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Services\AnimationSettings;
 use App\Services\GeoSearchSettings;
 use App\Services\MediaStorage;
 use App\Services\PhotographerVisibility;
@@ -77,6 +78,8 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
             ],
             'themeMode' => app(ThemeSettings::class)->mode(),
+            // Mozgás / animáció beállítások (a frontend reveal / számláló / hero ebből dönt).
+            'animation' => fn () => app(AnimationSettings::class)->toArray(),
             'locale' => App::getLocale(),
             'translations' => fn () => $this->translations(App::getLocale()),
         ];

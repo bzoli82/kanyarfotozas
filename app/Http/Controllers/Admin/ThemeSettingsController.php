@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\AnimationSettings;
 use App\Services\ThemeSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,10 +18,21 @@ class ThemeSettingsController extends Controller
      * betutipus) — csak superadmin, minden publikus/admin oldalra hat (app.blade.php
      * injektalja CSS custom property-kkent).
      */
-    public function index(ThemeSettings $theme): InertiaResponse
+    public function index(ThemeSettings $theme, AnimationSettings $animation): InertiaResponse
     {
         return Inertia::render('Admin/Settings/Theme', [
             'settings' => $theme->toArray(),
+            'animation' => $animation->forForm(),
+            'animationPageModes' => [
+                ['value' => 'none', 'label' => 'Nincs'],
+                ['value' => 'fade', 'label' => 'Áttűnés'],
+                ['value' => 'slide', 'label' => 'Csúszás'],
+            ],
+            'animationHeroModes' => [
+                ['value' => 'none', 'label' => 'Nincs'],
+                ['value' => 'kenburns', 'label' => 'Ken Burns (lassú ráközelítés)'],
+                ['value' => 'full', 'label' => 'Ken Burns + címsor-belépő'],
+            ],
             'modes' => [
                 ['value' => 'dark', 'label' => 'Sötét'],
                 ['value' => 'light', 'label' => 'Világos'],
@@ -53,9 +65,11 @@ class ThemeSettingsController extends Controller
             'custom.dark' => ['sometimes', 'array'],
             'custom.light.*' => ['string', $hex],
             'custom.dark.*' => ['string', $hex],
+            ...AnimationSettings::validationRules(),
         ]);
 
         $theme->update($data);
+        app(AnimationSettings::class)->update($data);
 
         return back()->with('success', 'Téma beállítások elmentve.');
     }

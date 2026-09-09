@@ -6,6 +6,7 @@ import { createPinia } from 'pinia';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { useThemeStore } from '@/Stores/theme';
+import reveal from '@/directives/reveal';
 
 /**
  * Elavult build utáni chunk-hiba kezelése. Ha a felhasználó tabja nyitva marad
@@ -57,11 +58,17 @@ createInertiaApp({
             .use(plugin)
             .use(createPinia());
 
+        app.directive('reveal', reveal);
+
         app.mount(el);
 
         useThemeStore().init(props.initialPage?.props?.themeMode);
     },
     progress: {
-        color: '#e63946',
+        // A blade <style> az app.js elott fut, igy a --color-accent mar elerheto —
+        // a folyamatjelzo szine a temahoz igazodik.
+        color:
+            getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() ||
+            '#e63946',
     },
 });

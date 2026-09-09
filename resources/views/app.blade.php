@@ -1,7 +1,11 @@
 @php($theme = app(\App\Services\ThemeSettings::class))
 @php($palettes = $theme->resolvedPalettes())
+@php($anim = app(\App\Services\AnimationSettings::class))
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
+    data-anim="{{ $anim->enabled() ? 'on' : 'off' }}"
+    data-anim-page="{{ $anim->enabled() ? $anim->pageTransition() : 'none' }}"
+    data-anim-reveal="{{ $anim->enabled() && $anim->scrollReveal() ? 'on' : 'off' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -89,6 +93,7 @@
             --color-accent-hover: {{ $theme->accentHoverColor() }};
             --radius-base: {{ $theme->borderRadius() }}px;
             --font-sans-base: {{ $theme->fontStack() }};
+            @foreach ($anim->resolvedVars() as $k => $v) {{ $k }}: {{ $v }}; @endforeach
         }
         :root, :root[data-theme='light'] { {{ $cssVars($palettes['light']) }} }
         :root[data-theme='dark'] { {{ $cssVars($palettes['dark']) }} }
