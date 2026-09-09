@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import EventMapModal from '@/Components/EventMapModal.vue';
 import SelectMenu from '@/Components/SelectMenu.vue';
+import DateField from '@/Components/DateField.vue';
 import { useI18n } from '@/Composables/useI18n';
 
 const { t } = useI18n();
@@ -326,13 +327,13 @@ function submitSearch() {
                     </div>
                 </div>
 
-                <label class="block">
+                <div class="block">
                     <span class="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
                         {{ t('home.search.date') }}
                     </span>
-                    <input v-model="search.dateFrom" type="date" class="w-full rounded-[var(--radius-base)] border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
-                </label>
+                    <DateField v-model="search.dateFrom" :placeholder="t('home.search.date')" />
+                </div>
                 <div v-if="photographerSearchEnabled" class="block">
                     <span class="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6" /></svg>
@@ -359,14 +360,14 @@ function submitSearch() {
                         <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">{{ t('home.search.longitude') }}</span>
                         <input v-model="search.lon" type="number" step="0.0001" placeholder="20.3772" class="w-full rounded-[var(--radius-base)] border border-border bg-surface-2 px-3 py-2.5 text-sm text-content placeholder:text-muted focus:border-accent focus:outline-none" />
                     </label>
-                    <label class="block">
+                    <div class="block">
                         <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">{{ t('home.search.date_from') }}</span>
-                        <input v-model="search.dateFrom" type="date" class="w-full rounded-[var(--radius-base)] border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
-                    </label>
-                    <label class="block">
+                        <DateField v-model="search.dateFrom" :placeholder="t('home.search.date_from')" />
+                    </div>
+                    <div class="block">
                         <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">{{ t('home.search.date_to') }}</span>
-                        <input v-model="search.dateUntil" type="date" class="w-full rounded-[var(--radius-base)] border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
-                    </label>
+                        <DateField v-model="search.dateUntil" :placeholder="t('home.search.date_to')" />
+                    </div>
                 </div>
 
                 <label class="mt-3 block max-w-sm">

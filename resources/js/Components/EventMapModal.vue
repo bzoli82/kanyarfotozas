@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import SelectMenu from '@/Components/SelectMenu.vue';
+import DateField from '@/Components/DateField.vue';
 import 'leaflet/dist/leaflet.css';
 
 // Fotós-szűrő — a superadmin kikapcsolhatja (fotós-attribúció rejtése).
@@ -300,22 +301,14 @@ onBeforeUnmount(() => {
 
                 <!-- Szurok a terkepen belul -->
                 <div class="flex flex-wrap items-end gap-3 border-b border-border bg-surface-2/50 px-4 py-3">
-                    <label class="block">
+                    <div class="block w-36">
                         <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">Dátumtól</span>
-                        <input
-                            v-model="dateFrom"
-                            type="date"
-                            class="rounded-[var(--radius-base)] border border-border bg-surface-2 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
-                        />
-                    </label>
-                    <label class="block">
+                        <DateField v-model="dateFrom" placeholder="Dátumtól" dense />
+                    </div>
+                    <div class="block w-36">
                         <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">Dátumig</span>
-                        <input
-                            v-model="dateUntil"
-                            type="date"
-                            class="rounded-[var(--radius-base)] border border-border bg-surface-2 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
-                        />
-                    </label>
+                        <DateField v-model="dateUntil" placeholder="Dátumig" dense />
+                    </div>
                     <div v-if="photographerSearchEnabled" class="block w-40">
                         <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">Fotós</span>
                         <SelectMenu v-model="photographerId" :options="photographerOptions" :active="!!photographerId" dense />
