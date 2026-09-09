@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import SelectMenu from '@/Components/SelectMenu.vue';
 import 'leaflet/dist/leaflet.css';
 
 // Fotós-szűrő — a superadmin kikapcsolhatja (fotós-attribúció rejtése).
@@ -31,6 +32,11 @@ const typeOptions = [
     { value: 'photo', label: 'Csak képek' },
     { value: 'video', label: 'Csak videók' },
 ];
+
+const photographerOptions = computed(() => [
+    { value: '', label: 'Összes fotós' },
+    ...photographers.value.map((p) => ({ value: p.id, label: p.name })),
+]);
 
 let map = null;
 let markersLayer = null;
@@ -310,25 +316,14 @@ onBeforeUnmount(() => {
                             class="rounded-[var(--radius-base)] border border-border bg-surface-2 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
                         />
                     </label>
-                    <label v-if="photographerSearchEnabled" class="block">
+                    <div v-if="photographerSearchEnabled" class="block w-40">
                         <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">Fotós</span>
-                        <select
-                            v-model="photographerId"
-                            class="rounded-[var(--radius-base)] border border-border bg-surface-2 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
-                        >
-                            <option value="">Összes fotós</option>
-                            <option v-for="p in photographers" :key="p.id" :value="p.id">{{ p.name }}</option>
-                        </select>
-                    </label>
-                    <label class="block">
+                        <SelectMenu v-model="photographerId" :options="photographerOptions" :active="!!photographerId" dense />
+                    </div>
+                    <div class="block w-36">
                         <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">Média</span>
-                        <select
-                            v-model="mediaType"
-                            class="rounded-[var(--radius-base)] border border-border bg-surface-2 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
-                        >
-                            <option v-for="opt in typeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                        </select>
-                    </label>
+                        <SelectMenu v-model="mediaType" :options="typeOptions" :active="mediaType !== 'all'" dense />
+                    </div>
                     <button
                         v-if="dateFrom || dateUntil || photographerId || mediaType !== 'all'"
                         type="button"

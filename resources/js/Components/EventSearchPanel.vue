@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import EventMapModal from '@/Components/EventMapModal.vue';
+import SelectMenu from '@/Components/SelectMenu.vue';
 import { useI18n } from '@/Composables/useI18n';
 
 const { t } = useI18n();
@@ -31,6 +32,16 @@ const search = reactive({
 });
 
 const photographers = ref([]);
+
+const photographerOptions = computed(() => [
+    { value: '', label: t('home.search.all_photographers') },
+    ...photographers.value.map((p) => ({ value: p.id, label: p.name })),
+]);
+const typeOptions = computed(() => [
+    { value: 'all', label: t('home.search.type_all') },
+    { value: 'photo', label: t('home.search.type_photo') },
+    { value: 'video', label: t('home.search.type_video') },
+]);
 const countries = ref([]);
 const countryPanelOpen = ref(false);
 const locations = ref([]);
@@ -322,33 +333,20 @@ function submitSearch() {
                     </span>
                     <input v-model="search.dateFrom" type="date" class="w-full rounded-[var(--radius-base)] border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
                 </label>
-                <label v-if="photographerSearchEnabled" class="block">
+                <div v-if="photographerSearchEnabled" class="block">
                     <span class="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6" /></svg>
                         {{ t('home.search.photographer') }}
                     </span>
-                    <div class="relative">
-                        <select v-model="search.photographerId" class="w-full appearance-none rounded-[var(--radius-base)] border border-border bg-surface-2 px-3 py-2.5 pr-9 text-sm text-content focus:border-accent focus:outline-none">
-                            <option value="">{{ t('home.search.all_photographers') }}</option>
-                            <option v-for="p in photographers" :key="p.id" :value="p.id">{{ p.name }}</option>
-                        </select>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted"><path d="m6 9 6 6 6-6" /></svg>
-                    </div>
-                </label>
-                <label class="block">
+                    <SelectMenu v-model="search.photographerId" :options="photographerOptions" :active="!!search.photographerId" />
+                </div>
+                <div class="block">
                     <span class="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="m9 8 5 4-5 4V8Z" /></svg>
                         {{ t('home.search.type') }}
                     </span>
-                    <div class="relative">
-                        <select v-model="search.type" class="w-full appearance-none rounded-[var(--radius-base)] border border-border bg-surface-2 px-3 py-2.5 pr-9 text-sm text-content focus:border-accent focus:outline-none">
-                            <option value="all">{{ t('home.search.type_all') }}</option>
-                            <option value="photo">{{ t('home.search.type_photo') }}</option>
-                            <option value="video">{{ t('home.search.type_video') }}</option>
-                        </select>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted"><path d="m6 9 6 6 6-6" /></svg>
-                    </div>
-                </label>
+                    <SelectMenu v-model="search.type" :options="typeOptions" :active="search.type !== 'all'" />
+                </div>
             </div>
 
             <div v-else-if="activeTab === 'gps'" class="pt-4">

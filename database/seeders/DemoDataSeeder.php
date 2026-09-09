@@ -122,9 +122,11 @@ class DemoDataSeeder extends Seeder
             }
         }
 
-        // A demóban látszódjon minden fotós-adat (éles alap: contacts KI, attribution BE).
-        SiteSetting::set('photographer_contacts_public', '1');
-        SiteSetting::set('photographer_attribution_public', '1');
+        // Fotós-láthatóság: az éles alapértékkel egyezően KI (a kép-szintű „Fotós: X"
+        // és a fotós-alapú kereső nem jelenik meg; a superadmin kapcsolhatja be
+        // a /admin/photographers oldalon). Ld. App\Services\PhotographerVisibility.
+        SiteSetting::set('photographer_contacts_public', '0');
+        SiteSetting::set('photographer_attribution_public', '0');
 
         // Cég szintű közösségi média linkek (a Kapcsolat oldal „Kövess minket" + a lábléc) —
         // demó/placeholder URL-ek, hogy a szekció ne tűnjön el egy friss telepítés után.
