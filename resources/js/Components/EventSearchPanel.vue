@@ -249,7 +249,7 @@ function submitSearch() {
                 </button>
             </div>
 
-            <div v-if="activeTab === 'default'" class="grid gap-3 pt-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div v-if="activeTab === 'default'" class="grid gap-3 pt-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div class="relative block">
                     <span class="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M12 3c2.5 2.5 4 5.5 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.5-4-9s1.5-6.5 4-9Z" /></svg>

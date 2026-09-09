@@ -155,7 +155,7 @@ const stats = computed(() => [
             </div>
 
             <!-- Keresopanel: a hero also szelere ulve (ugyanez a panel a /events oldalon is) -->
-            <div class="relative z-10 mx-auto -mt-24 max-w-5xl px-4 sm:px-6 lg:px-8">
+            <div class="relative z-10 mx-auto -mt-24 max-w-4xl px-4 sm:px-6 lg:px-8">
                 <EventSearchPanel />
             </div>
         </section>
