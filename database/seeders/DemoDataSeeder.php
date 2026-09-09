@@ -8,6 +8,7 @@ use App\Models\Media;
 use App\Models\User;
 use App\Services\PlaceholderMediaGenerator;
 use App\Services\SiteBranding;
+use App\Services\SocialLinks;
 use Illuminate\Database\Seeder;
 use Throwable;
 
@@ -118,6 +119,15 @@ class DemoDataSeeder extends Seeder
                     ->create();
             }
         }
+
+        // Cég szintű közösségi média linkek (a Kapcsolat oldal „Kövess minket" + a lábléc) —
+        // demó/placeholder URL-ek, hogy a szekció ne tűnjön el egy friss telepítés után.
+        app(SocialLinks::class)->update([
+            'facebook' => 'https://facebook.com/kanyarfotozas',
+            'instagram' => 'https://instagram.com/kanyarfotozas',
+            'youtube' => 'https://youtube.com/@kanyarfotozas',
+            'tiktok' => 'https://tiktok.com/@kanyarfotozas',
+        ]);
 
         $this->generatePlaceholderImages();
 
