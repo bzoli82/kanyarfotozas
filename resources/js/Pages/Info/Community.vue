@@ -28,14 +28,15 @@ const social = computed(() => page.props.social ?? []);
                 <ul v-else class="grid gap-4 sm:grid-cols-2">
                     <li v-for="s in social" :key="s.platform">
                         <a
+                            v-tilt
                             :href="s.url"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="group flex items-center gap-4 rounded-[var(--radius-base)] border border-border bg-surface-1 p-5 transition-colors hover:border-accent"
+                            class="hover-card group flex items-center gap-4 overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-1 p-5 transition-colors hover:border-accent"
                         >
-                            <SocialIcon :platform="s.platform" class="h-8 w-8 shrink-0 text-content group-hover:text-accent" />
+                            <SocialIcon :platform="s.platform" class="h-8 w-8 shrink-0 text-content transition-colors duration-300 ease-out group-hover:text-accent" />
                             <span class="min-w-0">
-                                <span class="block font-display text-base font-bold text-content group-hover:text-accent">{{ s.label }}</span>
+                                <span class="block font-display text-base font-bold text-content transition-colors duration-300 ease-out group-hover:text-accent">{{ s.label }}</span>
                                 <span class="block truncate text-xs text-muted">{{ s.display }}</span>
                             </span>
                         </a>
