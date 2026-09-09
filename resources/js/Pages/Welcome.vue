@@ -270,7 +270,7 @@ const stats = computed(() => [
                             </span>
                         </div>
                         <div class="p-3">
-                            <h3 class="text-sm font-semibold text-content group-hover:text-accent">{{ ev.name }}</h3>
+                            <h3 class="text-sm font-semibold text-content transition-colors duration-300 ease-out group-hover:text-accent">{{ ev.name }}</h3>
                             <p class="text-xs text-muted">
                                 {{ ev.location }}<template v-if="!ev.comingSoon"> · {{ t('home.recent.media_count', { count: ev.mediaCount }) }}</template>
                             </p>

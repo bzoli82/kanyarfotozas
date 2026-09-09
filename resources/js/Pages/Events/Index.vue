@@ -96,7 +96,7 @@ function formatDate(value) {
                             </span>
                         </div>
                         <div class="p-4">
-                            <h3 class="text-sm font-semibold text-content group-hover:text-accent">{{ event.name }}</h3>
+                            <h3 class="text-sm font-semibold text-content transition-colors duration-300 ease-out group-hover:text-accent">{{ event.name }}</h3>
                             <p class="text-xs text-muted">
                                 <span v-if="event.country">{{ event.country.flag_emoji }}</span>
                                 {{ event.location }} · {{ t('home.recent.media_count', { count: event.media_count }) }}
