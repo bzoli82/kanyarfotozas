@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Event;
 use App\Models\EventView;
 use App\Models\Media;
+use App\Models\Order;
 use App\Services\DashboardStatsService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -51,5 +52,29 @@ class DashboardFunnelTest extends TestCase
         $funnel = app(DashboardStatsService::class)->conversionFunnel();
 
         $this->assertSame('cart', $funnel['stages'][0]['key']);
+    }
+
+    public function test_event_performance_breaks_the_funnel_down_per_event(): void
+    {
+        $event = Event::factory()->create(['status' => Event::STATUS_LIVE]);
+        $media = Media::factory()->photo()->create(['event_id' => $event->id, 'status' => Media::STATUS_READY]);
+
+        EventView::query()->create(['event_id' => $event->id, 'viewed_on' => now()->toDateString(), 'count' => 20]);
+
+        $order = Order::factory()->paid()->create(['created_at' => now()]);
+        $order->media()->attach($media->id, ['price_cents' => 1490]);
+
+        // Egy másik live esemény forgalom nélkül — nem jelenik meg.
+        Event::factory()->create(['status' => Event::STATUS_LIVE]);
+
+        $rows = app(DashboardStatsService::class)->eventPerformance();
+
+        $this->assertCount(1, $rows);
+        $this->assertSame($event->id, $rows[0]['id']);
+        $this->assertSame(20, $rows[0]['views']);
+        $this->assertSame(1, $rows[0]['orders']);
+        $this->assertSame(1, $rows[0]['paid_orders']);
+        $this->assertSame(1490, $rows[0]['revenue_cents']);
+        $this->assertSame(5.0, $rows[0]['conversion']);
     }
 }

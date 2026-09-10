@@ -106,8 +106,8 @@ function initials(name) {
             <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
                 <h2 class="font-display text-xl font-bold uppercase tracking-tight text-content">{{ t('about.photographers_title') }}</h2>
                 <p class="mt-4 text-sm leading-relaxed text-muted">{{ t('about.photographers_body') }}</p>
-                <Link href="/contact" class="mt-6 inline-block rounded-lg bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover">
-                    {{ t('about.photographers_cta') }}
+                <Link href="/csatlakozz" class="btn-sheen mt-6 inline-block rounded-lg bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover">
+                    {{ t('apply.title') }}
                 </Link>
             </div>
         </section>

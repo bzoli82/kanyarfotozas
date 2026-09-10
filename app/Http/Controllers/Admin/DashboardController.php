@@ -47,6 +47,7 @@ class DashboardController extends Controller
             'security' => $stats->securityAlerts(),
             'alerts' => $alerts->visible(),
             'funnel' => $stats->conversionFunnel(),
+            'eventPerformance' => $stats->eventPerformance(),
             'mediaHealth' => $stats->mediaHealth(),
             'forecast' => $stats->revenueForecast(),
             'photographerComparison' => $comparison->rows(),

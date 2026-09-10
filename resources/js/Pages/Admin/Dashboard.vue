@@ -14,6 +14,7 @@ const props = defineProps({
     security: Object,
     alerts: { type: Array, default: () => [] },
     funnel: { type: Object, default: () => ({ stages: [], days: 30 }) },
+    eventPerformance: { type: Array, default: () => [] },
     mediaHealth: { type: Object, default: () => ({ samples: [], plate_recognition: {} }) },
     forecast: { type: Object, default: () => ({ week: {}, month: {} }) },
     photographerComparison: { type: Array, default: () => [] },
@@ -80,6 +81,10 @@ const { colors, palette } = useChartColors();
 
 function huf(cents) {
     return new Intl.NumberFormat('hu-HU').format(cents ?? 0) + ' Ft';
+}
+
+function nf(value) {
+    return new Intl.NumberFormat('hu-HU').format(value ?? 0);
 }
 
 const chartBaseOptions = computed(() => ({
@@ -295,6 +300,41 @@ function resendEmail(orderId) {
                     Az elmúlt 30 nap napi bevételére illesztett lineáris trend alapján.
                     Napi változás: {{ huf(forecast.daily_slope_cents) }}/nap.
                 </p>
+            </div>
+        </div>
+
+        <!-- Esemeny-szintu teljesitmeny -->
+        <div v-if="eventPerformance.length" class="mt-6 rounded-[var(--radius-base)] border border-border bg-surface-1 p-5">
+            <h2 class="text-sm font-semibold uppercase tracking-wide text-content">Események teljesítménye (30 nap)</h2>
+            <p class="mt-1 text-xs text-muted">A konverziós tölcsér eseményenként — melyik fotózás hoz megtekintést és bevételt. Konverzió = fizetett rendelés / galéria-megtekintés.</p>
+            <div class="mt-4 overflow-x-auto">
+                <table class="w-full min-w-[640px] text-left text-xs">
+                    <thead class="text-[10px] uppercase tracking-wide text-muted">
+                        <tr class="border-b border-border">
+                            <th class="py-2 pr-3 font-semibold">Esemény</th>
+                            <th class="py-2 px-3 text-right font-semibold">Megtekintés</th>
+                            <th class="py-2 px-3 text-right font-semibold">Rendelés</th>
+                            <th class="py-2 px-3 text-right font-semibold">Fizetett</th>
+                            <th class="py-2 px-3 text-right font-semibold">Bevétel</th>
+                            <th class="py-2 pl-3 text-right font-semibold">Konverzió</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="ev in eventPerformance" :key="ev.id" class="border-b border-border last:border-b-0">
+                            <td class="py-2 pr-3">
+                                <a :href="`/events/${ev.slug}`" target="_blank" class="font-medium text-content hover:text-accent">{{ ev.name }}</a>
+                                <span v-if="ev.event_date" class="ml-1 text-[10px] text-muted">{{ ev.event_date }}</span>
+                            </td>
+                            <td class="py-2 px-3 text-right text-muted">{{ nf(ev.views) }}</td>
+                            <td class="py-2 px-3 text-right text-muted">{{ nf(ev.orders) }}</td>
+                            <td class="py-2 px-3 text-right text-content">{{ nf(ev.paid_orders) }}</td>
+                            <td class="py-2 px-3 text-right font-semibold text-content">{{ huf(ev.revenue_cents) }}</td>
+                            <td class="py-2 pl-3 text-right" :class="ev.conversion === null ? 'text-muted' : 'text-content'">
+                                {{ ev.conversion === null ? '–' : ev.conversion + '%' }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 

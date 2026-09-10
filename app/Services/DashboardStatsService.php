@@ -161,6 +161,58 @@ class DashboardStatsService
     }
 
     /**
+     * Esemeny-szintu teljesitmeny: megtekintes -> rendeles -> fizetett -> bevetel,
+     * eseményenkent (a konverzios tolcser lebontasa). Csak a `live` esemenyek,
+     * amelyeknek az idoszakban volt megtekintese VAGY rendelese.
+     *
+     * @return list<array{id: int, name: string, slug: string, event_date: string|null, views: int, orders: int, paid_orders: int, revenue_cents: int, conversion: float|null}>
+     */
+    public function eventPerformance(int $days = 30, int $limit = 15): array
+    {
+        $from = now()->subDays($days - 1)->startOfDay();
+
+        $viewsSub = DB::table('event_views')
+            ->select('event_id', DB::raw('SUM(count) as views'))
+            ->where('viewed_on', '>=', $from->toDateString())
+            ->groupBy('event_id');
+
+        $rows = DB::table('events')
+            ->leftJoinSub($viewsSub, 'v', 'v.event_id', '=', 'events.id')
+            ->leftJoin('media', 'media.event_id', '=', 'events.id')
+            ->leftJoin('order_media', 'order_media.media_id', '=', 'media.id')
+            ->leftJoin('orders', function ($join) use ($from) {
+                $join->on('orders.id', '=', 'order_media.order_id')
+                    ->where('orders.created_at', '>=', $from);
+            })
+            ->where('events.status', Event::STATUS_LIVE)
+            ->groupBy('events.id', 'events.name', 'events.slug', 'events.event_date', 'v.views')
+            ->havingRaw('COALESCE(v.views, 0) > 0 OR COUNT(DISTINCT orders.id) > 0')
+            ->selectRaw(
+                'events.id, events.name, events.slug, events.event_date,
+                 COALESCE(v.views, 0)::int as views,
+                 COUNT(DISTINCT orders.id)::int as orders,
+                 COUNT(DISTINCT orders.id) FILTER (WHERE orders.payment_status = ?)::int as paid_orders,
+                 COALESCE(SUM(order_media.price_cents) FILTER (WHERE orders.payment_status = ?), 0)::int as revenue_cents',
+                [Order::STATUS_PAID, Order::STATUS_PAID]
+            )
+            ->orderByRaw('revenue_cents DESC, views DESC')
+            ->limit($limit)
+            ->get();
+
+        return $rows->map(fn ($r) => [
+            'id' => (int) $r->id,
+            'name' => $r->name,
+            'slug' => $r->slug,
+            'event_date' => $r->event_date,
+            'views' => (int) $r->views,
+            'orders' => (int) $r->orders,
+            'paid_orders' => (int) $r->paid_orders,
+            'revenue_cents' => (int) $r->revenue_cents,
+            'conversion' => $r->views > 0 ? round($r->paid_orders / $r->views * 100, 1) : null,
+        ])->all();
+    }
+
+    /**
      * @return array{labels: string[], data: int[]}
      */
     public function topPhotographers(int $limit = 5): array
