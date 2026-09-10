@@ -210,14 +210,7 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- Adatok + kosárba — a kártya függőleges közepe a médiáéhoz igazítva -->
-            <aside v-if="current" class="flex shrink-0 flex-col justify-center gap-2 lg:w-[240px]">
-                <p
-                    v-if="current.type !== 'video'"
-                    class="flex items-start gap-2 text-sm leading-relaxed text-white/70"
-                >
-                    <svg class="mt-0.5 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3M11 8v6M8 11h6" /></svg>
-                    <span>{{ t('media.zoom_hint') }}</span>
-                </p>
+            <aside v-if="current" class="flex shrink-0 flex-col justify-center gap-2.5 lg:w-[240px]">
                 <div class="rounded-[var(--radius-base)] border border-white/15 bg-white/5 p-3 text-white">
                     <dl class="space-y-1.5 text-xs">
                         <div v-if="shotAtLabel" class="flex justify-between border-b border-white/10 pb-1.5">
@@ -251,6 +244,14 @@ onBeforeUnmount(() => {
                     />
                     <p class="mt-2.5 border-t border-white/10 pt-2 text-center text-[11px] text-white/35">{{ index + 1 }} / {{ items.length }}</p>
                 </div>
+
+                <p
+                    v-if="current.type !== 'video'"
+                    class="flex items-start gap-2 text-sm leading-relaxed text-white/70"
+                >
+                    <svg class="mt-0.5 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3M11 8v6M8 11h6" /></svg>
+                    <span>{{ t('media.zoom_hint') }}</span>
+                </p>
             </aside>
         </div>
 
