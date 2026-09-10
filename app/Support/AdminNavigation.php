@@ -112,6 +112,8 @@ class AdminNavigation
             ]];
 
             $sections[] = ['title' => 'Kereshetőség', 'items' => [
+                ['label' => 'Karbantartási mód', 'href' => '/admin/settings/maintenance', 'icon' => 'shield',
+                    'hint' => 'A publikus oldal mögé egy „hamarosan" lapot tesz. Az admin + a fizetési webhookok elérhetők maradnak.'],
                 ['label' => 'SEO', 'href' => '/admin/settings/seo', 'icon' => 'search',
                     'hint' => 'Meta-leírás, OG-kép, Google Search Console azonosító + a globális „kereshetőség" kapcsoló.'],
                 ['label' => 'GEO (AI-keresők)', 'href' => '/admin/settings/geo', 'icon' => 'robot',
@@ -215,6 +217,8 @@ class AdminNavigation
             $extras[] = ['label' => 'R2 CORS / deploy-emlékeztetők', 'href' => $c, 'section' => 'Rendszer', 'icon' => 'storage',
                 'hint' => 'Kritikus beállítások → Deploy-emlékeztetők: a böngésző→R2 feltöltéshez szükséges CORS JSON.', 'keywords' => 'cors r2 cloudflare deploy feltoltes bucket'];
 
+            $extras[] = ['label' => 'Karbantartási mód', 'href' => '/admin/settings/maintenance', 'section' => 'Kereshetőség', 'icon' => 'shield',
+                'hint' => 'A publikus oldalt egy „hamarosan" lap mögé teszi; az admin elérhető marad.', 'keywords' => 'karbantartas maintenance hamarosan down offline zarva coming soon'];
             $extras[] = ['label' => 'Animációk (mozgás) beállítása', 'href' => '/admin/settings/theme', 'section' => 'Megjelenés', 'icon' => 'theme',
                 'hint' => 'Téma → Animációk: oldalváltás, hero, kártya-hover, görgetés-reveal, GY.I.K. lenyílás, kosárba-repülés — mind ki/be.', 'keywords' => 'animacio mozgas atmenet transition hover parallax reveal'];
             $extras[] = ['label' => 'Feltölthető logó (kép)', 'href' => '/admin/settings/branding', 'section' => 'Tartalom', 'icon' => 'branding',
