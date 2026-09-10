@@ -35,6 +35,9 @@ const form = useForm({
     anim_progress: props.animation.progress,
     anim_imgfade: props.animation.imgfade,
     anim_grain: props.animation.grain,
+    anim_btnsheen: props.animation.btnsheen,
+    anim_flycart: props.animation.flycart,
+    anim_themereveal: props.animation.themereveal,
 });
 
 // Animáció-előnézet: a kiválasztott (még nem mentett) stílus numerikus értékei.
@@ -322,6 +325,18 @@ function previewVars(palette) {
                         <label class="flex items-center gap-2 text-xs text-content">
                             <input v-model="form.anim_grain" type="checkbox" class="accent-[var(--color-accent)]" />
                             Hero: finom filmszemcse + „görgess" nyíl
+                        </label>
+                        <label class="flex items-center gap-2 text-xs text-content">
+                            <input v-model="form.anim_btnsheen" type="checkbox" class="accent-[var(--color-accent)]" />
+                            Gombok: fény-suhanás a kurzor alatt (Kosárba gombok)
+                        </label>
+                        <label class="flex items-center gap-2 text-xs text-content">
+                            <input v-model="form.anim_flycart" type="checkbox" class="accent-[var(--color-accent)]" />
+                            „Kosárba" — a kép a kosár-ikonhoz repül
+                        </label>
+                        <label class="flex items-center gap-2 text-xs text-content">
+                            <input v-model="form.anim_themereveal" type="checkbox" class="accent-[var(--color-accent)]" />
+                            Téma-váltás: körkörös feltárás a kapcsolótól
                         </label>
 
                         <div class="rounded-md border border-border bg-surface-2 p-3">

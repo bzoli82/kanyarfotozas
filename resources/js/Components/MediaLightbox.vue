@@ -3,10 +3,12 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useCartStore } from '@/Stores/cart';
 import { useI18n } from '@/Composables/useI18n';
 import { useMediaUrl } from '@/Composables/useMediaUrl';
+import { useFlyToCart } from '@/Composables/useFlyToCart';
 import VideoPlayer from '@/Components/VideoPlayer.vue';
 
 const { t, locale } = useI18n();
 const { mediaUrl } = useMediaUrl();
+const { flyToCart } = useFlyToCart();
 
 const props = defineProps({
     items: { type: Array, required: true },
@@ -19,6 +21,7 @@ const emit = defineEmits(['close', 'update:index', 'load-more']);
 const cart = useCartStore();
 const stripEl = ref(null);
 const dialogEl = ref(null);
+const stageImgEl = ref(null);
 let restoreScrollY = 0;
 let previouslyFocused = null;
 
@@ -46,6 +49,10 @@ function jumpTo(i) {
 
 function addToCart() {
     if (!current.value) return;
+    if (!cart.hasItem(current.value.id)) {
+        const url = current.value.thumbnail_s3_key ? mediaUrl(current.value.thumbnail_s3_key) : null;
+        flyToCart(stageImgEl.value, url);
+    }
     cart.add({
         id: current.value.id,
         type: current.value.type,
@@ -145,6 +152,7 @@ onBeforeUnmount(() => {
                 <img
                     v-else-if="current"
                     :key="`i-${current.id}`"
+                    ref="stageImgEl"
                     :src="mediaUrl(current.watermarked_s3_key ?? current.thumbnail_s3_key)"
                     class="max-h-full max-w-full rounded-[var(--radius-base)] object-contain"
                     decoding="async"
@@ -190,7 +198,7 @@ onBeforeUnmount(() => {
                     </div>
                     <button
                         type="button"
-                        class="mt-2.5 w-full rounded-lg py-2 text-[11px] font-semibold uppercase tracking-wide transition-colors"
+                        class="btn-sheen mt-2.5 w-full rounded-lg py-2 text-[11px] font-semibold uppercase tracking-wide transition-colors"
                         :class="cart.hasItem(current.id) ? 'border border-accent text-accent' : 'bg-accent text-white hover:bg-accent-hover'"
                         @click="addToCart"
                     >

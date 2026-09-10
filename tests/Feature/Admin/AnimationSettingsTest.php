@@ -35,6 +35,9 @@ class AnimationSettingsTest extends TestCase
         $this->assertTrue($anim->progressBar());
         $this->assertTrue($anim->imageFade());
         $this->assertTrue($anim->heroGrain());
+        $this->assertTrue($anim->buttonSheen());
+        $this->assertTrue($anim->flyToCart());
+        $this->assertTrue($anim->themeReveal());
         $this->assertSame('480ms', $anim->resolvedVars()['--anim-duration']);
     }
 
@@ -69,6 +72,9 @@ class AnimationSettingsTest extends TestCase
             'anim_progress' => false,
             'anim_imgfade' => false,
             'anim_grain' => false,
+            'anim_btnsheen' => false,
+            'anim_flycart' => false,
+            'anim_themereveal' => false,
         ])->assertRedirect();
 
         $anim = app(AnimationSettings::class);
@@ -79,6 +85,9 @@ class AnimationSettingsTest extends TestCase
         $this->assertFalse($anim->scrollReveal());
         $this->assertFalse($anim->frostedHeader());
         $this->assertFalse($anim->heroGrain());
+        $this->assertFalse($anim->buttonSheen());
+        $this->assertFalse($anim->flyToCart());
+        $this->assertFalse($anim->themeReveal());
         $this->assertSame('720ms', $anim->resolvedVars()['--anim-duration']);
     }
 

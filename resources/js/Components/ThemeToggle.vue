@@ -8,6 +8,10 @@ const options = [
     { value: 'dark', label: 'Sötét' },
     { value: 'system', label: 'Rendszer' },
 ];
+
+function pick(value, event) {
+    theme.setMode(value, event ? { x: event.clientX, y: event.clientY } : null);
+}
 </script>
 
 <template>
@@ -21,7 +25,7 @@ const options = [
             :title="option.label"
             class="grid h-7 w-7 place-items-center rounded-md text-content/70 transition-colors hover:text-content"
             :class="{ 'bg-surface-2 text-accent': theme.mode === option.value }"
-            @click="theme.setMode(option.value)"
+            @click="pick(option.value, $event)"
         >
             <svg v-if="option.value === 'light'" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="4" />

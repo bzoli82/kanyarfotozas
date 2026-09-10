@@ -103,6 +103,21 @@ class AnimationSettings
         return (bool) SiteSetting::get('anim_grain', true);
     }
 
+    public function buttonSheen(): bool
+    {
+        return (bool) SiteSetting::get('anim_btnsheen', true);
+    }
+
+    public function flyToCart(): bool
+    {
+        return (bool) SiteSetting::get('anim_flycart', true);
+    }
+
+    public function themeReveal(): bool
+    {
+        return (bool) SiteSetting::get('anim_themereveal', true);
+    }
+
     /**
      * A választott stílus numerikus értékei — az app.blade.php CSS custom
      * property-ként injektálja. Kikapcsolt animációnál minden 0 (= azonnali).
@@ -143,6 +158,9 @@ class AnimationSettings
             'progress' => $this->progressBar(),
             'imgfade' => $this->imageFade(),
             'grain' => $this->heroGrain(),
+            'btnsheen' => $this->buttonSheen(),
+            'flycart' => $this->flyToCart(),
+            'themereveal' => $this->themeReveal(),
         ];
     }
 
@@ -185,6 +203,9 @@ class AnimationSettings
             'anim_progress' => ['sometimes', 'boolean'],
             'anim_imgfade' => ['sometimes', 'boolean'],
             'anim_grain' => ['sometimes', 'boolean'],
+            'anim_btnsheen' => ['sometimes', 'boolean'],
+            'anim_flycart' => ['sometimes', 'boolean'],
+            'anim_themereveal' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -193,7 +214,7 @@ class AnimationSettings
      */
     public function update(array $data): void
     {
-        foreach (['anim_enabled', 'anim_reveal', 'anim_counters', 'anim_header', 'anim_progress', 'anim_imgfade', 'anim_grain'] as $key) {
+        foreach (['anim_enabled', 'anim_reveal', 'anim_counters', 'anim_header', 'anim_progress', 'anim_imgfade', 'anim_grain', 'anim_btnsheen', 'anim_flycart', 'anim_themereveal'] as $key) {
             if (array_key_exists($key, $data)) {
                 SiteSetting::set($key, $data[$key] ? '1' : '0');
             }

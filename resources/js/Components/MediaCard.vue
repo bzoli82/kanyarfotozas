@@ -4,9 +4,11 @@ import { useCartStore } from '@/Stores/cart';
 import { useCollectionStore } from '@/Stores/collection';
 import { useI18n } from '@/Composables/useI18n';
 import { useMediaUrl } from '@/Composables/useMediaUrl';
+import { useFlyToCart } from '@/Composables/useFlyToCart';
 
 const { t } = useI18n();
 const { mediaUrl } = useMediaUrl();
+const { flyToCart } = useFlyToCart();
 
 const props = defineProps({
     media: { type: Object, required: true },
@@ -19,6 +21,7 @@ const cart = useCartStore();
 const collection = useCollectionStore();
 const isHovering = ref(false);
 const videoEl = ref(null);
+const thumbEl = ref(null);
 const scrubHover = ref(null); // { x, time, frameStyle } | null
 
 // Elő-feldolgozott videó (nincs scrub sprite) → statikus poszter + lejátszás-ikon,
@@ -87,6 +90,9 @@ function mediaSnapshot() {
 }
 
 function addToCart() {
+    if (!cart.hasItem(props.media.id)) {
+        flyToCart(thumbEl.value, props.media.thumbnail_s3_key ? mediaUrl(props.media.thumbnail_s3_key) : null);
+    }
     cart.add(mediaSnapshot());
 }
 
@@ -126,6 +132,7 @@ function toggleCollection() {
                 </div>
                 <img
                     v-if="media.thumbnail_s3_key"
+                    ref="thumbEl"
                     v-imgfade
                     :src="mediaUrl(media.thumbnail_s3_key)"
                     class="hover-card__media h-full w-full object-cover"
@@ -182,7 +189,7 @@ function toggleCollection() {
             <span class="text-sm font-semibold text-content">{{ media.price_cents }} Ft</span>
             <button
                 type="button"
-                class="rounded-lg border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition-colors"
+                class="btn-sheen rounded-lg border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition-colors"
                 :class="cart.hasItem(media.id) ? 'border-accent text-accent' : 'border-border text-content hover:border-accent'"
                 @click="addToCart"
             >

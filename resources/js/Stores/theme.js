@@ -47,9 +47,35 @@ export const useThemeStore = defineStore('theme', {
                 });
             }
         },
-        setMode(mode) {
+        setMode(mode, origin = null) {
             this.mode = mode;
             writeStoredMode(mode);
+
+            // Körkörös feltárás a kapcsoló pozíciójától (View Transitions API) —
+            // a /admin/settings/theme „Animációk" → „Téma-váltás körkörös feltárása" kapcsolja.
+            const canReveal =
+                typeof document !== 'undefined' &&
+                document.startViewTransition &&
+                !document.hidden &&
+                document.documentElement.dataset.animThemereveal !== 'off' &&
+                !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+            if (canReveal && origin) {
+                const root = document.documentElement.style;
+                root.setProperty('--theme-reveal-x', `${origin.x}px`);
+                root.setProperty('--theme-reveal-y', `${origin.y}px`);
+                const vt = document.startViewTransition(() => this.apply());
+                // A ViewTransition promise-jai elutasíthatnak (megszakított / időtúllépett
+                // átmenet háttérbe tett tabnál) — a témaváltás már megtörtént, a hibát
+                // elnyeljük, hogy ne legyen unhandled rejection.
+                const swallow = () => {};
+                vt.updateCallbackDone?.catch(swallow);
+                vt.ready?.catch(swallow);
+                vt.finished?.catch(swallow);
+
+                return;
+            }
+
             this.apply();
         },
         apply() {
