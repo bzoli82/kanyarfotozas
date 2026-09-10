@@ -351,6 +351,7 @@ Route::middleware(['auth', 'role:superadmin|admin|photographer', '2fa'])->prefix
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
+    Route::put('/events/{event}/cover', [EventController::class, 'setCover'])->name('events.cover');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
     Route::post('/events/{event}/media', [MediaController::class, 'store'])->name('events.media.store');
     Route::post('/events/{event}/media/bulk-delete', [MediaController::class, 'bulkDestroy'])->name('events.media.bulk-delete');

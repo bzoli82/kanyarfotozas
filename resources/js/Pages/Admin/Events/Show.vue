@@ -96,6 +96,11 @@ function destroyMedia(item) {
     router.delete(`/admin/media/${item.id}`, { preserveScroll: true });
 }
 
+// --- Fedőkép (a listaoldalak / térkép / megosztás borítója) ---
+function setCover(mediaId) {
+    router.put(`/admin/events/${props.event.id}/cover`, { cover_media_id: mediaId }, { preserveScroll: true });
+}
+
 // --- Tobbszoros kijeloles (drag / kattintas) + koteges torles ---
 const gridRef = ref(null);
 const selectedIds = ref([]);
@@ -517,6 +522,14 @@ onBeforeUnmount(() => importPollTimer && clearTimeout(importPollTimer));
                         <span class="absolute right-2 top-2 rounded-full border px-2 py-0.5 text-[10px] font-medium" :class="statusClass[item.status]">
                             {{ statusLabel[item.status] ?? item.status }}
                         </span>
+
+                        <span
+                            v-if="item.id === event.cover_media_id"
+                            class="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
+                        >
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 7h7l-5.5 4.5L18.5 22 12 17.5 5.5 22l2-8.5L2 9h7z" /></svg>
+                            Fedőkép
+                        </span>
                     </div>
                     <div class="space-y-2 p-3">
                         <div class="flex items-center justify-between text-xs">
@@ -524,7 +537,7 @@ onBeforeUnmount(() => importPollTimer && clearTimeout(importPollTimer));
                             <span class="shrink-0 font-medium text-content">{{ huf(item.price_cents) }}</span>
                         </div>
 
-                        <div class="flex items-center justify-between">
+                        <div class="flex items-center justify-between gap-2">
                             <button
                                 type="button"
                                 class="text-[11px] font-semibold uppercase tracking-wide text-muted hover:text-content"
@@ -533,6 +546,15 @@ onBeforeUnmount(() => importPollTimer && clearTimeout(importPollTimer));
                                 @click="toggleVisibility(item)"
                             >
                                 {{ item.status === 'hidden' ? 'Megjelenítés' : 'Elrejtés' }}
+                            </button>
+                            <button
+                                v-if="canEditEvent && item.status === 'ready'"
+                                type="button"
+                                class="text-[11px] font-semibold uppercase tracking-wide hover:text-accent"
+                                :class="item.id === event.cover_media_id ? 'text-accent' : 'text-muted'"
+                                @click="setCover(item.id === event.cover_media_id ? null : item.id)"
+                            >
+                                {{ item.id === event.cover_media_id ? '★ Fedőkép' : 'Fedőkép' }}
                             </button>
                             <button type="button" class="text-[11px] font-semibold uppercase tracking-wide text-accent hover:text-accent-hover" @click="destroyMedia(item)">
                                 Törlés

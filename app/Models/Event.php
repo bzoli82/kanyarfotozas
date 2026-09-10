@@ -19,7 +19,7 @@ use Spatie\Sluggable\SlugOptions;
 #[Fillable([
     'country_id', 'name', 'location', 'latitude', 'longitude',
     'event_date', 'starts_at', 'ends_at', 'status', 'featured_until', 'created_by',
-    'photo_price_cents', 'video_price_cents', 'organizer_id', 'organizer_share_percent',
+    'photo_price_cents', 'video_price_cents', 'organizer_id', 'organizer_share_percent', 'cover_media_id',
 ])]
 #[ObservedBy(EventObserver::class)]
 class Event extends Model
@@ -151,9 +151,12 @@ class Event extends Model
 
         return $query->addSelect(['cover_thumbnail_s3_key' => Media::query()
             ->select('thumbnail_s3_key')
-            ->whereColumn('event_id', 'events.id')
-            ->where('status', Media::STATUS_READY)
-            ->orderBy('id')
+            ->whereColumn('media.event_id', 'events.id')
+            ->where('media.status', Media::STATUS_READY)
+            // A kézzel beállított fedőkép (events.cover_media_id) előre; ha nincs
+            // vagy nem `ready`, az esemény első kész médiája.
+            ->orderByRaw('CASE WHEN media.id = events.cover_media_id THEN 0 ELSE 1 END')
+            ->orderBy('media.id')
             ->limit(1),
         ]);
     }

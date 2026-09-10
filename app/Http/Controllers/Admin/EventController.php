@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -247,6 +248,28 @@ class EventController extends Controller
         }
 
         return redirect()->route('admin.events.show', $event)->with('success', $message);
+    }
+
+    /**
+     * Fedőkép beállítása — a listaoldalak / térkép / megosztás borítója. A
+     * `null` visszaállítja az alapértelmezettre (első kész média).
+     */
+    public function setCover(Request $request, Event $event): RedirectResponse
+    {
+        Gate::authorize('manage-event', $event);
+
+        $data = $request->validate([
+            'cover_media_id' => [
+                'nullable',
+                Rule::exists('media', 'id')->where('event_id', $event->id),
+            ],
+        ]);
+
+        $event->update(['cover_media_id' => $data['cover_media_id'] ?? null]);
+
+        return back()->with('success', $data['cover_media_id'] ?? null
+            ? 'Fedőkép beállítva.'
+            : 'Fedőkép visszaállítva az alapértelmezettre.');
     }
 
     public function destroy(Request $request, Event $event): RedirectResponse
