@@ -349,7 +349,7 @@ function previewVars(palette) {
                         </label>
                         <label class="flex items-center gap-2 text-xs text-content">
                             <input v-model="form.anim_faq" type="checkbox" class="accent-[var(--color-accent)]" />
-                            GY.I.K.: a válaszok le-/felgördülnek (időzítés az animáció-stílus szerint)
+                            GY.I.K.: a válaszok le-/felgördülnek (0,5 mp)
                         </label>
 
                         <div class="rounded-md border border-border bg-surface-2 p-3">

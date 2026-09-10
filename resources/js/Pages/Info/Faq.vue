@@ -24,18 +24,14 @@ function toggle(id) {
 }
 
 // Kérdés-válasz le-/felgördülés. Ki/be a /admin/settings/theme „Animációk" →
-// „GY.I.K. lenyíló animáció"; az időzítés az animáció-stílus (--anim-duration).
+// „GY.I.K. lenyíló animáció".
+const ANSWER_MS = 500;
+
 function animationOn() {
     if (typeof document === 'undefined') return false;
     if (document.documentElement.dataset.animFaq === 'off') return false;
 
     return !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-}
-
-function answerDuration() {
-    const raw = getComputedStyle(document.documentElement).getPropertyValue('--anim-duration');
-
-    return parseInt(raw, 10) || 300;
 }
 
 /**
@@ -69,7 +65,7 @@ function faqEnter(el, done) {
 
         return;
     }
-    const ms = answerDuration();
+    const ms = ANSWER_MS;
     el.style.overflow = 'hidden';
     el.style.height = '0';
     el.style.transition = 'none';
@@ -92,7 +88,7 @@ function faqLeave(el, done) {
 
         return;
     }
-    const ms = answerDuration();
+    const ms = ANSWER_MS;
     el.style.overflow = 'hidden';
     el.style.height = `${el.scrollHeight}px`;
     el.style.transition = 'none';
