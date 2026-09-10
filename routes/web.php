@@ -188,6 +188,7 @@ Route::middleware(['auth', 'role:superadmin|admin', '2fa'])->prefix('admin')->na
     Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard');
     Route::post('/orders/{order}/resend-email', [DashboardController::class, 'resendOrderEmail'])->name('orders.resend-email');
     Route::post('/dashboard/alerts/dismiss', [DashboardController::class, 'dismissAlert'])->name('dashboard.alerts.dismiss');
+    Route::post('/dashboard/onboarding/dismiss', [DashboardController::class, 'dismissOnboarding'])->name('dashboard.onboarding.dismiss');
     Route::post('/dashboard/media/{media}/reprocess', [DashboardController::class, 'reprocessMedia'])->name('dashboard.media.reprocess');
     Route::get('/dashboard/photographers/export', [DashboardController::class, 'exportPhotographerComparison'])->name('dashboard.photographers.export');
     Route::get('/dashboard/stats/export', [DashboardController::class, 'exportPeriodicStats'])->name('dashboard.stats.export');

@@ -12,6 +12,7 @@ use App\Models\PhotographerPayout;
 use App\Services\CommissionBonus;
 use App\Services\DashboardStatsService;
 use App\Services\LegalPages;
+use App\Services\OnboardingChecklist;
 use App\Services\PeriodicStatsExport;
 use App\Services\PhotographerComparison;
 use App\Services\PhotographerPayoutService;
@@ -53,7 +54,23 @@ class DashboardController extends Controller
             'photographerComparison' => $comparison->rows(),
             // Csak superadminnak: fotósok, akiknél az oldalon kívüli értékesítés jelei lehetnek.
             'conversionWatch' => $request->user()?->role === 'superadmin' ? $comparison->watchlist() : [],
+            // „Első lépések" — csak superadminnak, csak amíg nincs kész / elrejtve.
+            'onboarding' => $request->user()?->role === 'superadmin'
+                ? app(OnboardingChecklist::class)->forDashboard($request->user())
+                : null,
         ]);
+    }
+
+    /**
+     * „Első lépések" kártya elrejtése (superadmin). Bármikor visszahozható a
+     * beállítás törlésével — de a felület nem ad hozzá gombot (a Kritikus
+     * beállítások zöld/sárga/piros úgyis mindig mutatja a hiányokat).
+     */
+    public function dismissOnboarding(OnboardingChecklist $checklist): RedirectResponse
+    {
+        $checklist->dismiss();
+
+        return back()->with('success', '„Első lépések" elrejtve.');
     }
 
     /**

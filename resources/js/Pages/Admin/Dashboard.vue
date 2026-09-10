@@ -13,6 +13,7 @@ const props = defineProps({
     latestOrders: Array,
     security: Object,
     alerts: { type: Array, default: () => [] },
+    onboarding: { type: Object, default: null },
     funnel: { type: Object, default: () => ({ stages: [], days: 30 }) },
     eventPerformance: { type: Array, default: () => [] },
     mediaHealth: { type: Object, default: () => ({ samples: [], plate_recognition: {} }) },
@@ -30,6 +31,10 @@ const severityStyle = {
 
 function dismissAlert(key) {
     router.post('/admin/dashboard/alerts/dismiss', { key }, { preserveScroll: true });
+}
+
+function dismissOnboarding() {
+    router.post('/admin/dashboard/onboarding/dismiss', {}, { preserveScroll: true });
 }
 
 // --- Mediaegeszseg ---
@@ -163,6 +168,38 @@ function resendEmail(orderId) {
             <Link href="/admin/events/create" class="rounded-lg bg-accent px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover">
                 + Új esemény
             </Link>
+        </div>
+
+        <!-- „Első lépések" — élesítés előtti / utáni beállítási teendők -->
+        <div v-if="onboarding" class="mt-4 rounded-[var(--radius-base)] border border-accent/40 bg-surface-1 p-5">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h2 class="text-sm font-semibold uppercase tracking-wide text-content">Első lépések</h2>
+                    <p class="mt-0.5 text-xs text-muted">{{ onboarding.done }} / {{ onboarding.total }} kész — a hiányzókra kattintva egyből a beállításhoz jutsz.</p>
+                </div>
+                <button type="button" class="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-muted hover:text-content" @click="dismissOnboarding">Elrejtem</button>
+            </div>
+
+            <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-2">
+                <div class="h-full rounded-full bg-accent transition-all" :style="{ width: (onboarding.done / onboarding.total * 100) + '%' }" />
+            </div>
+
+            <ul class="mt-4 space-y-1.5">
+                <li v-for="item in onboarding.items" :key="item.key">
+                    <Link
+                        :href="item.href"
+                        class="flex items-start gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-surface-2"
+                        :class="item.done ? 'text-muted' : 'text-content'"
+                    >
+                        <svg v-if="item.done" class="mt-0.5 shrink-0 text-accent" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5" /></svg>
+                        <span v-else class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full border-2 border-accent" />
+                        <span class="min-w-0">
+                            <span class="block text-sm" :class="{ 'line-through': item.done }">{{ item.label }}</span>
+                            <span v-if="!item.done" class="block text-[11px] text-muted">{{ item.hint }}</span>
+                        </span>
+                    </Link>
+                </li>
+            </ul>
         </div>
 
         <div v-if="security.active" class="mt-4 rounded-[var(--radius-base)] border border-accent bg-accent/10 p-4 text-sm text-content">
