@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\BrandingSettingsController;
 use App\Http\Controllers\Admin\CriticalSettingsController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -193,6 +194,8 @@ Route::middleware(['auth', 'role:superadmin|admin', '2fa'])->prefix('admin')->na
 
     Route::get('/stats', [StatsController::class, 'index'])->name('stats');
     Route::get('/stats/export', [StatsController::class, 'export'])->name('stats.export');
+
+    Route::get('/activity', [ActivityLogController::class, 'index'])->name('activity');
 
     // Kétfaktoros hitelesítés — minden admin a saját fiókjához
     Route::get('/settings/security', [SecuritySettingsController::class, 'index'])->name('settings.security');

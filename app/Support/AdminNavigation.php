@@ -42,6 +42,8 @@ class AdminNavigation
                     'hint' => 'Napi kép: bevétel, rendelések, figyelmeztetések, konverziós tölcsér, médiaegészség.'],
                 ['label' => 'Statisztikák', 'href' => '/admin/stats', 'icon' => 'stats',
                     'hint' => 'Szűrhető értékesítési kimutatás + CSV export. Időszakonként lebontva.'],
+                ['label' => 'Tevékenység-napló', 'href' => '/admin/activity', 'icon' => 'doc',
+                    'hint' => 'Ki mit módosított: rendelés, esemény, média, beállítás, visszatérítés. Szűrhető, kereshető.'],
             ]))];
         } else {
             $sections[] = ['title' => 'Áttekintés', 'items' => [
