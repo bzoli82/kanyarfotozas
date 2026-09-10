@@ -103,8 +103,25 @@ class ContactFormTest extends TestCase
 
     public function test_invalid_proof_of_work_is_rejected(): void
     {
-        $this->post('/contact', $this->payloadWithGuard(['guard_pow' => 0]))
-            ->assertSessionHasErrors('guard');
+        // A challenge-t addig generáljuk újra, amíg a PoW legkisebb megoldása > 0 —
+        // ekkor a `guard_pow => 0` BIZTOSAN nem megoldás (nem 1/256 eséllyel flaky).
+        do {
+            $guard = $this->get('/contact')->viewData('page')['props']['guard'];
+            $solution = app(FormGuard::class)->solveProofOfWork($guard['pow']['salt'], $guard['pow']['bits']);
+        } while ($solution === 0);
+
+        preg_match('/(\d+)\s*\+\s*(\d+)/', $guard['question'], $m);
+        $this->travel(5)->seconds();
+
+        $this->post('/contact', [
+            'name' => 'Teszt Elek',
+            'email' => 'teszt@example.com',
+            'subject' => 'Kérdés a letöltésről',
+            'message' => 'Nem találom a letöltési linket.',
+            'guard_token' => $guard['token'],
+            'guard_answer' => (int) $m[1] + (int) $m[2],
+            'guard_pow' => 0,
+        ])->assertSessionHasErrors('guard');
 
         $this->assertDatabaseCount('contact_messages', 0);
     }
