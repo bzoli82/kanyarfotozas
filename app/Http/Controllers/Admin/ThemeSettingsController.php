@@ -35,9 +35,13 @@ class ThemeSettingsController extends Controller
             ],
             'animationCardModes' => [
                 ['value' => 'none', 'label' => 'Nincs'],
-                ['value' => 'lift', 'label' => 'Emelkedés + kép-ráközelítés'],
-                ['value' => 'shine', 'label' => 'Emelkedés + fény-suhanás'],
+                ['value' => 'lift', 'label' => 'Emelkedés (a kártya megemelkedik)'],
                 ['value' => 'tilt', 'label' => '3D-dőlés a kurzor felé'],
+            ],
+            'animationCardMediaModes' => [
+                ['value' => 'none', 'label' => 'Nincs (a kép nem mozog)'],
+                ['value' => 'zoom', 'label' => 'Ráközelítés (a kép enyhén nagyít)'],
+                ['value' => 'shine', 'label' => 'Fény-suhanás a képen'],
             ],
             'modes' => [
                 ['value' => 'dark', 'label' => 'Sötét'],

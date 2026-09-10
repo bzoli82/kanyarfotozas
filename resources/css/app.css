@@ -166,28 +166,27 @@ html[data-anim='off'] [data-reveal] {
     position: relative;
 }
 .hover-card__media {
-    transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 500ms ease;
 }
 
-[data-anim-cards='lift'] .hover-card,
-[data-anim-cards='shine'] .hover-card {
+[data-anim-cards='lift'] .hover-card {
     transition:
         transform 300ms ease,
         border-color 300ms ease,
         box-shadow 300ms ease;
 }
-[data-anim-cards='lift'] .hover-card:hover,
-[data-anim-cards='shine'] .hover-card:hover {
+[data-anim-cards='lift'] .hover-card:hover {
     transform: translateY(-3px);
     border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
     box-shadow: 0 14px 30px -8px rgba(0, 0, 0, 0.3);
 }
-[data-anim-cards='lift'] .hover-card:hover .hover-card__media,
-[data-anim-cards='shine'] .hover-card:hover .hover-card__media {
-    transform: scale(1.05);
-}
 
-[data-anim-cards='shine'] .hover-card::after {
+/* A kártyán BELÜLI kép hover-effektje — data-anim-cardmedia (none | zoom | shine),
+ * teljesen független a kártya-szintű lift/tilt-től. Alap: none (a kép nem mozog). */
+[data-anim-cardmedia='zoom'] .hover-card:hover .hover-card__media {
+    transform: scale(1.04);
+}
+[data-anim-cardmedia='shine'] .hover-card::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -197,7 +196,7 @@ html[data-anim='off'] [data-reveal] {
     transform: translateX(-120%);
     transition: transform 750ms ease;
 }
-[data-anim-cards='shine'] .hover-card:hover::after {
+[data-anim-cardmedia='shine'] .hover-card:hover::after {
     transform: translateX(120%);
 }
 

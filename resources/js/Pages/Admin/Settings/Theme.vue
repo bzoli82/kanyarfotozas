@@ -12,6 +12,7 @@ const props = defineProps({
     animationPageModes: Array,
     animationHeroModes: Array,
     animationCardModes: Array,
+    animationCardMediaModes: Array,
 });
 
 const form = useForm({
@@ -29,6 +30,7 @@ const form = useForm({
     anim_page: props.animation.page,
     anim_hero: props.animation.hero,
     anim_cards: props.animation.cards,
+    anim_cardmedia: props.animation.cardmedia,
     anim_reveal: props.animation.reveal,
     anim_counters: props.animation.counters,
     anim_header: props.animation.header,
@@ -279,13 +281,19 @@ function previewVars(palette) {
 
                         <div>
                             <label class="block">
-                                <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">Galéria- / kereső-kártyák (hover)</span>
+                                <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">Galéria- / kereső-kártyák — maga a kártya (hover)</span>
                                 <select v-model="form.anim_cards" class="w-full appearance-none rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content focus:border-accent focus:outline-none">
                                     <option v-for="o in animationCardModes" :key="o.value" :value="o.value">{{ o.label }}</option>
                                 </select>
                             </label>
+                            <label class="mt-2 block">
+                                <span class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted">…és a kártyán belüli kép (hover)</span>
+                                <select v-model="form.anim_cardmedia" class="w-full appearance-none rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-content focus:border-accent focus:outline-none">
+                                    <option v-for="o in animationCardMediaModes" :key="o.value" :value="o.value">{{ o.label }}</option>
+                                </select>
+                            </label>
                             <!-- Élő kártya-előnézet: vidd rá a kurzort -->
-                            <div :data-anim-cards="form.anim_cards" class="mt-2">
+                            <div :data-anim-cards="form.anim_cards" :data-anim-cardmedia="form.anim_cardmedia" class="mt-2">
                                 <div
                                     ref="previewCard"
                                     class="hover-card mx-auto w-40 overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-2"

@@ -24,6 +24,8 @@ class AnimationSettings
 
     public const DEFAULT_CARDS = 'lift';
 
+    public const DEFAULT_CARD_MEDIA = 'none';
+
     /**
      * @var array<string, array{label: string, duration: int, distance: int, stagger: int}>
      */
@@ -37,8 +39,11 @@ class AnimationSettings
 
     public const HERO_MODES = ['none', 'kenburns', 'full'];
 
-    /** Galéria- / kereső-eredmény kártyák hover-viselkedése. */
-    public const CARD_MODES = ['none', 'lift', 'shine', 'tilt'];
+    /** Kártya-szintű hover-viselkedés (magát a kártyát mozgatja). */
+    public const CARD_MODES = ['none', 'lift', 'tilt'];
+
+    /** A kártyán BELÜLI kép hover-effektje (a kártyához képest). */
+    public const CARD_MEDIA_MODES = ['none', 'zoom', 'shine'];
 
     public function enabled(): bool
     {
@@ -71,6 +76,13 @@ class AnimationSettings
         $value = (string) SiteSetting::get('anim_cards', self::DEFAULT_CARDS);
 
         return in_array($value, self::CARD_MODES, true) ? $value : self::DEFAULT_CARDS;
+    }
+
+    public function cardMedia(): string
+    {
+        $value = (string) SiteSetting::get('anim_cardmedia', self::DEFAULT_CARD_MEDIA);
+
+        return in_array($value, self::CARD_MEDIA_MODES, true) ? $value : self::DEFAULT_CARD_MEDIA;
     }
 
     public function scrollReveal(): bool
@@ -152,6 +164,7 @@ class AnimationSettings
             'page' => $this->pageTransition(),
             'hero' => $this->hero(),
             'cards' => $this->cards(),
+            'cardmedia' => $this->cardMedia(),
             'reveal' => $this->scrollReveal(),
             'counters' => $this->counters(),
             'header' => $this->frostedHeader(),
@@ -197,6 +210,7 @@ class AnimationSettings
             'anim_page' => ['sometimes', Rule::in(self::PAGE_MODES)],
             'anim_hero' => ['sometimes', Rule::in(self::HERO_MODES)],
             'anim_cards' => ['sometimes', Rule::in(self::CARD_MODES)],
+            'anim_cardmedia' => ['sometimes', Rule::in(self::CARD_MEDIA_MODES)],
             'anim_reveal' => ['sometimes', 'boolean'],
             'anim_counters' => ['sometimes', 'boolean'],
             'anim_header' => ['sometimes', 'boolean'],
@@ -219,7 +233,7 @@ class AnimationSettings
                 SiteSetting::set($key, $data[$key] ? '1' : '0');
             }
         }
-        foreach (['anim_preset', 'anim_page', 'anim_hero', 'anim_cards'] as $key) {
+        foreach (['anim_preset', 'anim_page', 'anim_hero', 'anim_cards', 'anim_cardmedia'] as $key) {
             if (array_key_exists($key, $data)) {
                 SiteSetting::set($key, (string) $data[$key]);
             }

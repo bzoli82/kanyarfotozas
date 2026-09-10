@@ -6,6 +6,7 @@
     data-anim="{{ $anim->enabled() ? 'on' : 'off' }}"
     data-anim-page="{{ $anim->enabled() ? $anim->pageTransition() : 'none' }}"
     data-anim-cards="{{ $anim->enabled() ? $anim->cards() : 'none' }}"
+    data-anim-cardmedia="{{ $anim->enabled() ? $anim->cardMedia() : 'none' }}"
     data-anim-reveal="{{ $anim->enabled() && $anim->scrollReveal() ? 'on' : 'off' }}"
     data-anim-header="{{ $anim->enabled() && $anim->frostedHeader() ? 'on' : 'off' }}"
     data-anim-progress="{{ $anim->enabled() && $anim->progressBar() ? 'on' : 'off' }}"

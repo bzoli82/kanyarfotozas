@@ -29,6 +29,7 @@ class AnimationSettingsTest extends TestCase
         $this->assertSame('fade', $anim->pageTransition());
         $this->assertSame('full', $anim->hero());
         $this->assertSame('lift', $anim->cards());
+        $this->assertSame('none', $anim->cardMedia());
         $this->assertTrue($anim->scrollReveal());
         $this->assertTrue($anim->counters());
         $this->assertTrue($anim->frostedHeader());
@@ -66,6 +67,7 @@ class AnimationSettingsTest extends TestCase
             'anim_page' => 'slide',
             'anim_hero' => 'none',
             'anim_cards' => 'tilt',
+            'anim_cardmedia' => 'zoom',
             'anim_reveal' => false,
             'anim_counters' => true,
             'anim_header' => false,
@@ -82,6 +84,7 @@ class AnimationSettingsTest extends TestCase
         $this->assertSame('slide', $anim->pageTransition());
         $this->assertSame('none', $anim->hero());
         $this->assertSame('tilt', $anim->cards());
+        $this->assertSame('zoom', $anim->cardMedia());
         $this->assertFalse($anim->scrollReveal());
         $this->assertFalse($anim->frostedHeader());
         $this->assertFalse($anim->heroGrain());
@@ -103,7 +106,8 @@ class AnimationSettingsTest extends TestCase
             'font_family' => 'Inter',
             'anim_preset' => 'wobble',
             'anim_cards' => 'explode',
-        ])->assertSessionHasErrors(['anim_preset', 'anim_cards']);
+            'anim_cardmedia' => 'boom',
+        ])->assertSessionHasErrors(['anim_preset', 'anim_cards', 'anim_cardmedia']);
     }
 
     public function test_partial_put_does_not_wipe_animation_settings(): void
