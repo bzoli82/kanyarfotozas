@@ -38,6 +38,31 @@ function answerDuration() {
     return parseInt(raw, 10) || 300;
 }
 
+/**
+ * Csak a `height`-et animáljuk (nincs opacity — az két, versengő transitionend-et
+ * adna, és a korábbi elakadást okozta). A `transition: none` + kényszerített reflow
+ * garantálja, hogy a böngésző a kezdőállapotot (0 / teljes magasság) is látja,
+ * mielőtt az átmenet elindul — így nincs döccenés.
+ */
+function onHeightEnd(el, ms, done) {
+    let called = false;
+    const finish = () => {
+        if (called) {
+            return;
+        }
+        called = true;
+        el.removeEventListener('transitionend', handler);
+        done();
+    };
+    const handler = (e) => {
+        if (e.target === el && e.propertyName === 'height') {
+            finish();
+        }
+    };
+    el.addEventListener('transitionend', handler);
+    setTimeout(finish, ms + 60);
+}
+
 function faqEnter(el, done) {
     if (!animationOn()) {
         done();
@@ -47,20 +72,17 @@ function faqEnter(el, done) {
     const ms = answerDuration();
     el.style.overflow = 'hidden';
     el.style.height = '0';
-    el.style.opacity = '0';
-    el.style.transition = `height ${ms}ms ease, opacity ${ms}ms ease`;
+    el.style.transition = 'none';
+    void el.offsetHeight;
     const target = el.scrollHeight;
-    requestAnimationFrame(() => {
-        el.style.height = `${target}px`;
-        el.style.opacity = '1';
-    });
-    el.addEventListener('transitionend', done, { once: true });
+    el.style.transition = `height ${ms}ms ease`;
+    el.style.height = `${target}px`;
+    onHeightEnd(el, ms, done);
 }
 
 function faqAfterEnter(el) {
     el.style.height = '';
     el.style.overflow = '';
-    el.style.opacity = '';
     el.style.transition = '';
 }
 
@@ -73,12 +95,11 @@ function faqLeave(el, done) {
     const ms = answerDuration();
     el.style.overflow = 'hidden';
     el.style.height = `${el.scrollHeight}px`;
-    el.style.transition = `height ${ms}ms ease, opacity ${ms}ms ease`;
-    requestAnimationFrame(() => {
-        el.style.height = '0';
-        el.style.opacity = '0';
-    });
-    el.addEventListener('transitionend', done, { once: true });
+    el.style.transition = 'none';
+    void el.offsetHeight;
+    el.style.transition = `height ${ms}ms ease`;
+    el.style.height = '0';
+    onHeightEnd(el, ms, done);
 }
 
 // schema.org FAQPage strukturalt adat (Google rich result-hoz)
@@ -147,8 +168,10 @@ const faqSchema = computed(() => JSON.stringify({
                                         <path d="M6 9l6 6 6-6" />
                                     </svg>
                                 </button>
-                                <Transition @enter="faqEnter" @after-enter="faqAfterEnter" @leave="faqLeave">
-                                    <p v-if="openId === item.id" class="px-4 pb-4 text-sm leading-relaxed text-muted">{{ item.answer }}</p>
+                                <Transition :css="false" @enter="faqEnter" @after-enter="faqAfterEnter" @leave="faqLeave">
+                                    <div v-if="openId === item.id" class="overflow-hidden">
+                                        <p class="px-4 pb-4 text-sm leading-relaxed text-muted">{{ item.answer }}</p>
+                                    </div>
                                 </Transition>
                             </div>
                         </div>
