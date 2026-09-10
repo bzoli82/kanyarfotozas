@@ -152,6 +152,18 @@ class ImageProcessingService
     }
 
     /**
+     * Feltöltött raszter-logó normalizálása: max 900px széles, arány megtartva,
+     * átlátszóságot megőrző WebP 92%. (SVG-t nem ez kezel — az sanitálva, nyersen tárolódik.)
+     */
+    public function makeLogo(string $absolutePath): string
+    {
+        $image = $this->manager->decodePath($absolutePath);
+        $image->scaleDown(width: 900);
+
+        return (string) $image->encode(new WebpEncoder(quality: 92));
+    }
+
+    /**
      * @return array{width: int, height: int}
      */
     public function dimensions(string $absolutePath): array

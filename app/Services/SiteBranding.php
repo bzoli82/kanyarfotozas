@@ -38,6 +38,32 @@ class SiteBranding
         return trim((string) SiteSetting::get('site_logo_tail', self::DEFAULT_LOGO_TAIL));
     }
 
+    /** Feltöltött logó kulcsa a publikus diskon (világos háttérhez), vagy null. */
+    public function logoPath(): ?string
+    {
+        $value = trim((string) SiteSetting::get('site_logo_path', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
+    /** Feltöltött logó kulcsa sötét háttérhez (hero-fejléc, sötét téma), vagy null. */
+    public function logoDarkPath(): ?string
+    {
+        $value = trim((string) SiteSetting::get('site_logo_dark_path', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
+    public function setLogoPath(?string $key): void
+    {
+        SiteSetting::set('site_logo_path', (string) $key);
+    }
+
+    public function setLogoDarkPath(?string $key): void
+    {
+        SiteSetting::set('site_logo_dark_path', (string) $key);
+    }
+
     /**
      * Az oldal VÉGLEGES domainje (pl. `roadsidephoto.eu`) — a rendszer-e-mailek
      * (superadmin / demo fiókok), a megosztási URL-ek és a DB-név ebből képződik.
@@ -101,7 +127,7 @@ class SiteBranding
     }
 
     /**
-     * @return array{name: string, logo_lead: string, logo_tail: string, domain: string}
+     * @return array{name: string, logo_lead: string, logo_tail: string, logo: string|null, logo_dark: string|null, domain: string}
      */
     public function toArray(): array
     {
@@ -109,6 +135,8 @@ class SiteBranding
             'name' => $this->name(),
             'logo_lead' => $this->logoLead(),
             'logo_tail' => $this->logoTail(),
+            'logo' => $this->logoPath(),
+            'logo_dark' => $this->logoDarkPath(),
             'domain' => $this->domain(),
         ];
     }

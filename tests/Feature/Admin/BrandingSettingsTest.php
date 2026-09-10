@@ -7,6 +7,8 @@ use App\Services\SiteBranding;
 use App\Services\WatermarkSettings;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class BrandingSettingsTest extends TestCase
@@ -82,5 +84,70 @@ class BrandingSettingsTest extends TestCase
         ])->assertRedirect();
 
         $this->assertSame('', app(SiteBranding::class)->logoTail());
+    }
+
+    public function test_raster_logo_upload_is_stored_and_exposed(): void
+    {
+        Storage::fake('public');
+        $superadmin = User::factory()->superadmin()->create();
+
+        $this->actingAs($superadmin)->put('/admin/settings/branding', [
+            'name' => 'Logós',
+            'logo_lead' => 'LOGO',
+            'logo_tail' => '',
+            'logo' => UploadedFile::fake()->image('brand.png', 800, 200),
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $key = app(SiteBranding::class)->logoPath();
+        $this->assertNotNull($key);
+        $this->assertStringEndsWith('.webp', $key);
+        Storage::disk('public')->assertExists($key);
+
+        $props = $this->get('/')->viewData('page')['props'];
+        $this->assertSame($key, $props['branding']['logo']);
+    }
+
+    public function test_svg_logo_is_sanitized_on_upload(): void
+    {
+        Storage::fake('public');
+        $superadmin = User::factory()->superadmin()->create();
+
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><script>alert(1)</script><rect width="10" height="10"/></svg>';
+        $file = UploadedFile::fake()->createWithContent('logo.svg', $svg);
+
+        $this->actingAs($superadmin)->put('/admin/settings/branding', [
+            'name' => 'SVG',
+            'logo_lead' => 'SVG',
+            'logo_tail' => '',
+            'logo' => $file,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $key = app(SiteBranding::class)->logoPath();
+        $this->assertStringEndsWith('.svg', $key);
+        $stored = Storage::disk('public')->get($key);
+        $this->assertStringNotContainsString('<script', $stored);
+        $this->assertStringContainsString('<rect', $stored);
+    }
+
+    public function test_logo_can_be_removed(): void
+    {
+        Storage::fake('public');
+        $superadmin = User::factory()->superadmin()->create();
+
+        $this->actingAs($superadmin)->put('/admin/settings/branding', [
+            'name' => 'X', 'logo_lead' => 'X', 'logo_tail' => '',
+            'logo' => UploadedFile::fake()->image('brand.png', 800, 200),
+        ])->assertRedirect();
+
+        $key = app(SiteBranding::class)->logoPath();
+        $this->assertNotNull($key);
+
+        $this->actingAs($superadmin)->put('/admin/settings/branding', [
+            'name' => 'X', 'logo_lead' => 'X', 'logo_tail' => '',
+            'remove_logo' => true,
+        ])->assertRedirect();
+
+        $this->assertNull(app(SiteBranding::class)->logoPath());
+        Storage::disk('public')->assertMissing($key);
     }
 }
