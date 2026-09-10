@@ -338,6 +338,10 @@ Bevétel-növelő funkciók, a felhasználó szándékosan elhalasztotta:
 - `C:\Users\bz\.config\herd\bin\php84\php.ini`: `upload_tmp_dir`, `upload_max_filesize=512M`, `post_max_size=4096M`, `max_file_uploads=200`, `memory_limit=512M`, `max_execution_time=300` — a batch média feltöltéshez kellett, a `php artisan serve` beépített szervere enélkül "unable to create temporary file" hibát dobott
 - `.claude/launch.json` indítja a `php artisan serve`-et a Browser panelhez
 
+## Dokumentáció (`docs/`)
+- `docs/DEPLOY-HETZNER-COOLIFY.md` — éles deploy runbook (Hetzner CX22 + Coolify + R2).
+- `docs/HELYI-TESZTELES.md` — helyi (dev) végigtesztelés: `serve` + `queue:work`, a megvásárolt fájlok tároló-váltása (NAS ↔ R2) + szinkron, és a fizetés (Stripe teszt-kulcs + `stripe listen`; SimplePay/Barion sandbox tunnellel).
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
