@@ -149,4 +149,86 @@ class AdminNavigation
 
         return $sections;
     }
+
+    /**
+     * Kulcsszavas kereséshez: a menüpontok laposan (szekció-címmel) + néhány
+     * „mélyen ülő" beállítás, amit nehéz megtalálni (pl. a Kritikus beállítások
+     * alszekciói). A `keywords` extra találati szavak (szinonimák, angol, rövidítés).
+     *
+     * @return list<array{label: string, href: string, hint: string, section: string, icon: string, keywords: string}>
+     */
+    public static function searchIndex(User $user): array
+    {
+        $index = [];
+
+        foreach (self::sections($user) as $section) {
+            foreach ($section['items'] as $item) {
+                $index[] = [
+                    'label' => $item['label'],
+                    'href' => $item['href'],
+                    'hint' => $item['hint'],
+                    'section' => $section['title'],
+                    'icon' => $item['icon'],
+                    'keywords' => '',
+                ];
+            }
+        }
+
+        $isSuper = (string) $user->role === User::ROLE_SUPERADMIN;
+        $isAdmin = in_array((string) $user->role, [User::ROLE_SUPERADMIN, User::ROLE_ADMIN], true);
+
+        $extras = [];
+
+        if ($isAdmin) {
+            $extras[] = ['label' => 'Új esemény létrehozása', 'href' => '/admin/events/create', 'section' => 'Napi munka', 'icon' => 'calendar',
+                'hint' => 'Új fotózás felvétele (név, helyszín, dátum, árazás), majd média feltöltés.', 'keywords' => 'esemeny uj create hozzaadas rendezveny palyanap verseny'];
+            $extras[] = ['label' => 'Kép / videó feltöltése (mobil)', 'href' => '/upload', 'section' => 'Napi munka', 'icon' => 'images',
+                'hint' => 'Mobilra optimalizált feltöltő — a pálya mellől is.', 'keywords' => 'feltoltes upload mobil telefon kep video pwa'];
+            $extras[] = ['label' => 'Visszatérítés egy rendelésre', 'href' => '/admin/orders', 'section' => 'Napi munka', 'icon' => 'cart',
+                'hint' => 'A rendelés részletnézetében: teljes vagy részleges visszatérítés (Stripe / SimplePay / Barion).', 'keywords' => 'visszaterites refund penzvisszafizetes sztorno rendeles'];
+            $extras[] = ['label' => 'Számla kiállítása / sztornó', 'href' => '/admin/orders', 'section' => 'Napi munka', 'icon' => 'doc',
+                'hint' => 'A rendelés részletnézetében a „Számla" panel (Billingo).', 'keywords' => 'szamla invoice billingo sztorno pdf afa'];
+        }
+
+        if ($isSuper) {
+            $c = '/admin/settings/critical';
+            $extras[] = ['label' => 'Stripe kulcsok', 'href' => $c, 'section' => 'Rendszer', 'icon' => 'shield',
+                'hint' => 'Kritikus beállítások → Fizetés: Stripe secret / publishable / webhook secret.', 'keywords' => 'stripe fizetes kartya payment webhook kulcs'];
+            $extras[] = ['label' => 'SimplePay beállítás', 'href' => $c, 'section' => 'Rendszer', 'icon' => 'shield',
+                'hint' => 'Kritikus beállítások → Fizetés: SimplePay merchant + secret key, sandbox.', 'keywords' => 'simplepay otp fizetes payment merchant'];
+            $extras[] = ['label' => 'Barion beállítás', 'href' => $c, 'section' => 'Rendszer', 'icon' => 'shield',
+                'hint' => 'Kritikus beállítások → Fizetés: Barion POSKey + payee, sandbox.', 'keywords' => 'barion fizetes payment poskey smart gateway'];
+            $extras[] = ['label' => 'E-mail küldés (SMTP)', 'href' => $c.'#mail', 'section' => 'Rendszer', 'icon' => 'mail',
+                'hint' => 'Kritikus beállítások → E-mail: SMTP host/port/jelszó, feladó, Reply-To, tesztlevél.', 'keywords' => 'smtp email level kuldes mail felado reply-to tesztlevel'];
+            $extras[] = ['label' => 'hCaptcha be/ki', 'href' => $c, 'section' => 'Rendszer', 'icon' => 'shield',
+                'hint' => 'Kritikus beállítások → Captcha: a hCaptcha widget bekapcsolása a Kapcsolat űrlapon.', 'keywords' => 'hcaptcha captcha robot spam kapcsolat urlap'];
+            $extras[] = ['label' => 'Számlázás (Billingo)', 'href' => $c, 'section' => 'Rendszer', 'icon' => 'doc',
+                'hint' => 'Kritikus beállítások → Számlázás: Billingo API-kulcs + számlatömb, ÁFA, auto-számla.', 'keywords' => 'szamlazas billingo invoice afa nav szamlatomb'];
+            $extras[] = ['label' => 'Automatikus mentés / backup', 'href' => $c, 'section' => 'Rendszer', 'icon' => 'storage',
+                'hint' => 'Kritikus beállítások → Monitoring és mentés: „Mentés most", a legutóbbi mentések, hiba-értesítés.', 'keywords' => 'backup mentes adatbazis pg_dump biztonsagi monitoring webhook'];
+            $extras[] = ['label' => 'Webes ütemező (cron fallback)', 'href' => $c, 'section' => 'Rendszer', 'icon' => 'sync',
+                'hint' => 'Kritikus beállítások → Deploy-emlékeztetők: ha nincs rendes cron, egy titkos URL-t egy külső ütemezőbe.', 'keywords' => 'cron utemezo scheduler webscheduler feladat'];
+            $extras[] = ['label' => 'Domain átnevezése', 'href' => $c, 'section' => 'Rendszer', 'icon' => 'branding',
+                'hint' => 'Kritikus beállítások → Az oldal neve / átnevezés: Előnézet + végrehajtás egy új domainre.', 'keywords' => 'domain atnevezes rename identity url'];
+            $extras[] = ['label' => 'R2 CORS / deploy-emlékeztetők', 'href' => $c, 'section' => 'Rendszer', 'icon' => 'storage',
+                'hint' => 'Kritikus beállítások → Deploy-emlékeztetők: a böngésző→R2 feltöltéshez szükséges CORS JSON.', 'keywords' => 'cors r2 cloudflare deploy feltoltes bucket'];
+
+            $extras[] = ['label' => 'Animációk (mozgás) beállítása', 'href' => '/admin/settings/theme', 'section' => 'Megjelenés', 'icon' => 'theme',
+                'hint' => 'Téma → Animációk: oldalváltás, hero, kártya-hover, görgetés-reveal, GY.I.K. lenyílás, kosárba-repülés — mind ki/be.', 'keywords' => 'animacio mozgas atmenet transition hover parallax reveal'];
+            $extras[] = ['label' => 'Feltölthető logó (kép)', 'href' => '/admin/settings/branding', 'section' => 'Tartalom', 'icon' => 'branding',
+                'hint' => 'Oldal neve → Logó (kép): SVG/PNG feltöltés (fő + sötét háttérre); e-mailben és OG-képen is.', 'keywords' => 'logo svg png embléma marka markajel kep feltoltes'];
+            $extras[] = ['label' => 'Mennyiségi kedvezmény', 'href' => '/admin/settings/pricing', 'section' => 'Rendszer', 'icon' => 'wallet',
+                'hint' => 'Árazás → Mennyiségi kedvezmény: „N+ kép egy eseményből → X% kedvezmény".', 'keywords' => 'kedvezmeny mennyisegi bulk discount csomagar arazas'];
+            $extras[] = ['label' => 'Fotós jutalék-bónusz', 'href' => '/admin/settings/pricing', 'section' => 'Rendszer', 'icon' => 'wallet',
+                'hint' => 'Árazás → Fotós jutalék-bónusz: a havi eladásszámmal nő a fotós részesedése.', 'keywords' => 'jutalek bonusz reszesedes fotos commission bonus arazas'];
+            $extras[] = ['label' => '2FA kötelezővé tétele', 'href' => '/admin/settings/security', 'section' => 'Saját fiók', 'icon' => 'lock',
+                'hint' => 'Biztonság: a superadmin kötelezővé teheti a kétfaktoros hitelesítést minden adminnak.', 'keywords' => '2fa ketfaktoros totp kotelezo biztonsag mfa'];
+            $extras[] = ['label' => 'Új fotós meghívása', 'href' => '/admin/photographers', 'section' => 'Fotósok & szervezők', 'icon' => 'users',
+                'hint' => 'Fotósok → „Új fotós meghívása" — 48 órás linkkel, előre beállított jutalékkal.', 'keywords' => 'fotos meghivo invite uj regisztracio szerep'];
+            $extras[] = ['label' => 'Fotós kifizetés (jutalék)', 'href' => '/admin/photographers', 'section' => 'Fotósok & szervezők', 'icon' => 'wallet',
+                'hint' => 'A fotós részletnézetében a „Kifizetések" fül: jutalék-főkönyv, bizonylat, kifizetés.', 'keywords' => 'kifizetes payout jutalek elszamolas fotos bizonylat'];
+        }
+
+        return array_merge($index, $extras);
+    }
 }

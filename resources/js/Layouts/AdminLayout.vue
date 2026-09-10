@@ -4,6 +4,7 @@ import { Link, usePage, router } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import BrandLogo from '@/Components/BrandLogo.vue';
 import AdminNavIcon from '@/Components/AdminNavIcon.vue';
+import AdminCommandPalette from '@/Components/AdminCommandPalette.vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
@@ -36,6 +37,7 @@ function isActive(href) {
 }
 
 const mobileOpen = ref(false);
+const cmdp = ref(null);
 
 function logout() {
     router.post('/logout');
@@ -44,6 +46,7 @@ function logout() {
 
 <template>
     <div class="flex min-h-screen bg-surface-0">
+        <AdminCommandPalette ref="cmdp" />
         <aside class="hidden w-60 shrink-0 flex-col border-r border-border bg-surface-1 lg:flex">
             <div class="border-b border-border px-5 py-4">
                 <Link href="/" class="font-display block text-base font-bold tracking-tight text-content">
@@ -52,6 +55,18 @@ function logout() {
                 <p class="mt-0.5 text-[11px] uppercase tracking-wide text-muted">
                     {{ isAdmin ? 'Admin felület' : isOrganizer ? 'Szervező felület' : 'Fotós felület' }}
                 </p>
+            </div>
+
+            <div class="px-3 pt-3">
+                <button
+                    type="button"
+                    class="flex w-full items-center gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2 text-left text-xs text-muted transition-colors hover:border-accent hover:text-content"
+                    @click="cmdp?.show()"
+                >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+                    <span class="flex-1 truncate">Keresés a menüben…</span>
+                    <kbd class="hidden shrink-0 rounded border border-border px-1 text-[10px] xl:inline">Ctrl K</kbd>
+                </button>
             </div>
 
             <nav class="flex-1 overflow-y-auto px-3 py-4">
@@ -107,6 +122,9 @@ function logout() {
                     <BrandLogo />
                 </Link>
                 <div class="flex items-center gap-3">
+                    <button type="button" class="grid h-9 w-9 place-items-center rounded-lg border border-border text-content" aria-label="Keresés a menüben" @click="cmdp?.show()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+                    </button>
                     <ThemeToggle />
                     <button type="button" class="text-xs font-semibold uppercase tracking-wide text-muted" @click="logout">Kilépés</button>
                 </div>

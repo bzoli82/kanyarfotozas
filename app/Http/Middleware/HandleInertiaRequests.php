@@ -73,6 +73,10 @@ class HandleInertiaRequests extends Middleware
             'adminNav' => fn () => $request->user() && in_array($request->user()->role, [
                 User::ROLE_SUPERADMIN, User::ROLE_ADMIN, User::ROLE_PHOTOGRAPHER, User::ROLE_ORGANIZER,
             ], true) ? AdminNavigation::sections($request->user()) : null,
+            // Kulcsszavas kereséshez (Ctrl/Cmd+K az admin felületen) — lapos, kereshető lista.
+            'adminSearch' => fn () => $request->user() && in_array($request->user()->role, [
+                User::ROLE_SUPERADMIN, User::ROLE_ADMIN, User::ROLE_PHOTOGRAPHER, User::ROLE_ORGANIZER,
+            ], true) ? AdminNavigation::searchIndex($request->user()) : null,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
