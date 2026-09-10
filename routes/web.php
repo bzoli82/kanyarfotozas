@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\MediaUploadController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\OrganizerPayoutController;
+use App\Http\Controllers\Admin\PageImageLibraryController;
 use App\Http\Controllers\Admin\PayoutController;
 use App\Http\Controllers\Admin\PhotographerController;
 use App\Http\Controllers\Admin\PlateRecognitionSettingsController;
@@ -274,6 +275,10 @@ Route::middleware(['auth', 'role:superadmin', '2fa'])->prefix('admin')->name('ad
 
     Route::get('/settings/maintenance', [MaintenanceModeController::class, 'index'])->name('settings.maintenance');
     Route::put('/settings/maintenance', [MaintenanceModeController::class, 'update'])->name('settings.maintenance.update');
+
+    Route::get('/settings/images', [PageImageLibraryController::class, 'index'])->name('settings.images');
+    Route::post('/settings/images/convert', [PageImageLibraryController::class, 'convert'])->middleware('throttle:10,1')->name('settings.images.convert');
+    Route::post('/settings/images/delete', [PageImageLibraryController::class, 'destroy'])->name('settings.images.delete');
 
     Route::get('/settings/legal', [LegalSettingsController::class, 'index'])->name('settings.legal');
     Route::put('/settings/legal', [LegalSettingsController::class, 'update'])->name('settings.legal.update');

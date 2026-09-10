@@ -165,6 +165,27 @@ class ImageProcessingService
     }
 
     /**
+     * Meglévő raszter-kép (JPG/PNG/GIF) újrakódolása WebP-re — a Képtár csoportos
+     * konvertálásához. Opcionális max. szélesség (arány megtartva, csak lefelé).
+     *
+     * @return array{binary: string, width: int, height: int}
+     */
+    public function reencodeWebp(string $binary, int $quality = 82, ?int $maxWidth = null): array
+    {
+        $image = $this->manager->decode($binary);
+
+        if ($maxWidth !== null && $maxWidth > 0) {
+            $image->scaleDown(width: $maxWidth);
+        }
+
+        return [
+            'binary' => (string) $image->encode(new WebpEncoder(quality: max(1, min(100, $quality)))),
+            'width' => $image->width(),
+            'height' => $image->height(),
+        ];
+    }
+
+    /**
      * OG megosztókép a logóból: 1200x630 sötét vászon, középen a logó (~60% szélesség).
      * PNG. Csak akkor hívjuk, ha a feltöltött logó raszter (GD dekódolható).
      */

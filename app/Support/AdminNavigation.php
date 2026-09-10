@@ -96,6 +96,8 @@ class AdminNavigation
                     'hint' => 'A platform neve + a kétszínű fejléc-logó. A név mentése a vízjel szövegét is átírja.'],
                 ['label' => 'Hero média', 'href' => '/admin/settings/hero', 'icon' => 'images',
                     'hint' => 'A főoldali diavetítés képei és videói (egymásba tűnnek). Ajánlott méretekkel.'],
+                ['label' => 'Képtár', 'href' => '/admin/settings/images', 'icon' => 'images',
+                    'hint' => 'Az oldal-képek (hero, OG, logó, profilképek) egy rácsban: formátum, méret, hol használják. JPG→WebP konvertálás, árva-takarítás.'],
                 ['label' => 'E-mail sablonok', 'href' => '/admin/settings/mail', 'icon' => 'mail',
                     'hint' => '10 rendszer-e-mail (tárgy/fejléc/bevezető/lezárás/aláírás) szerkesztése, élő előnézettel.'],
                 ['label' => 'Jogi oldalak', 'href' => '/admin/settings/legal', 'icon' => 'doc',
@@ -223,6 +225,8 @@ class AdminNavigation
                 'hint' => 'A publikus oldalt egy „hamarosan" lap mögé teszi; az admin elérhető marad.', 'keywords' => 'karbantartas maintenance hamarosan down offline zarva coming soon'];
             $extras[] = ['label' => 'Animációk (mozgás) beállítása', 'href' => '/admin/settings/theme', 'section' => 'Megjelenés', 'icon' => 'theme',
                 'hint' => 'Téma → Animációk: oldalváltás, hero, kártya-hover, görgetés-reveal, GY.I.K. lenyílás, kosárba-repülés — mind ki/be.', 'keywords' => 'animacio mozgas atmenet transition hover parallax reveal'];
+            $extras[] = ['label' => 'Képtár / képek konvertálása WebP-re', 'href' => '/admin/settings/images', 'section' => 'Tartalom', 'icon' => 'images',
+                'hint' => 'Az oldal-képek egy rácsban: formátum, méret, hol használják. Csoportos JPG→WebP konvertálás, használatlan képek törlése.', 'keywords' => 'keptar kepek image library webp konvertalas jpg png arva orphan meret optimalizalas'];
             $extras[] = ['label' => 'Feltölthető logó (kép)', 'href' => '/admin/settings/branding', 'section' => 'Tartalom', 'icon' => 'branding',
                 'hint' => 'Oldal neve → Logó (kép): SVG/PNG feltöltés (fő + sötét háttérre); e-mailben és OG-képen is.', 'keywords' => 'logo svg png embléma marka markajel kep feltoltes'];
             $extras[] = ['label' => 'Mennyiségi kedvezmény', 'href' => '/admin/settings/pricing', 'section' => 'Rendszer', 'icon' => 'wallet',
