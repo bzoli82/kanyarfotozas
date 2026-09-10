@@ -310,7 +310,16 @@ superadmin > admin > photographer (Spatie Permission + `users.role` enum kettős
 
 - **„Hogyan tartsd szinkronban az élest és a fejlesztőit"** magyarázó blokk a `/admin/settings/data-sync` oldal tetején (`<details>`): a kód dev→éles (`git push` → deploy → `migrate`), az adat éles→dev (ez az oldal), a titkos kulcsok külön; a 4 lépéses kör + a buktatók (hozzáadó migráció, seederek egyszer, FAQ seederből).
 
-  **571 PHPUnit teszt zöld** (2 skipped — a PostGIS-es GPS-tesztek CI-ben). CI zöld (`bzoli82/roadsidephoto`).
+- **Admin kényelmi kör (2026-09-10)**:
+  - **Kulcsszavas kereső / parancspaletta** (`AdminCommandPalette.vue`, Ctrl/Cmd+K) — `App\Support\AdminNavigation::searchIndex()` (a menüpontok + curated „mélyen ülő" extrák `keywords` szinonimákkal), `adminSearch` shared prop (ugyanaz a szerep-gate, mint az `adminNav`). Ékezet-tűrő (`NFD` + diakritikus-strip).
+  - **Onboarding checklist** (`App\Services\OnboardingChecklist`) — a superadmin `/admin/dashboard`-ján egy kártya (fizetés / e-mail / jogi / hero / fotós / esemény / 2FA), elrejthető.
+  - **Tevékenység-napló** (`/admin/activity`, `ActivityLogController`) — Spatie ActivityLog, szűrhető/kereshető. **A média-feltöltés NEM naplózódik** (`Media::$recordEvents = []`), és a napló csak az elmúlt ~1 hónapot tartja (`activitylog.clean_after_days = 35` + napi `activitylog:clean`).
+  - **Karbantartási mód** (`/admin/settings/maintenance`, `App\Services\MaintenanceMode` + `CheckMaintenanceMode` middleware) — a publikus oldal mögé 503-as „hamarosan" lap; admin/login/webhookok elérhetők, csapattagok bypass.
+  - **E-mail napló** (`/admin/mail-log`, `SentEmail` modell + `LogSentEmail` listener a `MessageSent` eseményre) — elküldött levelek (címzett + tárgy), 30 nap után purge.
+  - **Esemény fedőkép-választó** — `events.cover_media_id` (FK `media`, `nullOnDelete`), `Event::scopeWithCoverThumbnail()` a `CASE WHEN media.id = events.cover_media_id THEN 0` sorrenddel; `EventController::setCover` (`PUT /admin/events/{event}/cover`), a `Show.vue` média-rácsban „Fedőkép" gomb + jelvény.
+  - **Képtár** (`/admin/settings/images`, `App\Services\PageImageLibrary` + `PageImageLibraryController`) — CSAK az oldal-képek (`public` disk `hero/ seo/ branding/ avatars/`), NEM a média / vízjeles előnézet / letölthető fájl. Rács: formátum-jelvény, méret + felbontás, hol használják (kattintható), nagy-méret jelzés. Szűrő: mind / JPG / PNG / WebP / SVG / használatlan / nagy. Csoportos JPG-PNG→WebP (`ImageProcessingService::reencodeWebp`, minőség + max. szélesség; a `HeroSlide` / `SiteSetting` / `User.avatar_s3_key` hivatkozásokat is átírja, a régi fájl árvává válik). Csoportos törlés — csak árva fájlokra (`usageMap()` védi a használtakat).
+
+  **~595 PHPUnit teszt zöld** (2 skipped — a PostGIS-es GPS-tesztek CI-ben). CI zöld (`bzoli82/roadsidephoto`).
 
 ## Jövőbeli ötletek (később — NE valósítsd meg, amíg a felhasználó nem kéri)
 Bevétel-növelő funkciók, a felhasználó szándékosan elhalasztotta:
