@@ -23,13 +23,14 @@ class MessageController extends Controller
 {
     public function index(Request $request): InertiaResponse
     {
-        $filter = $request->string('filter')->value(); // '', 'support', 'photographer', 'unanswered', 'resolved'
+        $filter = $request->string('filter')->value(); // '', 'support', 'photographer', 'applications', 'unanswered', 'resolved'
 
         $threads = ContactMessage::query()
             ->with(['photographer:id,name', 'replies'])
             ->withCount('replies')
-            ->when($filter === 'support', fn ($q) => $q->whereNull('photographer_id'))
+            ->when($filter === 'support', fn ($q) => $q->whereNull('photographer_id')->where('contact_type', '!=', ContactMessage::TYPE_PHOTOGRAPHER_APPLICATION))
             ->when($filter === 'photographer', fn ($q) => $q->whereNotNull('photographer_id'))
+            ->when($filter === 'applications', fn ($q) => $q->where('contact_type', ContactMessage::TYPE_PHOTOGRAPHER_APPLICATION))
             ->when($filter === 'unanswered', fn ($q) => $q->where('status', '!=', ContactMessage::STATUS_RESOLVED)->has('replies', '=', 0))
             ->when($filter === 'resolved', fn ($q) => $q->where('status', ContactMessage::STATUS_RESOLVED))
             ->orderByRaw('COALESCE(last_reply_at, created_at) DESC')
@@ -56,6 +57,7 @@ class MessageController extends Controller
                 'all' => ContactMessage::query()->count(),
                 'unanswered' => ContactMessage::query()->where('status', '!=', ContactMessage::STATUS_RESOLVED)->has('replies', '=', 0)->count(),
                 'photographer' => ContactMessage::query()->whereNotNull('photographer_id')->count(),
+                'applications' => ContactMessage::query()->where('contact_type', ContactMessage::TYPE_PHOTOGRAPHER_APPLICATION)->count(),
             ],
         ]);
     }

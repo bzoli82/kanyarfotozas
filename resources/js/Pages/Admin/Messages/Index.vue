@@ -14,6 +14,7 @@ const filters = [
     { key: '', label: 'Összes' },
     { key: 'unanswered', label: 'Megválaszolatlan' },
     { key: 'photographer', label: 'Fotósnak címzett' },
+    { key: 'applications', label: 'Fotós-jelentkezés' },
     { key: 'support', label: 'Support' },
     { key: 'resolved', label: 'Lezárt' },
 ];
@@ -73,6 +74,7 @@ function dt(value) {
             >
                 {{ f.label }}
                 <span v-if="f.key === 'unanswered' && counts.unanswered" class="ml-1 rounded-full bg-accent px-1.5 text-[10px] text-white">{{ counts.unanswered }}</span>
+                <span v-if="f.key === 'applications' && counts.applications" class="ml-1 rounded-full bg-accent px-1.5 text-[10px] text-white">{{ counts.applications }}</span>
             </button>
         </div>
 

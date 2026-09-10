@@ -53,6 +53,7 @@ use App\Http\Controllers\Public\MediaController as PublicMediaController;
 use App\Http\Controllers\Public\MediaShareController;
 use App\Http\Controllers\Public\MyPurchasesController;
 use App\Http\Controllers\Public\PageController;
+use App\Http\Controllers\Public\PhotographerApplicationController;
 use App\Http\Controllers\Public\PhotographerController as PublicPhotographerController;
 use App\Http\Controllers\Public\PhotographerQuestionController;
 use App\Http\Controllers\SitemapController;
@@ -146,6 +147,8 @@ Route::post('/my-purchases/logout', [MyPurchasesController::class, 'logout'])->n
 Route::get('/about', [PageController::class, 'about'])->name('public.about');
 Route::get('/social', [PageController::class, 'community'])->name('public.community');
 Route::get('/photographers', [PublicPhotographerController::class, 'index'])->name('public.photographers');
+Route::get('/csatlakozz', [PhotographerApplicationController::class, 'create'])->name('public.photographers.apply');
+Route::post('/csatlakozz', [PhotographerApplicationController::class, 'store'])->middleware('throttle:contact')->name('public.photographers.apply.store');
 Route::get('/privacy', [PageController::class, 'privacy'])->name('public.privacy');
 Route::get('/shop', [PageController::class, 'shop'])->name('public.shop');
 Route::get('/impresszum', [PageController::class, 'impressum'])->name('public.impressum');

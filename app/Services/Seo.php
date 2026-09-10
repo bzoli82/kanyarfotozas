@@ -77,6 +77,7 @@ class Seo
             'public.shop' => [...$seo, 'title' => 'Árak és letöltés — '.$brand, 'description' => 'Egységes árazás, azonnali letöltés vízjel nélkül, JPEG és WebP formátum, videók MP4-ben.'],
             'public.faq' => [...$seo, 'title' => 'Gyakori kérdések — '.$brand, 'description' => 'Válaszok a vásárlással, letöltéssel, rendszám-homályosítással és a fotósoknak szóló kérdésekre.'],
             'public.contact' => [...$seo, 'title' => 'Kapcsolat — '.$brand, 'description' => 'Írj nekünk kérdéssel, panasszal vagy együttműködési ajánlattal.'],
+            'public.photographers.apply' => [...$seo, 'title' => 'Csatlakozz fotósként — '.$brand, 'description' => 'Áruld nálunk a motorsport-fotóidat: kész webshop, fizetés, vízjel és rendszám-homályosítás — te a bevétel megbeszélt százalékát kapod.'],
             'public.privacy' => [...$seo, 'title' => 'Adatkezelési tájékoztató — '.$brand],
             default => $seo,
         };

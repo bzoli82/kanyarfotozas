@@ -42,9 +42,14 @@ const steps = computed(() => [1, 2, 3, 4].map((n) => ({
             <div class="mx-auto max-w-3xl px-4 py-12 text-center sm:px-6 lg:px-8">
                 <h2 class="font-display text-xl font-bold uppercase tracking-tight text-content">{{ t('about.photographers_title') }}</h2>
                 <p class="mt-4 text-sm leading-relaxed text-muted">{{ t('about.photographers_body') }}</p>
-                <Link href="/photographers" class="mt-6 inline-block rounded-lg bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover">
-                    {{ t('photographers.title') }}
-                </Link>
+                <div class="mt-6 flex flex-wrap justify-center gap-3">
+                    <Link href="/csatlakozz" class="btn-sheen inline-block rounded-lg bg-accent px-6 py-3 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover">
+                        {{ t('apply.title') }}
+                    </Link>
+                    <Link href="/photographers" class="inline-block rounded-lg border border-border px-6 py-3 text-xs font-semibold uppercase tracking-wide text-content hover:border-accent hover:text-accent">
+                        {{ t('photographers.title') }}
+                    </Link>
+                </div>
             </div>
         </section>
     </PublicLayout>

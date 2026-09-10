@@ -25,6 +25,8 @@ class ContactMessage extends Model
 
     public const TYPE_OTHER = 'other';
 
+    public const TYPE_PHOTOGRAPHER_APPLICATION = 'photographer_application';
+
     protected function casts(): array
     {
         return [

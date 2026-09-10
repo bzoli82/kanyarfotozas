@@ -207,6 +207,7 @@ onBeforeUnmount(() => {
                     <Link href="/social" class="hover:text-content">{{ t('nav.community') }}</Link>
                     <Link href="/contact" class="hover:text-content">{{ t('nav.contact') }}</Link>
                     <Link href="/shop" class="hover:text-content">{{ t('nav.pricing') }}</Link>
+                    <Link href="/csatlakozz" class="hover:text-content">{{ t('apply.title') }}</Link>
                     <Link href="/my-purchases" class="hover:text-content">Korábbi vásárlásaim</Link>
                     <Link href="/privacy" class="hover:text-content">{{ t('footer.privacy') }}</Link>
                     <Link href="/aszf" class="hover:text-content">{{ t('footer.terms') }}</Link>

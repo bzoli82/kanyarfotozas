@@ -19,7 +19,7 @@ class SitemapController extends Controller
         $xml = Cache::remember('sitemap.xml', now()->addHour(), function () {
             $urls = [];
 
-            foreach (['home', 'public.events.index', 'public.about', 'public.community', 'public.shop', 'public.faq', 'public.contact', 'public.privacy', 'public.terms', 'public.impressum'] as $name) {
+            foreach (['home', 'public.events.index', 'public.about', 'public.community', 'public.shop', 'public.faq', 'public.contact', 'public.photographers.apply', 'public.privacy', 'public.terms', 'public.impressum'] as $name) {
                 $urls[] = ['loc' => route($name), 'changefreq' => 'weekly', 'priority' => $name === 'home' ? '1.0' : '0.6'];
             }
 
