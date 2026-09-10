@@ -39,7 +39,6 @@ const eventLabel = {
 const subjectLabel = {
     Order: 'Rendelés',
     Event: 'Esemény',
-    Media: 'Média',
     User: 'Felhasználó',
     Invoice: 'Számla',
 };
@@ -53,8 +52,9 @@ const hasFilter = computed(() => q.value || subject.value || causer.value);
     <AdminLayout>
         <h1 class="font-display text-xl font-bold uppercase tracking-tight text-content">Tevékenység-napló</h1>
         <p class="mt-1 max-w-2xl text-sm text-muted">
-            Ki mit módosított az oldalon — rendelés, esemény, média, beállítás, fizetés-lezárás, visszatérítés.
-            Csak megtekintés.
+            Ki mit módosított az oldalon — rendelés, esemény, beállítás, fizetés-lezárás, visszatérítés.
+            Csak megtekintés. Az <strong class="text-content">elmúlt ~1 hónapot</strong> mutatja (a régebbi
+            bejegyzéseket a rendszer automatikusan törli); a média-feltöltések nem kerülnek be.
         </p>
 
         <div class="mt-5 flex flex-wrap items-end gap-3">

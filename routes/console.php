@@ -33,3 +33,6 @@ Schedule::command('roadsidephoto:purge-delivery-cache')->hourly();
 
 // Arva kozvetlen-feltoltes mappak (bongeszo -> R2, importra soha nem kerult).
 Schedule::command('roadsidephoto:purge-import-uploads')->dailyAt('04:10');
+
+// Tevekenyseg-naplo: a config('activitylog.clean_after_days')-nel (35) regebbi sorok torlese.
+Schedule::command('activitylog:clean')->dailyAt('04:20');

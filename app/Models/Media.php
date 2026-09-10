@@ -118,11 +118,17 @@ class Media extends Model
         return $this->status === self::STATUS_READY;
     }
 
+    /**
+     * A médiák NEM naplózódnak a tevékenység-naplóba: egy nagy esemény több száz
+     * feltöltése + a feldolgozási státusz-váltások pillanatok alatt felfújnák a
+     * logot. A feldolgozás állapotát a dashboard „Médiaegészség" panelje mutatja.
+     *
+     * @var list<string>
+     */
+    protected static $recordEvents = [];
+
     public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logOnly(['status', 'price_cents'])
-            ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+        return LogOptions::defaults()->logUnguarded();
     }
 }

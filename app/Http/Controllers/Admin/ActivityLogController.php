@@ -23,7 +23,17 @@ class ActivityLogController extends Controller
         $subject = $request->string('subject')->value() ?: null;
         $causer = $request->string('causer')->value() ?: null;
 
-        $activity = Activity::query()
+        // A napló csak az elmúlt ~1 hónapot mutatja (a régebbieket a napi
+        // `activitylog:clean` úgyis törli — ld. config/activitylog.php).
+        $since = now()->subDays((int) config('activitylog.clean_after_days', 35));
+
+        $base = fn () => Activity::query()
+            ->where('created_at', '>=', $since)
+            // A médiák nem naplózódnak (Media::$recordEvents = []) — a régi / demo
+            // sorokat itt is kizárjuk, hogy ne fújják fel a listát.
+            ->where(fn ($w) => $w->whereNull('subject_type')->orWhere('subject_type', 'NOT ILIKE', '%\\\\Media'));
+
+        $activity = $base()
             ->with('causer')
             ->when($q, fn ($query) => $query->where('description', 'ILIKE', "%{$q}%"))
             ->when($subject, fn ($query) => $query->where('subject_type', 'ILIKE', '%\\\\'.$subject))
@@ -42,7 +52,7 @@ class ActivityLogController extends Controller
                 'created_at' => $a->created_at?->toIso8601String(),
             ]);
 
-        $subjectTypes = Activity::query()
+        $subjectTypes = $base()
             ->whereNotNull('subject_type')
             ->distinct()
             ->pluck('subject_type')
@@ -52,7 +62,7 @@ class ActivityLogController extends Controller
             ->values();
 
         $causers = User::query()
-            ->whereIn('id', Activity::query()->whereNotNull('causer_id')->distinct()->pluck('causer_id'))
+            ->whereIn('id', $base()->whereNotNull('causer_id')->distinct()->pluck('causer_id'))
             ->orderBy('name')
             ->get(['id', 'name']);
 
