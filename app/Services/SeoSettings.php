@@ -37,7 +37,9 @@ class SeoSettings
 
     public function ogImageUrl(): string
     {
-        $path = $this->ogImagePath();
+        // 1) kézzel feltöltött OG-kép → 2) a logóból automatikusan generált →
+        // 3) a beépített minta.
+        $path = $this->ogImagePath() ?? app(SiteBranding::class)->ogAutoPath();
 
         if ($path === null) {
             return url('/images/watermark-preview-sample.jpg');

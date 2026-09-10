@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
+import BrandLogo from '@/Components/BrandLogo.vue';
 import FeedbackModal from '@/Components/FeedbackModal.vue';
 import { useI18n } from '@/Composables/useI18n';
 import { useFormGuard } from '@/Composables/useFormGuard';
@@ -75,6 +76,9 @@ async function submit() {
     <PublicLayout>
         <section class="border-b border-border">
             <div class="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
+                <div class="font-display mb-5 text-sm font-bold tracking-tight text-muted">
+                    <BrandLogo />
+                </div>
                 <h1 class="font-display text-3xl font-bold uppercase tracking-tight text-content sm:text-4xl">{{ t('contact.title') }}</h1>
                 <p class="mt-4 text-sm text-muted">{{ t('contact.subtitle') }}</p>
             </div>

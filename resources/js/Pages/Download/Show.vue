@@ -2,6 +2,7 @@
 import { reactive } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
+import BrandLogo from '@/Components/BrandLogo.vue';
 import { useI18n } from '@/Composables/useI18n';
 import { useMediaUrl } from '@/Composables/useMediaUrl';
 
@@ -69,6 +70,9 @@ function formatDate(iso) {
     <PublicLayout>
         <section>
             <div class="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
+                <div class="font-display mb-4 text-sm font-bold tracking-tight text-muted">
+                    <BrandLogo />
+                </div>
                 <h1 class="font-display text-2xl font-bold uppercase tracking-tight text-content">{{ t('download.title') }}</h1>
                 <p v-if="orderNumber" class="mt-1 text-xs font-semibold uppercase tracking-wide text-muted">
                     {{ t('download.order_number') }}: {{ orderNumber }}

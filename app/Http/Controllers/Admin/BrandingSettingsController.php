@@ -48,8 +48,15 @@ class BrandingSettingsController extends Controller
 
         $disk = Storage::disk(MediaStorage::public());
 
+        $touchedLogo = $request->hasFile('logo') || $request->hasFile('logo_dark')
+            || $request->boolean('remove_logo') || $request->boolean('remove_logo_dark');
+
         $this->handleSlot($request, $disk, $images, 'logo', 'remove_logo', $branding->logoPath(), $branding->setLogoPath(...));
         $this->handleSlot($request, $disk, $images, 'logo_dark', 'remove_logo_dark', $branding->logoDarkPath(), $branding->setLogoDarkPath(...));
+
+        if ($touchedLogo) {
+            $this->regenerateOgImage($branding, $disk, $images);
+        }
 
         return back()->with('success', 'Márkajel elmentve.');
     }
@@ -88,10 +95,44 @@ class BrandingSettingsController extends Controller
             $key = "branding/logo-{$slug}.svg";
             $disk->put($key, $clean, ['ContentType' => 'image/svg+xml']);
         } else {
-            $key = "branding/logo-{$slug}.webp";
+            $key = "branding/logo-{$slug}.png";
             $disk->put($key, $images->makeLogo($file->getRealPath()));
         }
 
         $persist($key);
+    }
+
+    /**
+     * OG megosztókép újragenerálása a logóból. A sötét-változat (világos rajz) →
+     * sötét vászon; egyébként a fő logó → világos vászon. SVG-nél kimarad (a
+     * kézzel feltöltött / beépített OG-kép marad érvényben).
+     *
+     * @param  Filesystem  $disk
+     */
+    private function regenerateOgImage(SiteBranding $branding, $disk, ImageProcessingService $images): void
+    {
+        if ($branding->ogAutoPath()) {
+            $disk->delete($branding->ogAutoPath());
+            $branding->setOgAutoPath(null);
+        }
+
+        [$src, $bg] = $branding->logoDarkPath()
+            ? [$branding->logoDarkPath(), '#0d0d0d']
+            : [$branding->logoPath(), '#f7f7f8'];
+
+        if ($src === null || ! preg_match('/\.(png|jpe?g|webp)$/i', $src)) {
+            return;
+        }
+
+        $tmp = tempnam(sys_get_temp_dir(), 'og').'.'.pathinfo($src, PATHINFO_EXTENSION);
+        file_put_contents($tmp, $disk->get($src));
+
+        try {
+            $key = 'branding/og-'.Str::lower(Str::random(10)).'.png';
+            $disk->put($key, $images->makeOgFromLogo($tmp, $bg));
+            $branding->setOgAutoPath($key);
+        } finally {
+            @unlink($tmp);
+        }
     }
 }

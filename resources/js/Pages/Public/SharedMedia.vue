@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
+import BrandLogo from '@/Components/BrandLogo.vue';
 import VideoPlayer from '@/Components/VideoPlayer.vue';
 // A `mediaUrl` prop a megosztási link — a média-fájl URL-jét az `assetUrl` helper adja.
 import { mediaUrl as assetUrl } from '@/Composables/useMediaUrl';
@@ -30,6 +31,9 @@ function huf(cents) {
     <PublicLayout>
         <section>
             <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+                <Link href="/" class="font-display mb-4 inline-block text-sm font-bold tracking-tight text-muted">
+                    <BrandLogo />
+                </Link>
                 <div class="overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-1">
                     <VideoPlayer
                         v-if="media.type === 'video' && media.watermarked_s3_key"

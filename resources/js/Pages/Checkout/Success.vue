@@ -2,6 +2,7 @@
 import { onMounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
+import BrandLogo from '@/Components/BrandLogo.vue';
 import { useCartStore } from '@/Stores/cart';
 import { useI18n } from '@/Composables/useI18n';
 
@@ -29,6 +30,9 @@ onMounted(() => {
         <section>
             <div class="mx-auto max-w-xl px-4 py-16 text-center sm:px-6 lg:px-8">
                 <template v-if="paid">
+                    <div class="font-display mb-8 text-base font-bold tracking-tight text-content">
+                        <BrandLogo />
+                    </div>
                     <div class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-accent/10 text-accent">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5" /></svg>
                     </div>

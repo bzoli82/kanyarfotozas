@@ -100,11 +100,16 @@ class BrandingSettingsTest extends TestCase
 
         $key = app(SiteBranding::class)->logoPath();
         $this->assertNotNull($key);
-        $this->assertStringEndsWith('.webp', $key);
+        $this->assertStringEndsWith('.png', $key);
         Storage::disk('public')->assertExists($key);
 
         $props = $this->get('/')->viewData('page')['props'];
         $this->assertSame($key, $props['branding']['logo']);
+
+        // A raszter logóból automatikusan OG-kép is készül.
+        $og = app(SiteBranding::class)->ogAutoPath();
+        $this->assertNotNull($og);
+        Storage::disk('public')->assertExists($og);
     }
 
     public function test_svg_logo_is_sanitized_on_upload(): void
@@ -127,6 +132,21 @@ class BrandingSettingsTest extends TestCase
         $stored = Storage::disk('public')->get($key);
         $this->assertStringNotContainsString('<script', $stored);
         $this->assertStringContainsString('<rect', $stored);
+    }
+
+    public function test_email_logo_url_is_absolute_and_raster_only(): void
+    {
+        $branding = app(SiteBranding::class);
+        $this->assertNull($branding->logoEmailUrl());
+
+        $branding->setLogoPath('branding/logo-x.svg');
+        $this->assertNull($branding->logoEmailUrl(), 'SVG nem jelenhet meg e-mailben');
+
+        $branding->setLogoPath('branding/logo-x.png');
+        $url = $branding->logoEmailUrl();
+        $this->assertNotNull($url);
+        $this->assertStringStartsWith('http', $url);
+        $this->assertStringContainsString('branding/logo-x.png', $url);
     }
 
     public function test_logo_can_be_removed(): void

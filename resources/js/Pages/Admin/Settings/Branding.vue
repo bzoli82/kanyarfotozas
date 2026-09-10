@@ -118,6 +118,11 @@ function save() {
                 <p class="text-[11px] text-muted">
                     A hero-fejléc mindig sötét — arra a „sötét háttérre" logó (vagy annak hiányában a fő logó) kerül.
                     A többi helyen (lábléc, admin, világos téma) a témához illő változat.
+                    <br>
+                    <strong class="text-content">E-mailekben</strong> csak a <strong class="text-content">PNG</strong> logó jelenik meg
+                    (az SVG-t / WebP-t sok levelezőprogram nem támogatja) — enélkül a szöveges logó megy ki.
+                    A <strong class="text-content">közösségi megosztókép</strong> (Facebook/X előnézet) automatikusan a
+                    logóból készül, ha nincs kézzel feltöltött OG-kép a SEO beállításoknál.
                 </p>
             </div>
 

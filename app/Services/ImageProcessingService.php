@@ -153,14 +153,30 @@ class ImageProcessingService
 
     /**
      * Feltöltött raszter-logó normalizálása: max 900px széles, arány megtartva,
-     * átlátszóságot megőrző WebP 92%. (SVG-t nem ez kezel — az sanitálva, nyersen tárolódik.)
+     * átlátszóságot megőrző PNG. PNG (nem WebP), mert e-mail kliensek és OG-botok
+     * univerzálisan támogatják. (SVG-t nem ez kezel — az sanitálva, nyersen tárolódik.)
      */
     public function makeLogo(string $absolutePath): string
     {
         $image = $this->manager->decodePath($absolutePath);
         $image->scaleDown(width: 900);
 
-        return (string) $image->encode(new WebpEncoder(quality: 92));
+        return (string) $image->encode(new PngEncoder);
+    }
+
+    /**
+     * OG megosztókép a logóból: 1200x630 sötét vászon, középen a logó (~60% szélesség).
+     * PNG. Csak akkor hívjuk, ha a feltöltött logó raszter (GD dekódolható).
+     */
+    public function makeOgFromLogo(string $logoAbsolutePath, string $background = '#0d0d0d'): string
+    {
+        $canvas = $this->manager->createImage(1200, 630)->fill($background);
+
+        $logo = $this->manager->decodePath($logoAbsolutePath);
+        $logo->scaleDown(width: 720, height: 360);
+        $canvas->insert($logo, 0, 0, 'center');
+
+        return (string) $canvas->encode(new PngEncoder);
     }
 
     /**

@@ -64,6 +64,46 @@ class SiteBranding
         SiteSetting::set('site_logo_dark_path', (string) $key);
     }
 
+    /** A logóból automatikusan generált OG-megosztókép kulcsa (vagy null). */
+    public function ogAutoPath(): ?string
+    {
+        $value = trim((string) SiteSetting::get('branding_og_auto_path', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
+    public function setOgAutoPath(?string $key): void
+    {
+        SiteSetting::set('branding_og_auto_path', (string) $key);
+    }
+
+    /**
+     * A fő logó ABSZOLÚT URL-je e-mailhez — csak akkor, ha raszter (PNG/JPG/GIF).
+     * SVG / WebP: null (sok levelezőprogram nem jeleníti meg) → az e-mail a
+     * szöveges logóra esik vissza.
+     */
+    public function logoEmailUrl(): ?string
+    {
+        $key = $this->logoPath();
+
+        if ($key === null || ! preg_match('/\.(png|jpe?g|gif)$/i', $key)) {
+            return null;
+        }
+
+        return $this->absolutePublicUrl($key);
+    }
+
+    private function absolutePublicUrl(string $key): string
+    {
+        $base = MediaStorage::publicBaseUrl();
+
+        if (str_starts_with($base, 'http://') || str_starts_with($base, 'https://')) {
+            return $base.'/'.ltrim($key, '/');
+        }
+
+        return rtrim((string) config('app.url'), '/').'/'.ltrim($base, '/').'/'.ltrim($key, '/');
+    }
+
     /**
      * Az oldal VÉGLEGES domainje (pl. `roadsidephoto.eu`) — a rendszer-e-mailek
      * (superadmin / demo fiókok), a megosztási URL-ek és a DB-név ebből képződik.
