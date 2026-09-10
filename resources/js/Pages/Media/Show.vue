@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
 import MediaCard from '@/Components/MediaCard.vue';
+import CartButton from '@/Components/CartButton.vue';
 import VideoPlayer from '@/Components/VideoPlayer.vue';
 import { useCartStore } from '@/Stores/cart';
 import { useI18n } from '@/Composables/useI18n';
@@ -128,19 +129,13 @@ async function submitAsk() {
                                 <span class="text-lg font-bold text-content">{{ media.price_cents }} Ft</span>
                                 <span class="text-[11px] text-muted">{{ media.type === 'video' ? t('media.formats_video') : t('media.formats_photo') }}</span>
                             </div>
-                            <button
-                                type="button"
-                                class="btn-sheen group/cart mt-3 w-full rounded-lg py-2.5 text-xs font-semibold uppercase tracking-wide transition-colors"
-                                :class="cart.hasItem(media.id) ? 'border border-accent text-accent hover:border-accent/60 hover:text-accent/60' : 'bg-accent text-white hover:bg-accent-hover'"
-                                :title="cart.hasItem(media.id) ? t('common.remove_from_cart') : t('common.add_to_cart')"
-                                @click="toggleCart"
-                            >
-                                <span v-if="!cart.hasItem(media.id)">{{ t('common.add_to_cart') }}</span>
-                                <span v-else>
-                                    <span class="group-hover/cart:hidden">{{ t('common.in_cart_long') }}</span>
-                                    <span class="hidden group-hover/cart:inline">{{ t('common.remove_from_cart') }}</span>
-                                </span>
-                            </button>
+                            <CartButton
+                                :in-cart="cart.hasItem(media.id)"
+                                block
+                                long-in-cart-label
+                                class="mt-3"
+                                @toggle="toggleCart"
+                            />
                         </div>
 
                         <div v-if="contactGuard" class="mt-4 rounded-[var(--radius-base)] border border-border bg-surface-1 p-4">

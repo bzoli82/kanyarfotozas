@@ -5,6 +5,7 @@ import { useCollectionStore } from '@/Stores/collection';
 import { useI18n } from '@/Composables/useI18n';
 import { useMediaUrl } from '@/Composables/useMediaUrl';
 import { useFlyToCart } from '@/Composables/useFlyToCart';
+import CartButton from '@/Components/CartButton.vue';
 
 const { t } = useI18n();
 const { mediaUrl } = useMediaUrl();
@@ -190,19 +191,7 @@ function toggleCollection() {
 
         <div class="flex items-center justify-between gap-2 p-3">
             <span class="text-sm font-semibold text-content">{{ media.price_cents }} Ft</span>
-            <button
-                type="button"
-                class="btn-sheen group/cart rounded-lg border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition-colors"
-                :class="cart.hasItem(media.id) ? 'border-accent text-accent hover:border-accent/60 hover:text-accent/60' : 'border-border text-content hover:border-accent'"
-                :title="cart.hasItem(media.id) ? t('common.remove_from_cart') : t('common.add_to_cart')"
-                @click="toggleCart"
-            >
-                <span v-if="!cart.hasItem(media.id)">{{ t('common.add_to_cart') }}</span>
-                <span v-else>
-                    <span class="group-hover/cart:hidden">{{ t('common.in_cart') }}</span>
-                    <span class="hidden group-hover/cart:inline">{{ t('common.remove_from_cart') }}</span>
-                </span>
-            </button>
+            <CartButton :in-cart="cart.hasItem(media.id)" @toggle="toggleCart" />
         </div>
     </div>
 </template>

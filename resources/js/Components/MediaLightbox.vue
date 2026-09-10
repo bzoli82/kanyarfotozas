@@ -4,6 +4,7 @@ import { useCartStore } from '@/Stores/cart';
 import { useI18n } from '@/Composables/useI18n';
 import { useMediaUrl } from '@/Composables/useMediaUrl';
 import { useFlyToCart } from '@/Composables/useFlyToCart';
+import CartButton from '@/Components/CartButton.vue';
 import VideoPlayer from '@/Components/VideoPlayer.vue';
 
 const { t, locale } = useI18n();
@@ -199,19 +200,13 @@ onBeforeUnmount(() => {
                         <span class="text-base font-bold">{{ current.price_cents }} Ft</span>
                         <span class="text-[10px] text-white/40">{{ current.type === 'video' ? t('media.formats_video') : t('media.formats_photo') }}</span>
                     </div>
-                    <button
-                        type="button"
-                        class="btn-sheen group/cart mt-2.5 w-full rounded-lg py-2 text-[11px] font-semibold uppercase tracking-wide transition-colors"
-                        :class="cart.hasItem(current.id) ? 'border border-accent text-accent hover:border-accent/60 hover:text-accent/60' : 'bg-accent text-white hover:bg-accent-hover'"
-                        :title="cart.hasItem(current.id) ? t('common.remove_from_cart') : t('common.add_to_cart')"
-                        @click="toggleCart"
-                    >
-                        <span v-if="!cart.hasItem(current.id)">{{ t('common.add_to_cart') }}</span>
-                        <span v-else>
-                            <span class="group-hover/cart:hidden">{{ t('common.in_cart_long') }}</span>
-                            <span class="hidden group-hover/cart:inline">{{ t('common.remove_from_cart') }}</span>
-                        </span>
-                    </button>
+                    <CartButton
+                        :in-cart="cart.hasItem(current.id)"
+                        block
+                        long-in-cart-label
+                        class="mt-2.5"
+                        @toggle="toggleCart"
+                    />
                     <p class="mt-2.5 border-t border-white/10 pt-2 text-center text-[11px] text-white/35">{{ index + 1 }} / {{ items.length }}</p>
                 </div>
             </aside>
