@@ -103,11 +103,18 @@ function toggleCart() {
 function toggleCollection() {
     collection.toggle(mediaSnapshot());
 }
+
+// A bélyegkép elemét is átadjuk — az Events/Show.vue ebből indít „belenő a nagykép"
+// View Transition-t (ha az `data-anim-lightbox` be van kapcsolva).
+function select() {
+    emit('select', { media: props.media, el: thumbEl.value ?? null });
+}
 </script>
 
 <template>
     <div
         v-tilt
+        :data-media-id="media.id"
         class="hover-card group relative overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-1"
         @mouseenter="onEnterCard"
         @mouseleave="onLeaveCard"
@@ -128,7 +135,7 @@ function toggleCollection() {
             type="button"
             class="block w-full text-left"
             :aria-label="`${media.type === 'video' ? t('common.video') : t('common.photo')}${eventName ? ' — ' + eventName : ''} · ${media.price_cents} Ft`"
-            @click="emit('select', media)"
+            @click="select"
         >
             <div class="relative aspect-[4/3] overflow-hidden bg-surface-2">
                 <div v-if="!media.thumbnail_s3_key" class="absolute inset-0 grid place-items-center text-border">

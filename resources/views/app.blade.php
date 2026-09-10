@@ -15,7 +15,8 @@
     data-anim-btnsheen="{{ $anim->enabled() && $anim->buttonSheen() ? 'on' : 'off' }}"
     data-anim-flycart="{{ $anim->enabled() && $anim->flyToCart() ? 'on' : 'off' }}"
     data-anim-themereveal="{{ $anim->enabled() && $anim->themeReveal() ? 'on' : 'off' }}"
-    data-anim-faq="{{ $anim->enabled() && $anim->faqAccordion() ? 'on' : 'off' }}">
+    data-anim-faq="{{ $anim->enabled() && $anim->faqAccordion() ? 'on' : 'off' }}"
+    data-anim-lightbox="{{ $anim->enabled() && $anim->lightboxMorph() ? 'on' : 'off' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

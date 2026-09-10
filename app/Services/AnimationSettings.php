@@ -135,6 +135,12 @@ class AnimationSettings
         return (bool) SiteSetting::get('anim_faq', true);
     }
 
+    /** Galéria → nagykép: a bélyegkép „belenő" a teljes képernyős nézetbe (View Transitions). */
+    public function lightboxMorph(): bool
+    {
+        return (bool) SiteSetting::get('anim_lightbox', true);
+    }
+
     /**
      * A választott stílus numerikus értékei — az app.blade.php CSS custom
      * property-ként injektálja. Kikapcsolt animációnál minden 0 (= azonnali).
@@ -180,6 +186,7 @@ class AnimationSettings
             'flycart' => $this->flyToCart(),
             'themereveal' => $this->themeReveal(),
             'faq' => $this->faqAccordion(),
+            'lightbox' => $this->lightboxMorph(),
         ];
     }
 
@@ -227,6 +234,7 @@ class AnimationSettings
             'anim_flycart' => ['sometimes', 'boolean'],
             'anim_themereveal' => ['sometimes', 'boolean'],
             'anim_faq' => ['sometimes', 'boolean'],
+            'anim_lightbox' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -235,7 +243,7 @@ class AnimationSettings
      */
     public function update(array $data): void
     {
-        foreach (['anim_enabled', 'anim_reveal', 'anim_counters', 'anim_header', 'anim_progress', 'anim_imgfade', 'anim_grain', 'anim_btnsheen', 'anim_flycart', 'anim_themereveal', 'anim_faq'] as $key) {
+        foreach (['anim_enabled', 'anim_reveal', 'anim_counters', 'anim_header', 'anim_progress', 'anim_imgfade', 'anim_grain', 'anim_btnsheen', 'anim_flycart', 'anim_themereveal', 'anim_faq', 'anim_lightbox'] as $key) {
             if (array_key_exists($key, $data)) {
                 SiteSetting::set($key, $data[$key] ? '1' : '0');
             }

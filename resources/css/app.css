@@ -293,3 +293,23 @@ html[data-anim='off'] [data-reveal] {
         animation: none;
     }
 }
+
+/* Galéria → nagykép: a bélyegkép „belenő" a teljes képernyős nézetbe
+ * (Events/Show.vue + MediaLightbox.vue, a `data-anim-lightbox` kapcsolja). */
+@supports (view-transition-name: root) {
+    ::view-transition-group(lightbox-media) {
+        animation-duration: 320ms;
+        animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+    }
+    ::view-transition-old(lightbox-media),
+    ::view-transition-new(lightbox-media) {
+        animation-duration: 320ms;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(lightbox-media),
+    ::view-transition-old(lightbox-media),
+    ::view-transition-new(lightbox-media) {
+        animation: none !important;
+    }
+}

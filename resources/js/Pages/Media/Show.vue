@@ -184,7 +184,7 @@ async function submitAsk() {
                             :key="item.id"
                             :media="item"
                             :event-name="event.name"
-                            @select="(m) => router.visit(`/media/${m.id}`)"
+                            @select="(p) => router.visit(`/media/${p.media.id}`)"
                         />
                     </div>
                 </div>

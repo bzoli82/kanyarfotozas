@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
 import MediaCard from '@/Components/MediaCard.vue';
@@ -31,6 +31,9 @@ watch(() => props.perPage, (v) => { perPage.value = v; });
 const lightboxIndex = ref(null);
 // A lapváltás után újra kell nyitni a lightboxot (első vagy utolsó képnél).
 const pendingLightbox = ref(null);
+// A „belenő a nagykép" View Transition alatt kikapcsoljuk a <Transition name="lb">
+// CSS-fade-jét, hogy a nyitó snapshot ne opacity:0-nál készüljön.
+const lbCss = ref(true);
 
 const hasPrevPage = computed(() => Boolean(props.media.prev_page_url));
 const hasNextPage = computed(() => Boolean(props.media.next_page_url));
@@ -50,8 +53,50 @@ watch(
     },
 );
 
-function openLightbox(media) {
-    lightboxIndex.value = items.value.findIndex((i) => i.id === media.id);
+/**
+ * Galéria → nagykép közös-elem áttűnés (View Transitions API): a rákattintott
+ * bélyegkép „belenő" a teljes képernyős nézetbe. Csak nyitáskor, csak képnél;
+ * záráskor a <Transition name="lb"> egyszerű fade viszi.
+ */
+function canMorph(el, media) {
+    return Boolean(
+        el
+        && media
+        && media.type !== 'video'
+        && typeof document !== 'undefined'
+        && document.startViewTransition
+        && !document.hidden
+        && document.documentElement.dataset.animLightbox !== 'off'
+        && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
+    );
+}
+
+function openLightbox(payload) {
+    const media = payload?.media ?? payload;
+    const el = payload?.el ?? null;
+    const idx = items.value.findIndex((i) => i.id === media.id);
+    if (idx < 0) return;
+
+    if (!canMorph(el, media)) {
+        lightboxIndex.value = idx;
+
+        return;
+    }
+
+    el.style.viewTransitionName = 'lightbox-media';
+    lbCss.value = false;
+    const vt = document.startViewTransition(async () => {
+        // A régi elemről MÉG a mountolás előtt levesszük a nevet, hogy a nagykép
+        // burka legyen az egyetlen `lightbox-media` az „új" snapshot pillanatában.
+        el.style.viewTransitionName = '';
+        lightboxIndex.value = idx;
+        await nextTick();
+    });
+    const restore = () => { lbCss.value = true; };
+    const swallow = () => {};
+    vt.updateCallbackDone?.catch(swallow);
+    vt.ready?.catch(swallow);
+    vt.finished?.then(restore, restore);
 }
 
 /** A jelenlegi szűrők tiszta query-paraméterként (az „all" / üres kihagyva). */
@@ -282,7 +327,7 @@ function lightboxPrevPage() {
             </div>
         </section>
 
-        <Transition name="lb">
+        <Transition name="lb" :css="lbCss">
             <MediaLightbox
                 v-if="lightboxIndex !== null"
                 :items="items"

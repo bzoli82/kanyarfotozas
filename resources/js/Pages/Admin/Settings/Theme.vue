@@ -41,6 +41,7 @@ const form = useForm({
     anim_flycart: props.animation.flycart,
     anim_themereveal: props.animation.themereveal,
     anim_faq: props.animation.faq,
+    anim_lightbox: props.animation.lightbox,
 });
 
 // Animáció-előnézet: a kiválasztott (még nem mentett) stílus numerikus értékei.
@@ -350,6 +351,10 @@ function previewVars(palette) {
                         <label class="flex items-center gap-2 text-xs text-content">
                             <input v-model="form.anim_faq" type="checkbox" class="accent-[var(--color-accent)]" />
                             GY.I.K.: a válaszok le-/felgördülnek (0,5 mp)
+                        </label>
+                        <label class="flex items-center gap-2 text-xs text-content">
+                            <input v-model="form.anim_lightbox" type="checkbox" class="accent-[var(--color-accent)]" />
+                            Galéria → nagykép: a bélyegkép belenő a teljes képernyős nézetbe
                         </label>
 
                         <div class="rounded-md border border-border bg-surface-2 p-3">

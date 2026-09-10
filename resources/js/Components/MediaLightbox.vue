@@ -4,6 +4,7 @@ import { useCartStore } from '@/Stores/cart';
 import { useI18n } from '@/Composables/useI18n';
 import { useMediaUrl } from '@/Composables/useMediaUrl';
 import { useFlyToCart } from '@/Composables/useFlyToCart';
+import { useImageZoom } from '@/Composables/useImageZoom';
 import CartButton from '@/Components/CartButton.vue';
 import VideoPlayer from '@/Components/VideoPlayer.vue';
 
@@ -30,6 +31,13 @@ let restoreScrollY = 0;
 let previouslyFocused = null;
 
 const current = computed(() => props.items[props.index] ?? null);
+
+// Nagykép: görgő / koppintás / csippentés nagyít, húzás pásztáz; nagyítás nélkül
+// a vízszintes húzás lapoz.
+const { zoomed, reset: resetZoom, style: zoomStyle, handlers: zoomHandlers } = useImageZoom({
+    getElement: () => stageImgEl.value,
+    onSwipe: (dir) => go(dir),
+});
 
 const shotAtLabel = computed(() => {
     if (!current.value?.shot_at) return null;
@@ -92,6 +100,7 @@ function centerActiveThumb() {
 }
 
 watch(() => props.index, () => {
+    resetZoom();
     centerActiveThumb();
 });
 
@@ -146,7 +155,7 @@ onBeforeUnmount(() => {
 
         <div class="flex min-h-0 flex-1 flex-col gap-4 px-4 pb-4 lg:flex-row" @click.self="emit('close')">
             <!-- Média + léptető nyilak -->
-            <div class="relative flex min-h-0 flex-1 items-center justify-center" @click.self="emit('close')">
+            <div class="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden" @click.self="emit('close')">
                 <button
                     type="button"
                     :aria-label="t('common.previous')"
@@ -157,21 +166,28 @@ onBeforeUnmount(() => {
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6" /></svg>
                 </button>
 
-                <VideoPlayer
-                    v-if="current && current.type === 'video' && current.watermarked_s3_key"
-                    :key="`v-${current.id}`"
-                    :src="mediaUrl(current.watermarked_s3_key)"
-                    :hls="current.hls_playlist_s3_key ? mediaUrl(current.hls_playlist_s3_key) : null"
-                />
-                <img
-                    v-else-if="current"
-                    :key="`i-${current.id}`"
-                    ref="stageImgEl"
-                    :src="mediaUrl(current.watermarked_s3_key ?? current.thumbnail_s3_key)"
-                    class="max-h-full max-w-full rounded-[var(--radius-base)] object-contain"
-                    decoding="async"
-                    :alt="`${event.name}${shotAtLabel ? ' — ' + shotAtLabel : ''}`"
-                />
+                <!-- Stabil (nem `:key`-elt) burok — a galéria→nagykép View Transition
+                     közös eleme, hogy a kép/videó cseréje ne dobjon „duplicate name"-et. -->
+                <div class="flex max-h-full max-w-full items-center justify-center" style="view-transition-name: lightbox-media">
+                    <VideoPlayer
+                        v-if="current && current.type === 'video' && current.watermarked_s3_key"
+                        :key="`v-${current.id}`"
+                        :src="mediaUrl(current.watermarked_s3_key)"
+                        :hls="current.hls_playlist_s3_key ? mediaUrl(current.hls_playlist_s3_key) : null"
+                    />
+                    <img
+                        v-else-if="current"
+                        :key="`i-${current.id}`"
+                        ref="stageImgEl"
+                        :src="mediaUrl(current.watermarked_s3_key ?? current.thumbnail_s3_key)"
+                        class="max-h-full max-w-full rounded-[var(--radius-base)] object-contain"
+                        :style="zoomStyle"
+                        draggable="false"
+                        decoding="async"
+                        :alt="`${event.name}${shotAtLabel ? ' — ' + shotAtLabel : ''}`"
+                        v-on="zoomHandlers"
+                    />
+                </div>
 
                 <button
                     type="button"
@@ -181,6 +197,15 @@ onBeforeUnmount(() => {
                     @click="go(1)"
                 >
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6" /></svg>
+                </button>
+
+                <button
+                    v-if="zoomed"
+                    type="button"
+                    class="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1 text-[11px] font-semibold text-white hover:bg-black/90"
+                    @click="resetZoom"
+                >
+                    1:1
                 </button>
             </div>
 
