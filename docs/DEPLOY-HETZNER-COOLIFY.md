@@ -1,6 +1,6 @@
 # Deploy runbook — Hetzner CX22 + Coolify
 
-Cél: a KanyarFotózás platform éles üzembe helyezése a **legolcsóbb, ehhez az apphoz
+Cél: a RoadsidePhoto platform éles üzembe helyezése a **legolcsóbb, ehhez az apphoz
 illő** módon.
 
 - **Szerver**: Hetzner Cloud **CX22** (2 vCPU / 4 GB RAM / 40 GB SSD) — ~€4,5/hó.
@@ -163,7 +163,7 @@ A `storage/app` **nem lehet efemer** — itt van a feltöltés-staging és a
 Application → **Environment Variables** → illeszd be (a `<...>` helyekre a valós értéket):
 
 ```dotenv
-APP_NAME="KanyarFotózás"
+APP_NAME="RoadsidePhoto"
 APP_ENV=production
 APP_KEY=                         # 6/c-ben generáljuk
 APP_DEBUG=false
@@ -216,7 +216,7 @@ MAIL_PORT=587
 MAIL_USERNAME=<...>
 MAIL_PASSWORD=<...>
 MAIL_FROM_ADDRESS=noreply@roadsidephoto.eu
-MAIL_FROM_NAME="KanyarFotózás"
+MAIL_FROM_NAME="RoadsidePhoto"
 
 # A fizetési / számlázási kulcsokat NE ide — a /admin/settings/critical
 # oldalról add meg (titkosítva a site_settings-ben).
@@ -382,6 +382,55 @@ nézd meg a fejlécben `spf=pass` / `dkim=pass`.
 | **Managed Postgres** | `DB_*` átirányítása (pl. Neon — támogat PostGIS-t is); Coolify csak az appot futtatja. |
 | **Külön worker/DB gép** | Coolify multi-server (több szerver egy instance alatt), vagy load balancer + több app-node. |
 | **Váltás Forge / Laravel Cloud** | Semmi Coolify-specifikus a kódban — sima Laravel app. `git remote` marad, új platform, env átmásol. |
+
+---
+
+## 15. Fejlesztés élesítés után — új funkció, séma-változás
+
+Amikor már élesen töltöd a tartalmat (valódi események, rendelések), és eszedbe jut
+1-2 új funkció: **a kód egy irányba folyik (fejlesztői → éles), az adat a másikba (éles → fejlesztői).**
+Ugyanez a magyarázat az `/admin/settings/data-sync` oldal tetején is látható.
+
+### A kör
+
+1. **Húzd le az éles adatot a fejlesztői gépre** — `/admin/settings/data-sync` → „Éles adatbázis
+   letöltése és visszaállítása" (a **„Biztonságos másolat" pipa maradjon bekapcsolva**: kitörli a
+   titkos kulcsokat és anonimizálja a vásárlói e-maileket). Ha a média közös R2-n van, automatikusan
+   látszik; ha nem, ott a „Média letöltése az R2-ről" gomb.
+   → Innentől a fejlesztői géped úgy néz ki, mint az éles, csak teszt-kulcsokkal.
+
+2. **Fejleszd a funkciót** külön git-ágon. Új DB-mező kell? Csak **hozzáadó, biztonságos** migrációt
+   írj — `nullable` oszlop vagy `default` érték —, mert éles, feltöltött táblán fog lefutni.
+   Ha a régi soroknak is kell érték: adat-feltöltő migráció (`DB::table(...)->update(...)`
+   vagy `INSERT ... SELECT`).
+
+3. **Teszteld helyben** a lehúzott éles adaton, `php artisan test` zöld.
+
+4. **Merge a `main`-be + `git push`.** Coolify automatikusan deployol; a start command lefuttatja:
+   `config:cache` + `route:cache` + **`php artisan migrate --force`** (csak az ÚJ migrációk — az éles
+   adat marad) + `storage:link`.
+
+### Amire figyelj
+
+- **`migrate:fresh` / `db:wipe` / `DemoDataSeeder` élesen SOHA** — kitörli a valódi adatot.
+- **Titkos kulcsok** élesen és helyben külön vannak. A „Biztonságos másolat" letöltés után helyben
+  újra be kell írnod a *teszt* Stripe/SMTP/R2 kulcsokat a Kritikus beállításoknál — az éles kulcsokat
+  ez sosem érinti.
+- **Seederek élesen** (`RolePermissionSeeder`, `SiteSettingSeeder`, `FaqItemSeeder`): induláskor
+  egyszer. Utána csak óvatosan (`SiteSetting::set` / `updateOrCreate` alapúak, tehát általában
+  idempotensek).
+- **GY.I.K. tartalom**: nincs admin-szerkesztő, a `FaqItem` seederből jön. Módosításhoz szerkeszd a
+  `FaqItemSeeder`-t, pushold, majd élesen: `php artisan db:seed --class=FaqItemSeeder`.
+- **Rollback**: ha egy deploy rossz, `git revert <commit>` + push → új deploy. Migráció visszavonása
+  csak akkor, ha a `down()` biztonságos a valós adaton (általában inkább egy új, javító migráció).
+- **Napi mentés** (`roadsidephoto:backup`) legyen élesen működő cron alatt — a `/admin/settings/critical`
+  → Monitoring panelen ellenőrizhető.
+
+### Opcionális: staging
+
+Ha kényelmesebb, egy harmadik környezet (`staging.roadsidephoto.eu`, a `main` előtti ág) —
+Coolify-ban egy másik alkalmazás ugyanabból a repóból, `APP_ENV=staging`, saját DB. A fenti kör
+enélkül is teljesen működik.
 
 ---
 

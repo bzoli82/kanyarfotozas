@@ -1,12 +1,15 @@
-# KanyarFotózás Platform — fejlesztési összefoglaló
+# RoadsidePhoto Platform — fejlesztési összefoglaló
 
-*Készült: 2026-09-07 · Állapot: minden tervezett funkció kész, 449 automata teszt zöld*
+*Frissítve: 2026-09-10 · Állapot: minden tervezett funkció kész, **571 automata teszt zöld**, a projekt git alatt (`github.com/bzoli82/roadsidephoto`), CI zöld*
+
+> **Márkanév: RoadsidePhoto** · domain: `roadsidephoto.eu` · logó: `ROADSIDE` (fehér) + `PHOTO` (accent), vagy adminból feltöltött kép.
+> A `kanyarfotozas → roadsidephoto` átnevezés **teljes** (kód, adatbázis, artisan-névtér `roadsidephoto:*`, git repo, `site_domain`). A magyar „kanyar" szó mint termékleírás szándékosan MARAD a copy-ban.
 
 ---
 
 ## 1. Mi ez?
 
-Magyar motorsport **kanyarfotó / -videó értékesítő platform**. A fotósok pályanapokon,
+Magyar motorsport **fotó / -videó értékesítő platform**. A fotósok pályanapokon,
 versenyeken, találkozókon fotózzák a résztvevőket; a résztvevők helyszín és időpont szerint
 megkeresik a magukról készült felvételeket, és **regisztráció nélkül**, csak e-mail-címmel
 megvásárolják, vízjel nélkül letöltik.
@@ -52,7 +55,8 @@ megvásárolják, vízjel nélkül letöltik.
 |---|---|
 | `/` | Főoldal — **hero diavetítés** (admin által feltölthető kép + videó) + a **közös keresőpanel** (ország / helyszín-autocomplete / dátum / fotós / típus + GPS-fül + térkép) |
 | `/events` | Esemény-lista — a lap tetején **ugyanaz a keresőpanel**, alatta a lapozható galéria (GPS sugaras PostGIS-keresés is) |
-| `/events/{slug}` | Esemény-galéria — fotó/videó kártyák, videónál hover-play + scrub-sáv, **lightbox** léptetéssel, időpont-hisztogram, HH:MM kereső |
+| `/events/{slug}` | Esemény-galéria — fotó/videó kártyák, videónál hover-play + scrub-sáv, **lightbox** léptetéssel, időpont-hisztogram, HH:MM kereső. **Klasszikus lapozás** (10/25/50/100/250/500 kép/oldal, „1–10 / 15 fotó" kiírás); a lightbox a szélső képnél átlép a szomszéd oldalra |
+| `/csatlakozz` | **„Csatlakozz fotósként"** jelentkezési űrlap (portfólió-link, régió, bemutatkozás) — az admin „Üzenetek" felületén landol |
 | `/media/{id}` | Média részletnézet + „hasonló időpontban készült" javaslatok |
 | `/cart` → `/checkout` | Kosár (Pinia + localStorage), kuponkód, fizetési mód választó, számlázási adatok (ha van számlázó) |
 | `/download/{token}` | Letöltés — tételenként JPEG/WebP/MP4 + „összes ZIP-ben" + számla PDF; 72 óra / max 5 oldal-megnyitás |
@@ -73,8 +77,8 @@ megvásárolják, vízjel nélkül letöltik.
 
 ### Működés
 - **Dashboard** (`/admin/dashboard`) — 8 KPI kártya, 5 Chart.js diagram, legfrissebb események/rendelések,
-  **proaktív figyelmeztetések**, konverziós tölcsér, médiaegészség, bevétel-előrejelzés (lineáris regresszió),
-  fotós-összehasonlítás, biztonsági riasztás panel.
+  **proaktív figyelmeztetések**, konverziós tölcsér, **esemény-szintű teljesítmény** (megtekintés → rendelés → fizetett → bevétel eseményenként),
+  médiaegészség, bevétel-előrejelzés (lineáris regresszió), fotós-összehasonlítás, biztonsági riasztás panel.
 - **Statisztikák** (`/admin/stats`) — szűrhető értékesítési táblázat + CSV export (időszakos rollup is).
 - **Rendelések** (`/admin/orders`) — lista/keresés **sorszám** szerint is (`{PREFIX}-{ÉV}-{6 jegy}`),
   részletek + **eseménynapló**, **visszatérítés** (teljes/részleges, Stripe + SimplePay + Barion), letöltő e-mail újraküldése,
@@ -128,9 +132,17 @@ megvásárolják, vízjel nélkül letöltik.
   feltöltve megmondja, melyik rendelésből / vásárlótól származik. Adminból ki/be kapcsolható.
 - **Szervező kifizetések** (`/admin/organizer-payouts`) — az esemény-szervezőknek járó / kifizetett
   bevétel-részesedés kézi könyvelése.
-- **Oldal neve** (branding), **Tárhely** (NAS/R2), **Vízjel** (élő előnézettel),
-  **Hero média**, **Rendszámfelismerés** (Plate Recognizer, teljesen kikapcsolható),
-  **E-mail sablonok** (7 sablon, 5-5 mező), **Téma** (6 színséma világos+sötét párban + testreszabható).
+- **Oldal neve / márkajel** (branding) — kétszínű szöveges logó **VAGY feltöltött kép** (SVG / PNG / WebP,
+  fő + opcionális „sötét háttérre" változat); a kép megjelenik a fejlécben, láblécben, **e-mailekben** (PNG),
+  és a **közösségi megosztóképen** (automatikusan generálva). Kép híján a szöveges logó marad.
+- **Tárhely** (NAS/R2), **Vízjel** (élő előnézettel), **Hero média**,
+  **Rendszámfelismerés** (Plate Recognizer, teljesen kikapcsolható), **E-mail sablonok** (10 sablon, 5-5 mező).
+- **Téma** (`/admin/settings/theme`) — 6 színséma világos+sötét párban + testreszabható; **teljes animáció-vezérlés**:
+  oldalváltás, hero-mozgás, kártya-hover (és külön a kártyán belüli kép hover-effektje), görgetés-reveal,
+  statisztika-számlálók, fejléc-fátyolüveg, gomb-visszajelzés, kosárba-repülő kép, téma-váltás áttűnés,
+  GY.I.K. lenyílás — mindegyik ki/be kapcsolható, a `prefers-reduced-motion` mindig felülír.
+- **Éles ↔ helyi szinkron** (`/admin/settings/data-sync`) — az éles adatbázis + média egyirányú letöltése
+  a fejlesztői gépre (biztonságos, „scrub"-olt másolat); a lap tetején magyarázat a dev↔éles munkafolyamatról.
 
 ---
 
@@ -150,13 +162,13 @@ megvásárolják, vízjel nélkül letöltik.
 
 | Gyakoriság | Parancs | Mit csinál |
 |---|---|---|
-| 5 perc | `kanyarfotozas:heartbeat` | ütemező-életjel (a Kritikus beállítások ebből tudja, fut-e a cron) |
-| 15 perc | `kanyarfotozas:scan-alerts` | kritikus dashboard-figyelmeztetések → e-mail a superadminoknak |
-| óránként | `kanyarfotozas:send-download-reminders` | letöltési emlékeztető a lejáró rendelésekre |
-| naponta 03:15 | `kanyarfotozas:backup` | **automatikus adatbázis-mentés** (`pg_dump` → gzip → beállított disk, 14 megtartva) |
+| 5 perc | `roadsidephoto:heartbeat` | ütemező-életjel (a Kritikus beállítások ebből tudja, fut-e a cron) |
+| 15 perc | `roadsidephoto:scan-alerts` | kritikus dashboard-figyelmeztetések → e-mail a superadminoknak |
+| óránként | `roadsidephoto:send-download-reminders`, `…:send-abandoned-cart-reminders`, `…:purge-delivery-cache` | letöltési emlékeztető / elhagyott kosár / delivery-cache takarítás |
+| naponta 03:15 | `roadsidephoto:backup` | **automatikus adatbázis-mentés** (`pg_dump` → gzip → beállított disk, 14 megtartva) |
 | hét/hónap eleje | fotós riportok | heti/havi értékesítési összesítő e-mailben (CSV-vel) |
 
-Queue worker is kell élesben: `php artisan queue:work --queue=videos,default`
+Queue worker is kell élesben: `php artisan queue:work --queue=videos,imports,default`
 
 ---
 
@@ -177,11 +189,11 @@ Queue worker is kell élesben: `php artisan queue:work --queue=videos,default`
 
 ## 9. Tesztek + CI
 
-- **449 PHPUnit teszt** (Feature + Unit), PostgreSQL+PostGIS tesztadatbázison.
+- **571 PHPUnit teszt** (Feature + Unit), PostgreSQL tesztadatbázison (a 2 PostGIS-es GPS-teszt CI-ben kimarad).
 - **Laravel Pint** stíluscheck.
-- **GitHub Actions** (`.github/workflows/ci.yml`): minden push/PR-re párhuzamosan fut
-  PHPUnit (PostGIS + FFmpeg service) + Pint + `npm run build`.
-  → **A projekt még nincs git alatt** — a CI a `git init` + GitHub remote + első push után aktiválódik.
+- **GitHub Actions** (`.github/workflows/ci.yml`, `github.com/bzoli82/roadsidephoto`, `main`): minden push/PR-re
+  párhuzamosan fut PHPUnit (`postgres:16-alpine`, sima Postgres, mint az éles cél + `apt-get install ffmpeg`) + Pint + `npm run build`.
+  **A CI zöld.**
 
 ---
 
@@ -200,14 +212,14 @@ Queue worker is kell élesben: `php artisan queue:work --queue=videos,default`
 - **Webszerver**: hosszú `Cache-Control` a `/build/*` és a média-fájlokra.
 - Részletek: **ELES-INDULAS-CHECKLIST.md**.
 
-### Az átnevezés (kanyarfoto.hu → kanyarfotozas.hu) — KÉSZ
-- Minden nem vizuális objektum át van írva: rendszer-e-mailek, `site_settings`,
-  artisan parancsnévtér (`kanyarfotozas:*`), NAS/R2 defaultok, localStorage-kulcsok, tesztadatbázis.
-- A helyi DB `kanyarfoto` → `kanyarfotozas` névre átnevezve, `.env` frissítve.
+### Az átnevezés (kanyarfotozas → roadsidephoto.eu) — KÉSZ (2026-09-09)
+- Minden nem vizuális objektum át van írva: rendszer-e-mailek (`@roadsidephoto.eu`), `site_settings`,
+  artisan parancsnévtér (`roadsidephoto:*`), NAS/R2 defaultok, localStorage-kulcsok (`roadsidephoto.*`),
+  tesztadatbázis (`roadsidephoto` / `roadsidephoto_test`), git repo (`bzoli82/roadsidephoto`), `docs/`, `CLAUDE.md`.
 - **Admin funkció**: `/admin/settings/critical` → „Az oldal neve / átnevezés" — bármikor
-  új domainre átnevezhető (Előnézet + Átnevezés). CLI: `php artisan kanyarfotozas:apply-identity`.
-- Ellenőrzés: `php artisan kanyarfotozas:audit-identity` → tiszta.
-- Éles indulásnál a DB neve + `.env` a szerveren manuálisan igazítandó (az előnézet kiírja).
+  ÚJABB domainre átnevezhető (Előnézet + Átnevezés). CLI: `php artisan roadsidephoto:apply-identity <domain>`.
+- Ellenőrzés: `php artisan roadsidephoto:audit-identity` → tiszta.
+- Éles indulásnál a DB neve + `.env` a szerveren manuálisan igazítandó, ha a helyitől eltérő domaint használsz (az előnézet kiírja).
 
 ### Nem blokkoló, ajánlott
 - Deploy-runbook (részletes telepítési dokumentáció).

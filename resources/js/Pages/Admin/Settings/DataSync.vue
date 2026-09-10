@@ -75,6 +75,55 @@ function pullMedia() {
             Élesítés (első valódi rendelés) után visszafelé SOHA ne használd.
         </p>
 
+        <details class="mt-4 max-w-2xl rounded-[var(--radius-base)] border border-border bg-surface-1 p-5 text-sm">
+            <summary class="cursor-pointer font-semibold text-content">
+                Hogyan tartsd szinkronban az élest és a fejlesztői verziót? (rövid magyarázat)
+            </summary>
+            <div class="mt-3 space-y-4 text-muted">
+                <p>
+                    <strong class="text-content">Az alap-szabály:</strong> a <strong class="text-content">kód</strong> a fejlesztői
+                    géptől megy az élesre (<code>git push</code> → automatikus deploy), az <strong class="text-content">adat</strong>
+                    pedig az élestől a fejlesztői gépre (ez az oldal). A kettőt soha ne keverd: élesen ne szerkessz kódot, és
+                    ne futtass <code>migrate:fresh</code>-t vagy demó-seedert — az kitörölné a valódi adatot.
+                </p>
+
+                <div>
+                    <p class="font-semibold text-content">Amikor eszedbe jut egy új funkció, ezt a kört csináld:</p>
+                    <ol class="mt-2 list-decimal space-y-1.5 pl-5">
+                        <li>
+                            <strong class="text-content">Húzd le az éles adatot ide</strong> (2. lépés lentebb, a „Biztonságos
+                            másolat" pipa maradjon bekapcsolva). Innentől a fejlesztői géped úgy néz ki, mint az éles — csak
+                            teszt-kulcsokkal.
+                        </li>
+                        <li>
+                            <strong class="text-content">Fejleszd a funkciót</strong> a fejlesztői gépen egy külön git-ágon.
+                            Ha új adatbázis-mező kell, csak <em>hozzáadó</em> migrációt írj (nullable oszlop vagy default érték) —
+                            ez éles, feltöltött táblán fog lefutni.
+                        </li>
+                        <li><strong class="text-content">Teszteld helyben</strong> a lehúzott éles adaton.</li>
+                        <li>
+                            <strong class="text-content">Push a <code>main</code> ágra.</strong> A deploy automatikusan lefut:
+                            friss kód + assetek, és <code>php artisan migrate</code> (csak az új migrációk — az éles adat marad).
+                        </li>
+                    </ol>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-content">Mire figyelj:</p>
+                    <ul class="mt-2 list-disc space-y-1.5 pl-5">
+                        <li>A titkos kulcsok (Stripe / SMTP / R2) élesen és helyben <strong class="text-content">külön</strong> vannak.
+                            A „Biztonságos másolat" letöltés után helyben újra be kell írnod a <em>teszt</em> kulcsokat a Kritikus
+                            beállításoknál — az éles kulcsokat ez sosem érinti.</li>
+                        <li>Élesen a valódi seedereket (szerepkörök, alap-beállítások, GY.I.K.) csak <strong class="text-content">egyszer</strong>,
+                            induláskor futtatod.</li>
+                        <li>A GY.I.K. tartalma seederből jön: ha módosítod, a <code>FaqItemSeeder</code>-t szerkeszd, pushold, és
+                            élesen futtass egy <code>php artisan db:seed --class=FaqItemSeeder</code>-t.</li>
+                        <li>Napi automatikus adatbázis-mentés már be van építve — csak működő ütemező (cron / Coolify feladat) kell hozzá.</li>
+                    </ul>
+                </div>
+            </div>
+        </details>
+
         <!-- ================= ÉLES PÉLDÁNY: forrás-kulcs ================= -->
         <div v-if="isProduction" class="mt-6 max-w-2xl space-y-4">
             <div class="rounded-[var(--radius-base)] border border-border bg-surface-1 p-5">

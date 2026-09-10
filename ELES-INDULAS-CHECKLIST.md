@@ -73,18 +73,22 @@ A kulcsokat lehet `.env`-ből VAGY a `/admin/settings/storage` oldalról megadni
 
 ## 7. Végleges domain
 
-Amint eldőlt a név (pl. `kanyarfotozas.hu`):
+A név **eldőlt: `roadsidephoto.eu`** — az átnevezés kód/DB/artisan-névtér szinten KÉSZ (`roadsidephoto:*`).
+Ezt a pontot csak akkor kell újra végigcsinálni, ha **másik domainre** váltanál:
 
-1. `/admin/settings/critical` → „Az oldal végleges domainje" mezőbe beírni
+1. `/admin/settings/critical` → „Az oldal végleges domainje" mezőbe beírni az új domaint
 2. Terminálból:
    ```
-   php artisan kanyarfotozas:apply-identity kanyarfotozas.hu --dry-run   # próba
-   php artisan kanyarfotozas:apply-identity kanyarfotozas.hu             # végrehajtás
+   php artisan roadsidephoto:apply-identity <uj-domain> --dry-run   # próba
+   php artisan roadsidephoto:apply-identity <uj-domain>             # végrehajtás
    ```
 3. Kézi teendők (a parancs kiírja): `.env` `DB_DATABASE` / `APP_NAME` / `APP_URL` / `MAIL_FROM_ADDRESS`,
    adatbázis átnevezése, `php artisan config:clear`, worker újraindítás
-4. `php artisan kanyarfotozas:audit-identity` — ellenőrzés, maradt-e régi „kanyarfoto" nyom
-5. Fejlesztői: a `kanyarfotozas:*` parancsnévtér átírása (nem user-facing)
+4. `php artisan roadsidephoto:audit-identity` — ellenőrzés, maradt-e régi „kanyarfotozas" nyom (tisztának kell lennie)
+
+> **Éles indulásnál** (nem domain-váltás): elég a szerver `.env`-jét a `roadsidephoto.eu`-ra igazítani
+> (`APP_URL=https://roadsidephoto.eu`, `DB_DATABASE=roadsidephoto`, `APP_NAME=RoadsidePhoto`,
+> `MAIL_FROM_ADDRESS=noreply@roadsidephoto.eu`), a többi már a kódban van.
 
 ## 8. DNS / e-mail deliverability
 
@@ -99,3 +103,11 @@ Amint eldőlt a név (pl. `kanyarfotozas.hu`):
 - [ ] Számla megérkezik + a NAV Online Számlában látszik
 - [ ] Első napi mentés lefutott (`/admin/settings/critical` → Monitoring)
 - [ ] `sitemap.xml` beküldve a Google Search Console-ba
+
+## 10. Élesítés után — új funkció fejlesztése
+
+Amikor már élesen töltöd a tartalmat, és új funkciót akarsz fejleszteni:
+**a kód fejlesztői → éles (`git push` → auto-deploy → `migrate`), az adat éles → fejlesztői
+(`/admin/settings/data-sync`).** Élesen SOHA ne szerkessz kódot / ne futtass `migrate:fresh`-t.
+A teljes munkafolyamat: `docs/DEPLOY-HETZNER-COOLIFY.md` → „15. Fejlesztés élesítés után",
+és röviden a `/admin/settings/data-sync` oldal tetején.

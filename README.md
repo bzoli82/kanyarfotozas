@@ -1,58 +1,59 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# RoadsidePhoto
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Magyar motorsport **fotó- és videó-értékesítő platform**. A fotósok pályanapokon, versenyeken,
+találkozókon rögzítik a résztvevőket; a résztvevők helyszín, dátum és időpont szerint megkeresik a
+magukról készült felvételeket, és **regisztráció nélkül**, csak e-mail-címmel megvásárolják, vízjel
+nélkül letöltik.
 
-## About Laravel
+- **Márkanév:** RoadsidePhoto · **domain:** `roadsidephoto.eu`
+- **Állapot:** minden tervezett funkció kész, 571 automata teszt zöld, CI zöld (`github.com/bzoli82/roadsidephoto`)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Tech stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Réteg | Megoldás |
+|---|---|
+| Backend | Laravel 13 (PHP 8.4), session-alapú auth, Spatie Permission + ActivityLog |
+| Frontend | Vue 3 + Inertia.js (SPA), Tailwind CSS 4, Leaflet |
+| Adatbázis | PostgreSQL 18 (+ PostGIS opcionális, csak a GPS sugaras kereséshez) |
+| Kép | Intervention Image (GD) — WebP thumbnail, csempézett vízjel, rendszám-homályosítás |
+| Videó | FFmpeg (opcionális — `preprocessed` módban a szervernek nem kell) |
+| Tárhely | fejlesztésben lokális disk; élesben Cloudflare R2 (env-vezérelt, kód nem változik) |
+| Fizetés | Stripe + SimplePay v2 + Barion Smart Gateway v2 (adminból ki/be) |
+| Számlázás | Billingo v3 |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Fejlesztői indítás
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+# PostgreSQL adatbázis: roadsidephoto / roadsidephoto_test
+php artisan migrate --seed          # DemoDataSeeder: demó események + placeholder média
+npm run dev                          # + php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Dev belépés: `superadmin@roadsidephoto.eu` / `password` (éles indulás előtt cserélendő).
 
-## Contributing
+## Tesztek
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+php artisan test          # 571 teszt, PostgreSQL tesztadatbázison
+vendor/bin/pint           # kód-stílus
+```
 
-## Code of Conduct
+## Dokumentáció
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+| Fájl | Tartalom |
+|---|---|
+| `PROJEKT-OSSZEFOGLALO.md` | Teljes funkció-áttekintés (publikus + admin felület, pipeline, biztonság) |
+| `ELES-INDULAS-CHECKLIST.md` | Éles indulás — környezet + konfiguráció pipálós lista |
+| `docs/DEPLOY-HETZNER-COOLIFY.md` | Lépésről lépésre szerver-telepítés (Hetzner CX22 + Coolify + R2) |
+| `CLAUDE.md` | Fejlesztői/architektúra-jegyzetek, buktatók, döntések (AI-agent + ember) |
 
-## Security Vulnerabilities
+## Éles ↔ fejlesztői szinkron
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+A **kód** egy irányba folyik (fejlesztői → éles: `git push` → automatikus deploy → `php artisan migrate`),
+az **adat** a másikba (éles → fejlesztői: `/admin/settings/data-sync`). Élesen soha ne szerkessz kódot,
+és ne futtass `migrate:fresh`-t vagy `DemoDataSeeder`-t. Részletek a data-sync admin oldal tetején és a
+`PROJEKT-OSSZEFOGLALO.md`-ban.
