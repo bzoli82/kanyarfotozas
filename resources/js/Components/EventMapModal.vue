@@ -243,26 +243,48 @@ function searchCurrentArea() {
 }
 
 function destroyMap() {
-    if (map) {
+    if (!map) return;
+
+    try {
+        map.stop();
+        markersLayer?.clearLayers();
         map.remove();
-        map = null;
-        markersLayer = null;
+    } catch (e) {
+        // A Leaflet néha dob bezáráskor (folyamatban lévő pan/zoom animáció) — ártalmatlan.
     }
+
+    map = null;
+    markersLayer = null;
 }
 
 function onKey(e) {
     if (e.key === 'Escape' && props.open) emit('close');
 }
 
+let invalidateTimer = null;
+
 watch(
     () => props.open,
     async (isOpen) => {
         if (isOpen) {
             window.addEventListener('keydown', onKey);
-            await initMap();
+            if (map) {
+                // A modal `v-show`-val rejtett volt → a konténer mérete 0 lett; frissítsük.
+                await nextTick();
+                map.invalidateSize();
+                loadEvents(false);
+            } else {
+                await initMap();
+            }
+            // Az áttűnés végén a konténer mérete végleges — Leaflet újraszámol.
+            clearTimeout(invalidateTimer);
+            invalidateTimer = setTimeout(() => map?.invalidateSize(), 320);
         } else {
             window.removeEventListener('keydown', onKey);
-            destroyMap();
+            clearTimeout(invalidateTimer);
+            map?.stop();
+            // A térképet NEM bontjuk le záráskor (a Leaflet remove()-ja folyamatban
+            // lévő animációnál dobhat) — csak az unmount-nál, lásd onBeforeUnmount.
         }
     },
 );
@@ -275,12 +297,13 @@ onBeforeUnmount(() => {
 
 <template>
     <Teleport to="body">
-        <div v-if="open" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" @click.self="emit('close')">
+        <Transition name="mapmodal">
+        <div v-show="open" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" @click.self="emit('close')">
             <div
                 role="dialog"
                 aria-modal="true"
                 aria-label="Fotózások térképen"
-                class="flex h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-1"
+                class="mapmodal-panel flex h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-1"
             >
                 <div class="flex items-center justify-between border-b border-border px-4 py-3">
                     <div>
@@ -376,5 +399,36 @@ onBeforeUnmount(() => {
                 </div>
             </div>
         </div>
+        </Transition>
     </Teleport>
 </template>
+
+<style scoped>
+/* Lágy áttűnés a header-menü / eseménykártyák sebességével (~300 ms). */
+.mapmodal-enter-active {
+    transition: opacity 300ms ease;
+}
+.mapmodal-leave-active {
+    transition: opacity 200ms ease;
+}
+.mapmodal-enter-from,
+.mapmodal-leave-to {
+    opacity: 0;
+}
+.mapmodal-enter-active .mapmodal-panel {
+    transition:
+        transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 300ms ease;
+}
+.mapmodal-enter-from .mapmodal-panel {
+    transform: translateY(14px) scale(0.985);
+    opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+    .mapmodal-enter-active,
+    .mapmodal-leave-active,
+    .mapmodal-enter-active .mapmodal-panel {
+        transition: none;
+    }
+}
+</style>
