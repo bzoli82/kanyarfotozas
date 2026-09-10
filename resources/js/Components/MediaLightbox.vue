@@ -210,7 +210,14 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- Adatok + kosárba — a kártya függőleges közepe a médiáéhoz igazítva -->
-            <aside v-if="current" class="flex shrink-0 flex-col justify-center lg:w-[240px]">
+            <aside v-if="current" class="flex shrink-0 flex-col justify-center gap-2 lg:w-[240px]">
+                <p
+                    v-if="current.type !== 'video'"
+                    class="flex items-start gap-1.5 text-[11px] leading-relaxed text-white/45"
+                >
+                    <svg class="mt-px shrink-0" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3M11 8v6M8 11h6" /></svg>
+                    <span>{{ t('media.zoom_hint') }}</span>
+                </p>
                 <div class="rounded-[var(--radius-base)] border border-white/15 bg-white/5 p-3 text-white">
                     <dl class="space-y-1.5 text-xs">
                         <div v-if="shotAtLabel" class="flex justify-between border-b border-white/10 pb-1.5">

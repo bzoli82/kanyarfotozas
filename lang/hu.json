@@ -160,6 +160,7 @@
     "media.photographer": "Fotós",
     "media.formats_photo": "JPEG + WebP",
     "media.formats_video": "JPEG + WebP / MP4",
+    "media.zoom_hint": "A képre kattintva nagyíthatsz, majd egérrel pásztázhatsz; az egérgörgő is nagyít. Mobilon koppintással és kétujjas csippentéssel zoomolhatsz.",
     "media.nearby_title": "Ebben az időpontban készült képek",
     "media.page_title": ":name — média",
     "media.ask_photographer": "Kérdés a fotóshoz",

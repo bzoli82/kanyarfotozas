@@ -160,6 +160,7 @@
     "media.photographer": "Photographer",
     "media.formats_photo": "JPEG + WebP",
     "media.formats_video": "JPEG + WebP / MP4",
+    "media.zoom_hint": "Click the image to zoom in, then drag to pan; the mouse wheel zooms too. On mobile, tap to zoom and pinch with two fingers.",
     "media.nearby_title": "Photos taken around this time",
     "media.page_title": ":name — media",
     "media.ask_photographer": "Ask the photographer",
