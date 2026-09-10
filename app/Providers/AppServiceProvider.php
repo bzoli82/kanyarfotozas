@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Event;
 use App\Models\User;
+use App\Services\ArchiveStorage;
 use App\Services\MailSettings;
 use App\Services\R2Storage;
 use App\Services\Seo;
@@ -38,6 +39,10 @@ class AppServiceProvider extends ServiceProvider
         // Ugyanígy a Cloudflare R2 (tárhely) kulcsai — a superadmin a
         // /admin/settings/storage oldalon állítja, nem kell .env.
         rescue(fn () => app(R2Storage::class)->applyRuntimeConfig(), report: false);
+
+        // Az archív disk futásidejű választása (saját NAS ↔ Cloudflare R2) — a
+        // superadmin a /admin/settings/storage oldalon egy kapcsolóval állítja.
+        rescue(fn () => app(ArchiveStorage::class)->applyRuntimeConfig(), report: false);
 
         // Az oldal neve (SiteBranding) elerheto az app.blade.php cimeben es a mail
         // sablonok alairasaban — a config('app.name') helyett. View composer, hogy

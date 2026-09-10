@@ -1,4 +1,5 @@
 <script setup>
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
@@ -11,7 +12,63 @@ const props = defineProps({
     r2Configured: Boolean,
     importDisk: String,
     diskRoles: Object,
+    archive: Object,
 });
+
+// --- Archív disk kapcsoló (megvásárolt teljes méretű fájlok: NAS vagy R2) ---
+const DISK_LABEL = { nas: 'Saját NAS / SFTP', r2_private: 'Cloudflare R2' };
+
+const archiveDiskForm = useForm({
+    disk: props.archive.overridden ? props.archive.effective : '',
+});
+
+function saveArchiveDisk() {
+    archiveDiskForm.transform((data) => ({ ...data, _method: 'put', disk: data.disk || null })).post('/admin/settings/storage/archive-disk', {
+        preserveScroll: true,
+    });
+}
+
+const syncForm = useForm({ from: '', to: '' });
+const syncStatus = ref(props.archive.sync);
+let syncPoll = null;
+
+const syncRunning = computed(() => syncStatus.value && syncStatus.value.running);
+
+function startSync(from, to) {
+    if (syncRunning.value) return;
+    syncForm.from = from;
+    syncForm.to = to;
+    syncForm.post('/admin/settings/storage/archive-sync', {
+        preserveScroll: true,
+        onSuccess: () => pollSync(),
+    });
+}
+
+async function pollSync() {
+    try {
+        const res = await fetch('/admin/settings/storage/archive-sync/status', { headers: { Accept: 'application/json' } });
+        syncStatus.value = await res.json();
+    } catch {
+        /* átmeneti hálózati hiba — a következő tick újrapróbál */
+    }
+    if (syncStatus.value && syncStatus.value.running) {
+        syncPoll = setTimeout(pollSync, 3000);
+    } else {
+        syncPoll = null;
+        router.reload({ only: ['archive'] });
+    }
+}
+
+onMounted(() => {
+    if (syncRunning.value) pollSync();
+});
+onBeforeUnmount(() => {
+    if (syncPoll) clearTimeout(syncPoll);
+});
+
+function diskAvailable(value) {
+    return (props.archive.options.find((o) => o.value === value) || {}).available;
+}
 
 const testForm = useForm({});
 
@@ -215,6 +272,97 @@ MEDIA_ARCHIVE_DISK=…   # nagy fájlok: eredeti + letölthető változatok</pre
                 Mentés
             </button>
         </form>
+
+        <!-- Archiv disk kapcsolo + NAS <-> R2 szinkron -->
+        <section class="mt-6 rounded-[var(--radius-base)] border border-border bg-surface-1 p-5">
+            <h2 class="text-sm font-semibold uppercase tracking-wide text-content">Megvásárolt fájlok — honnan töltsük le</h2>
+            <p class="mt-1 text-xs text-muted">
+                A teljes méretű eredeti és a megvásárolt letölthető JPEG/WebP/MP4 fájlok tárolója. Egy kapcsolóval
+                átbillenthető a saját NAS/SFTP szerver és a Cloudflare R2 privát bucket között — a kód nem változik.
+            </p>
+            <p class="mt-1 text-xs">
+                <span class="text-muted">Jelenleg: </span>
+                <code class="text-accent">{{ DISK_LABEL[archive.effective] || archive.effective }}</code>
+                <span class="text-muted">{{ archive.overridden ? ' (felületen beállítva)' : ' (.env alapértelmezés)' }}</span>
+            </p>
+
+            <div class="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-content">
+                ⚠️ <strong>Váltás előtt futtasd le a szinkront</strong> a cél-tárolóra! A meglévő
+                {{ archive.plan.media_on_archive }} archivált médiát a rendszer a váltás után az új diskon keresi —
+                ha a fájlok nincsenek ott, a letöltés hibát ad.
+                <span v-if="archive.plan.media_on_local > 0" class="mt-1 block text-muted">
+                    ({{ archive.plan.media_on_local }} média még a webhostingon van — azok nem részei a szinkronnak,
+                    előbb a háttér-archiválásnak kell lefutnia rájuk.)
+                </span>
+            </div>
+
+            <form class="mt-4 flex flex-wrap items-end gap-3" @submit.prevent="saveArchiveDisk">
+                <label class="block">
+                    <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">Kiszolgálás innen</span>
+                    <select v-model="archiveDiskForm.disk" class="rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none">
+                        <option value="">.env szerinti alapértelmezés</option>
+                        <option v-for="o in archive.options" :key="o.value" :value="o.value" :disabled="!o.available">
+                            {{ o.label }}{{ o.available ? '' : ' — nincs beállítva' }}
+                        </option>
+                    </select>
+                </label>
+                <button type="submit" :disabled="archiveDiskForm.processing" class="rounded-lg bg-accent px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-accent-hover disabled:opacity-60">
+                    Mentés
+                </button>
+            </form>
+
+            <div class="mt-6 border-t border-border pt-5">
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-content">Szinkron — NAS ↔ Cloudflare R2</h3>
+                <p class="mt-1 text-xs text-muted">
+                    Átmásolja az összes archivált média fájljait ({{ archive.plan.media_on_archive }} média, kb.
+                    {{ archive.plan.files_estimate }} fájl) a másik tárolóra. A már meglévő, azonos méretű fájlokat kihagyja,
+                    így többször is futtatható. A háttérben fut (queue) — nagy adatmennyiséghez CLI:
+                    <code>php artisan roadsidephoto:sync-archive-storage --from=nas --to=r2_private</code>.
+                </p>
+
+                <div class="mt-3 flex flex-wrap gap-3">
+                    <button
+                        type="button"
+                        :disabled="syncRunning || !diskAvailable('nas') || !diskAvailable('r2_private')"
+                        class="rounded-lg border border-border px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-content hover:border-accent disabled:opacity-40"
+                        @click="startSync('nas', 'r2_private')"
+                    >
+                        NAS → R2 másolás
+                    </button>
+                    <button
+                        type="button"
+                        :disabled="syncRunning || !diskAvailable('nas') || !diskAvailable('r2_private')"
+                        class="rounded-lg border border-border px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-content hover:border-accent disabled:opacity-40"
+                        @click="startSync('r2_private', 'nas')"
+                    >
+                        R2 → NAS másolás
+                    </button>
+                </div>
+                <p v-if="!diskAvailable('nas') || !diskAvailable('r2_private')" class="mt-2 text-[11px] text-muted">
+                    A szinkronhoz MINDKÉT tároló kulcsait be kell állítani (fentebb).
+                </p>
+
+                <div v-if="syncStatus" class="mt-4 rounded-lg border border-border bg-surface-2 p-3 text-xs">
+                    <div class="flex items-center justify-between">
+                        <span class="font-semibold text-content">
+                            {{ syncStatus.direction || 'Szinkron' }} —
+                            <span v-if="syncStatus.running" class="text-accent">fut…</span>
+                            <span v-else-if="syncStatus.cancelled" class="text-muted">megszakítva</span>
+                            <span v-else class="text-accent">kész</span>
+                        </span>
+                        <span class="text-muted">{{ syncStatus.progress }}%</span>
+                    </div>
+                    <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-1">
+                        <div class="h-full rounded-full bg-accent transition-all" :style="{ width: (syncStatus.progress || 0) + '%' }"></div>
+                    </div>
+                    <div class="mt-2 text-muted">
+                        Másolva: <strong class="text-content">{{ syncStatus.copied }}</strong> ·
+                        Kihagyva: {{ syncStatus.skipped }} ·
+                        Hiba: <span :class="syncStatus.failed > 0 ? 'text-accent' : ''">{{ syncStatus.failed }}</span>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <!-- Kapcsolati adatok szerkesztese -->
         <form class="mt-6 rounded-[var(--radius-base)] border border-border bg-surface-1 p-5" @submit.prevent="saveConnection">

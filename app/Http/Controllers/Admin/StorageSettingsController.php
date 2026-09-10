@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Jobs\ArchiveMediaOriginalToNas;
 use App\Models\Media;
+use App\Services\ArchiveStorage;
 use App\Services\MediaStorage;
 use App\Services\NasConnection;
 use App\Services\R2Storage;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -21,7 +24,7 @@ class StorageSettingsController extends Controller
      * NAS (SFTP) kapcsolati adatok + archivalasi hibak — kizarolag superadmin felulet,
      * a fotosok/feltoltok nem latjak (a route 'role:superadmin' vedett).
      */
-    public function index(NasConnection $nasConnection, R2Storage $r2): Response
+    public function index(NasConnection $nasConnection, R2Storage $r2, ArchiveStorage $archive): Response
     {
         return Inertia::render('Admin/Settings/Storage', [
             'configured' => $nasConnection->isConfigured(),
@@ -32,6 +35,13 @@ class StorageSettingsController extends Controller
             'diskRoles' => [
                 'public' => MediaStorage::public(),
                 'archive' => MediaStorage::archive(),
+            ],
+            'archive' => [
+                'effective' => $archive->disk(),
+                'overridden' => $archive->configuredDisk() !== null,
+                'options' => $archive->options(),
+                'plan' => $archive->plan(),
+                'sync' => $archive->syncStatus(),
             ],
             'stats' => [
                 'local' => Media::query()->where('original_storage', Media::STORAGE_LOCAL)->count(),
@@ -122,6 +132,66 @@ class StorageSettingsController extends Controller
         } catch (Throwable $e) {
             return back()->with('error', 'Sikertelen kapcsolódás: '.$e->getMessage());
         }
+    }
+
+    /**
+     * A megvasarolt teljes meretu fajlok archiv diskjenek valtasa (sajat NAS <-> R2).
+     * Ures ertek = visszaallas az .env alapertelmezesre.
+     */
+    public function updateArchiveDisk(Request $request, ArchiveStorage $archive): RedirectResponse
+    {
+        $data = $request->validate([
+            'disk' => ['nullable', Rule::in(ArchiveStorage::CHOICES)],
+        ]);
+
+        $disk = $data['disk'] ?? null;
+
+        if ($disk !== null && ! $archive->diskAvailable($disk)) {
+            return back()->with('error', 'Ez a tároló még nincs teljesen beállítva — előbb töltsd ki a kulcsait fentebb.');
+        }
+
+        $archive->setDisk($disk);
+
+        return back()->with('success', $disk
+            ? 'Elmentve — a megvásárolt fájlok mostantól innen töltődnek. Ha még nem futott le a szinkron, előbb indítsd el!'
+            : 'Visszaállítva az .env szerinti alapértelmezésre.');
+    }
+
+    /**
+     * Elindit egy hatter-szinkront: minden archivalt media fajljainak masolasa
+     * a `from` diskrol a `to` diskre (NAS <-> R2).
+     */
+    public function startArchiveSync(Request $request, ArchiveStorage $archive): RedirectResponse
+    {
+        $data = $request->validate([
+            'from' => ['required', Rule::in(ArchiveStorage::CHOICES)],
+            'to' => ['required', 'different:from', Rule::in(ArchiveStorage::CHOICES)],
+        ]);
+
+        if (! $archive->diskAvailable($data['from']) || ! $archive->diskAvailable($data['to'])) {
+            return back()->with('error', 'A szinkronhoz mindkét tároló kulcsait be kell állítani.');
+        }
+
+        $status = $archive->syncStatus();
+        if ($status && $status['running']) {
+            return back()->with('error', 'Már fut egy szinkron — várd meg, amíg befejeződik.');
+        }
+
+        $batchId = $archive->startSync($data['from'], $data['to']);
+
+        if ($batchId === null) {
+            return back()->with('success', 'Nincs archivált média — nincs mit szinkronizálni.');
+        }
+
+        return back()->with('success', 'A szinkron elindult a háttérben — a folyamat itt látszik.');
+    }
+
+    /**
+     * A legutobbi archiv-szinkron allapota (a felulet 3 masodpercenkent pollozza).
+     */
+    public function archiveSyncStatus(ArchiveStorage $archive): JsonResponse
+    {
+        return response()->json($archive->syncStatus() ?? ['running' => false, 'finished' => true]);
     }
 
     /**
