@@ -228,24 +228,23 @@ html[data-anim='off'] [data-reveal] {
     animation-delay: var(--hero-delay, 0ms);
 }
 
-/* Gomb fény-suhanás hoveren (data-anim-btnsheen='on', .btn-sheen osztály a CTA-kon) */
-.btn-sheen {
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
+/* Kosárba-gomb visszajelzés (data-anim-btnsheen='on', .btn-sheen osztály a CTA-kon).
+ * Világos ÉS sötét témán is működik: akcent-glória hoveren + kis „pattanás" kattintáskor. */
+[data-anim-btnsheen='on'] .btn-sheen {
+    transition:
+        transform 140ms ease,
+        box-shadow 200ms ease,
+        border-color 200ms ease,
+        background-color 200ms ease,
+        color 200ms ease;
 }
-[data-anim-btnsheen='on'] .btn-sheen::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
-    transform: translateX(-130%);
-    transition: transform 700ms ease;
+[data-anim-btnsheen='on'] .btn-sheen:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 22%, transparent);
 }
-[data-anim-btnsheen='on'] .btn-sheen:hover::after {
-    transform: translateX(130%);
+[data-anim-btnsheen='on'] .btn-sheen:active {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 /* Kosárba-repülő kép-klón (useFlyToCart) */
@@ -267,7 +266,7 @@ html[data-anim='off'] [data-reveal] {
     animation: cart-target-pop 420ms ease;
 }
 
-/* Téma-váltás körkörös feltárás a kapcsolótól (View Transitions API) */
+/* Téma-váltás — lágy áttűnés a régi és az új megjelenés között (View Transitions API) */
 @supports (view-transition-name: root) {
     [data-anim-themereveal='on']::view-transition-old(root),
     [data-anim-themereveal='on']::view-transition-new(root) {
@@ -279,15 +278,15 @@ html[data-anim='off'] [data-reveal] {
     }
     [data-anim-themereveal='on']::view-transition-new(root) {
         z-index: 2;
-        animation: theme-reveal 480ms cubic-bezier(0.22, 1, 0.36, 1);
+        animation: theme-fade-in 260ms ease both;
     }
 }
-@keyframes theme-reveal {
+@keyframes theme-fade-in {
     from {
-        clip-path: circle(0% at var(--theme-reveal-x, 50%) var(--theme-reveal-y, 50%));
+        opacity: 0;
     }
     to {
-        clip-path: circle(150% at var(--theme-reveal-x, 50%) var(--theme-reveal-y, 50%));
+        opacity: 1;
     }
 }
 @media (prefers-reduced-motion: reduce) {

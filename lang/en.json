@@ -41,6 +41,7 @@
     "common.add_to_cart": "Add to cart",
     "common.in_cart": "In cart",
     "common.in_cart_long": "In your cart",
+    "common.remove_from_cart": "Remove",
     "common.loading": "Loading…",
     "common.close": "Close",
     "common.ok": "OK",

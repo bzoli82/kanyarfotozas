@@ -32,7 +32,12 @@ const shotAtLabel = computed(() => {
     return d.toLocaleString(locale.value === 'en' ? 'en-GB' : 'hu-HU', { dateStyle: 'medium', timeStyle: 'short' });
 });
 
-function addToCart() {
+function toggleCart() {
+    if (cart.hasItem(props.media.id)) {
+        cart.remove(props.media.id);
+
+        return;
+    }
     cart.add({
         id: props.media.id,
         type: props.media.type,
@@ -125,11 +130,16 @@ async function submitAsk() {
                             </div>
                             <button
                                 type="button"
-                                class="mt-3 w-full rounded-lg py-2.5 text-xs font-semibold uppercase tracking-wide transition-colors"
-                                :class="cart.hasItem(media.id) ? 'border border-accent text-accent' : 'bg-accent text-white hover:bg-accent-hover'"
-                                @click="addToCart"
+                                class="btn-sheen group/cart mt-3 w-full rounded-lg py-2.5 text-xs font-semibold uppercase tracking-wide transition-colors"
+                                :class="cart.hasItem(media.id) ? 'border border-accent text-accent hover:border-accent/60 hover:text-accent/60' : 'bg-accent text-white hover:bg-accent-hover'"
+                                :title="cart.hasItem(media.id) ? t('common.remove_from_cart') : t('common.add_to_cart')"
+                                @click="toggleCart"
                             >
-                                {{ cart.hasItem(media.id) ? t('common.in_cart_long') : t('common.add_to_cart') }}
+                                <span v-if="!cart.hasItem(media.id)">{{ t('common.add_to_cart') }}</span>
+                                <span v-else>
+                                    <span class="group-hover/cart:hidden">{{ t('common.in_cart_long') }}</span>
+                                    <span class="hidden group-hover/cart:inline">{{ t('common.remove_from_cart') }}</span>
+                                </span>
                             </button>
                         </div>
 

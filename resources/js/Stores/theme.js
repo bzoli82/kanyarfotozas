@@ -47,23 +47,21 @@ export const useThemeStore = defineStore('theme', {
                 });
             }
         },
-        setMode(mode, origin = null) {
+        setMode(mode) {
             this.mode = mode;
             writeStoredMode(mode);
 
-            // Körkörös feltárás a kapcsoló pozíciójától (View Transitions API) —
-            // a /admin/settings/theme „Animációk" → „Téma-váltás körkörös feltárása" kapcsolja.
-            const canReveal =
+            // Lágy áttűnés a téma-váltásnál (View Transitions API) — a /admin/settings/theme
+            // „Animációk" → „Téma-váltás: lágy áttűnés" kapcsolja. Az áttűnést a
+            // ::view-transition-new(root) CSS-animáció adja (app.css).
+            const canFade =
                 typeof document !== 'undefined' &&
                 document.startViewTransition &&
                 !document.hidden &&
                 document.documentElement.dataset.animThemereveal !== 'off' &&
                 !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-            if (canReveal && origin) {
-                const root = document.documentElement.style;
-                root.setProperty('--theme-reveal-x', `${origin.x}px`);
-                root.setProperty('--theme-reveal-y', `${origin.y}px`);
+            if (canFade) {
                 const vt = document.startViewTransition(() => this.apply());
                 // A ViewTransition promise-jai elutasíthatnak (megszakított / időtúllépett
                 // átmenet háttérbe tett tabnál) — a témaváltás már megtörtént, a hibát

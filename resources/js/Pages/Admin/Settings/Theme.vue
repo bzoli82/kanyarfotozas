@@ -328,7 +328,7 @@ function previewVars(palette) {
                         </label>
                         <label class="flex items-center gap-2 text-xs text-content">
                             <input v-model="form.anim_btnsheen" type="checkbox" class="accent-[var(--color-accent)]" />
-                            Gombok: fény-suhanás a kurzor alatt (Kosárba gombok)
+                            Kosárba gomb: akcent-glória hoveren + pattanás kattintáskor
                         </label>
                         <label class="flex items-center gap-2 text-xs text-content">
                             <input v-model="form.anim_flycart" type="checkbox" class="accent-[var(--color-accent)]" />
@@ -336,7 +336,7 @@ function previewVars(palette) {
                         </label>
                         <label class="flex items-center gap-2 text-xs text-content">
                             <input v-model="form.anim_themereveal" type="checkbox" class="accent-[var(--color-accent)]" />
-                            Téma-váltás: körkörös feltárás a kapcsolótól
+                            Téma-váltás: lágy áttűnés a régi és új megjelenés között
                         </label>
 
                         <div class="rounded-md border border-border bg-surface-2 p-3">

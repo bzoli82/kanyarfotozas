@@ -89,10 +89,13 @@ function mediaSnapshot() {
     };
 }
 
-function addToCart() {
-    if (!cart.hasItem(props.media.id)) {
-        flyToCart(thumbEl.value, props.media.thumbnail_s3_key ? mediaUrl(props.media.thumbnail_s3_key) : null);
+function toggleCart() {
+    if (cart.hasItem(props.media.id)) {
+        cart.remove(props.media.id);
+
+        return;
     }
+    flyToCart(thumbEl.value, props.media.thumbnail_s3_key ? mediaUrl(props.media.thumbnail_s3_key) : null);
     cart.add(mediaSnapshot());
 }
 
@@ -189,11 +192,16 @@ function toggleCollection() {
             <span class="text-sm font-semibold text-content">{{ media.price_cents }} Ft</span>
             <button
                 type="button"
-                class="btn-sheen rounded-lg border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition-colors"
-                :class="cart.hasItem(media.id) ? 'border-accent text-accent' : 'border-border text-content hover:border-accent'"
-                @click="addToCart"
+                class="btn-sheen group/cart rounded-lg border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition-colors"
+                :class="cart.hasItem(media.id) ? 'border-accent text-accent hover:border-accent/60 hover:text-accent/60' : 'border-border text-content hover:border-accent'"
+                :title="cart.hasItem(media.id) ? t('common.remove_from_cart') : t('common.add_to_cart')"
+                @click="toggleCart"
             >
-                {{ cart.hasItem(media.id) ? t('common.in_cart') : t('common.add_to_cart') }}
+                <span v-if="!cart.hasItem(media.id)">{{ t('common.add_to_cart') }}</span>
+                <span v-else>
+                    <span class="group-hover/cart:hidden">{{ t('common.in_cart') }}</span>
+                    <span class="hidden group-hover/cart:inline">{{ t('common.remove_from_cart') }}</span>
+                </span>
             </button>
         </div>
     </div>
