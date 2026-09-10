@@ -23,6 +23,64 @@ function toggle(id) {
     openId.value = openId.value === id ? null : id;
 }
 
+// Kérdés-válasz le-/felgördülés. Ki/be a /admin/settings/theme „Animációk" →
+// „GY.I.K. lenyíló animáció"; az időzítés az animáció-stílus (--anim-duration).
+function animationOn() {
+    if (typeof document === 'undefined') return false;
+    if (document.documentElement.dataset.animFaq === 'off') return false;
+
+    return !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+}
+
+function answerDuration() {
+    const raw = getComputedStyle(document.documentElement).getPropertyValue('--anim-duration');
+
+    return parseInt(raw, 10) || 300;
+}
+
+function faqEnter(el, done) {
+    if (!animationOn()) {
+        done();
+
+        return;
+    }
+    const ms = answerDuration();
+    el.style.overflow = 'hidden';
+    el.style.height = '0';
+    el.style.opacity = '0';
+    el.style.transition = `height ${ms}ms ease, opacity ${ms}ms ease`;
+    const target = el.scrollHeight;
+    requestAnimationFrame(() => {
+        el.style.height = `${target}px`;
+        el.style.opacity = '1';
+    });
+    el.addEventListener('transitionend', done, { once: true });
+}
+
+function faqAfterEnter(el) {
+    el.style.height = '';
+    el.style.overflow = '';
+    el.style.opacity = '';
+    el.style.transition = '';
+}
+
+function faqLeave(el, done) {
+    if (!animationOn()) {
+        done();
+
+        return;
+    }
+    const ms = answerDuration();
+    el.style.overflow = 'hidden';
+    el.style.height = `${el.scrollHeight}px`;
+    el.style.transition = `height ${ms}ms ease, opacity ${ms}ms ease`;
+    requestAnimationFrame(() => {
+        el.style.height = '0';
+        el.style.opacity = '0';
+    });
+    el.addEventListener('transitionend', done, { once: true });
+}
+
 // schema.org FAQPage strukturalt adat (Google rich result-hoz)
 const faqSchema = computed(() => JSON.stringify({
     '@context': 'https://schema.org',
@@ -78,6 +136,7 @@ const faqSchema = computed(() => JSON.stringify({
                                 <button
                                     type="button"
                                     class="flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-sm font-medium text-content"
+                                    :aria-expanded="openId === item.id"
                                     @click="toggle(item.id)"
                                 >
                                     <span>{{ item.question }}</span>
@@ -88,7 +147,9 @@ const faqSchema = computed(() => JSON.stringify({
                                         <path d="M6 9l6 6 6-6" />
                                     </svg>
                                 </button>
-                                <p v-if="openId === item.id" class="px-4 pb-4 text-sm leading-relaxed text-muted">{{ item.answer }}</p>
+                                <Transition @enter="faqEnter" @after-enter="faqAfterEnter" @leave="faqLeave">
+                                    <p v-if="openId === item.id" class="px-4 pb-4 text-sm leading-relaxed text-muted">{{ item.answer }}</p>
+                                </Transition>
                             </div>
                         </div>
                     </div>

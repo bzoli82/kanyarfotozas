@@ -39,6 +39,7 @@ class AnimationSettingsTest extends TestCase
         $this->assertTrue($anim->buttonSheen());
         $this->assertTrue($anim->flyToCart());
         $this->assertTrue($anim->themeReveal());
+        $this->assertTrue($anim->faqAccordion());
         $this->assertSame('480ms', $anim->resolvedVars()['--anim-duration']);
     }
 
@@ -77,6 +78,7 @@ class AnimationSettingsTest extends TestCase
             'anim_btnsheen' => false,
             'anim_flycart' => false,
             'anim_themereveal' => false,
+            'anim_faq' => false,
         ])->assertRedirect();
 
         $anim = app(AnimationSettings::class);
@@ -91,6 +93,7 @@ class AnimationSettingsTest extends TestCase
         $this->assertFalse($anim->buttonSheen());
         $this->assertFalse($anim->flyToCart());
         $this->assertFalse($anim->themeReveal());
+        $this->assertFalse($anim->faqAccordion());
         $this->assertSame('720ms', $anim->resolvedVars()['--anim-duration']);
     }
 

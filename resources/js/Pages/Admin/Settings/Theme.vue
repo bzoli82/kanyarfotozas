@@ -40,6 +40,7 @@ const form = useForm({
     anim_btnsheen: props.animation.btnsheen,
     anim_flycart: props.animation.flycart,
     anim_themereveal: props.animation.themereveal,
+    anim_faq: props.animation.faq,
 });
 
 // Animáció-előnézet: a kiválasztott (még nem mentett) stílus numerikus értékei.
@@ -345,6 +346,10 @@ function previewVars(palette) {
                         <label class="flex items-center gap-2 text-xs text-content">
                             <input v-model="form.anim_themereveal" type="checkbox" class="accent-[var(--color-accent)]" />
                             Téma-váltás: lágy áttűnés a régi és új megjelenés között
+                        </label>
+                        <label class="flex items-center gap-2 text-xs text-content">
+                            <input v-model="form.anim_faq" type="checkbox" class="accent-[var(--color-accent)]" />
+                            GY.I.K.: a válaszok le-/felgördülnek (időzítés az animáció-stílus szerint)
                         </label>
 
                         <div class="rounded-md border border-border bg-surface-2 p-3">
