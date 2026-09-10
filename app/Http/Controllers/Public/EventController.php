@@ -15,11 +15,20 @@ use Inertia\Response;
 class EventController extends Controller
 {
     /**
-     * A talalati galeria valaszthato oldalmeretei.
+     * A talalati galeria (/events) valaszthato oldalmeretei.
      *
      * @var list<int>
      */
     private const PER_PAGE_OPTIONS = [10, 20, 50, 100, 200];
+
+    /**
+     * Az esemeny-galeria (/events/{slug}) valaszthato oldalmeretei.
+     *
+     * @var list<int>
+     */
+    private const GALLERY_PER_PAGE_OPTIONS = [10, 25, 50, 100, 250, 500];
+
+    private const GALLERY_PER_PAGE_DEFAULT = 50;
 
     /**
      * Esemeny lista (/events) — a fooldali keresopanel ide navigal a szurokkel.
@@ -71,6 +80,9 @@ class EventController extends Controller
             ->when(filled($shotTo), fn ($q) => $q->whereTime('shot_at', '<=', $shotTo))
             ->orderBy('shot_at');
 
+        $perPage = (int) $request->integer('per_page');
+        $perPage = in_array($perPage, self::GALLERY_PER_PAGE_OPTIONS, true) ? $perPage : self::GALLERY_PER_PAGE_DEFAULT;
+
         return Inertia::render('Events/Show', [
             'event' => [
                 'id' => $event->id,
@@ -85,7 +97,9 @@ class EventController extends Controller
                     'flag_emoji' => $event->country->flag_emoji,
                 ] : null,
             ],
-            'media' => $mediaQuery->paginate(24)->withQueryString()->through(fn (Media $m) => (new MediaResource($m))->resolve()),
+            'media' => $mediaQuery->paginate($perPage)->withQueryString()->through(fn (Media $m) => (new MediaResource($m))->resolve()),
+            'perPage' => $perPage,
+            'perPageOptions' => self::GALLERY_PER_PAGE_OPTIONS,
             'filters' => [
                 'type' => $type ?: 'all',
                 'shot_from' => $shotFrom,

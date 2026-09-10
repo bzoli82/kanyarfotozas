@@ -150,6 +150,9 @@
     "gallery.filter_videos": "Videos",
     "gallery.announced": "This event is coming up — photos and videos will appear here after the shoot.",
     "gallery.empty": "No media matches your filter.",
+    "gallery.per_page": "Photos / page:",
+    "gallery.showing": ":from–:to of :total photos",
+    "gallery.page_of": "Page :current / :last",
 
     "media.shot_at": "Taken at",
     "media.duration": "Length",

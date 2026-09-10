@@ -15,9 +15,12 @@ const props = defineProps({
     items: { type: Array, required: true },
     index: { type: Number, required: true },
     event: { type: Object, required: true },
+    // Lapozott galéria: a szélső elemnél a nyíl a szomszéd oldalra lép.
+    hasPrevPage: { type: Boolean, default: false },
+    hasNextPage: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['close', 'update:index', 'load-more']);
+const emit = defineEmits(['close', 'update:index', 'prev-page', 'next-page']);
 
 const cart = useCartStore();
 const stripEl = ref(null);
@@ -40,7 +43,16 @@ function durationLabel(seconds) {
 
 function go(delta) {
     const next = props.index + delta;
-    if (next < 0 || next >= props.items.length) return;
+    if (next < 0) {
+        if (props.hasPrevPage) emit('prev-page');
+
+        return;
+    }
+    if (next >= props.items.length) {
+        if (props.hasNextPage) emit('next-page');
+
+        return;
+    }
     emit('update:index', next);
 }
 
@@ -79,10 +91,8 @@ function centerActiveThumb() {
     });
 }
 
-// A galeria vegehez kozeledve toltsuk be a kovetkezo oldalt (a szulo items-e bovul)
-watch(() => props.index, (i) => {
+watch(() => props.index, () => {
     centerActiveThumb();
-    if (i >= props.items.length - 3) emit('load-more');
 });
 
 onMounted(() => {
@@ -140,7 +150,7 @@ onBeforeUnmount(() => {
                 <button
                     type="button"
                     :aria-label="t('common.previous')"
-                    :disabled="index === 0"
+                    :disabled="index === 0 && !hasPrevPage"
                     class="absolute left-0 z-10 grid h-11 w-11 place-items-center rounded-full bg-black/60 text-white hover:bg-black/80 disabled:opacity-30"
                     @click="go(-1)"
                 >
@@ -166,7 +176,7 @@ onBeforeUnmount(() => {
                 <button
                     type="button"
                     :aria-label="t('common.next')"
-                    :disabled="index >= items.length - 1"
+                    :disabled="index >= items.length - 1 && !hasNextPage"
                     class="absolute right-0 z-10 grid h-11 w-11 place-items-center rounded-full bg-black/60 text-white hover:bg-black/80 disabled:opacity-30"
                     @click="go(1)"
                 >

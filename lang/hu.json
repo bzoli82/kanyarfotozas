@@ -150,6 +150,9 @@
     "gallery.filter_videos": "Videók",
     "gallery.announced": "Ez az esemény hamarosan lesz — a képek/videók a fotózás után jelennek meg itt.",
     "gallery.empty": "Nincs a szűrésnek megfelelő média.",
+    "gallery.per_page": "Kép / oldal:",
+    "gallery.showing": ":from–:to / :total fotó",
+    "gallery.page_of": ":current / :last oldal",
 
     "media.shot_at": "Időpont",
     "media.duration": "Hossz",

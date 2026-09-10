@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
 import MediaCard from '@/Components/MediaCard.vue';
@@ -7,7 +7,8 @@ import MediaLightbox from '@/Components/MediaLightbox.vue';
 import MediaHistogram from '@/Components/MediaHistogram.vue';
 import { useI18n } from '@/Composables/useI18n';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
+const nf = new Intl.NumberFormat(locale.value === 'en' ? 'en-GB' : 'hu-HU');
 
 const filterOptions = computed(() => [
     { v: 'all', l: t('gallery.filter_all') },
@@ -19,26 +20,33 @@ const props = defineProps({
     event: Object,
     media: Object,
     filters: Object,
+    perPage: { type: Number, default: 50 },
+    perPageOptions: { type: Array, default: () => [10, 25, 50, 100, 250, 500] },
 });
 
-const items = ref([...props.media.data]);
-// Az elso oldalt Inertia rendereli (SEO), a tovabbiakat a JSON API-rol toltjuk —
-// ezert itt sajat lapszamlalot vezetunk, fuggetlenul az Inertia paginator URL-jeitol.
-const nextPage = ref(props.media.current_page < props.media.last_page ? props.media.current_page + 1 : null);
-const loadingMore = ref(false);
-const sentinel = ref(null);
-let observer = null;
+const items = computed(() => props.media.data);
+const perPage = ref(props.perPage);
+watch(() => props.perPage, (v) => { perPage.value = v; });
 
 const lightboxIndex = ref(null);
+// A lapváltás után újra kell nyitni a lightboxot (első vagy utolsó képnél).
+const pendingLightbox = ref(null);
 
-// Szurovaltas (`preserveState: true` miatt a komponens NEM epul ujra) — a friss,
-// szurt media-listat a props-bol vissza kell szinkronizalni az `items`/`nextPage`-be.
+const hasPrevPage = computed(() => Boolean(props.media.prev_page_url));
+const hasNextPage = computed(() => Boolean(props.media.next_page_url));
+
+// Szurovaltas / lapozas (`preserveState: true` — a komponens NEM epul ujra).
 watch(
     () => props.media,
-    (media) => {
-        items.value = [...media.data];
-        nextPage.value = media.current_page < media.last_page ? media.current_page + 1 : null;
-        lightboxIndex.value = null;
+    () => {
+        if (pendingLightbox.value === 'first') {
+            lightboxIndex.value = 0;
+        } else if (pendingLightbox.value === 'last') {
+            lightboxIndex.value = Math.max(0, items.value.length - 1);
+        } else {
+            lightboxIndex.value = null;
+        }
+        pendingLightbox.value = null;
     },
 );
 
@@ -46,8 +54,42 @@ function openLightbox(media) {
     lightboxIndex.value = items.value.findIndex((i) => i.id === media.id);
 }
 
+/** A jelenlegi szűrők tiszta query-paraméterként (az „all" / üres kihagyva). */
+function queryParams(extra = {}) {
+    const p = {};
+    if (props.filters.type && props.filters.type !== 'all') p.type = props.filters.type;
+    if (props.filters.shot_from) p.shot_from = props.filters.shot_from;
+    if (props.filters.shot_to) p.shot_to = props.filters.shot_to;
+    if (perPage.value !== 50) p.per_page = perPage.value;
+
+    return { ...p, ...extra };
+}
+
+function scrollToTop() {
+    document.getElementById('gallery-top')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function goToPage(url, reopen = null) {
+    if (!url) return;
+    pendingLightbox.value = reopen;
+    router.get(url, {}, {
+        preserveState: true,
+        preserveScroll: Boolean(reopen),
+        onSuccess: () => {
+            if (!reopen) scrollToTop();
+        },
+    });
+}
+
+function changePerPage() {
+    router.get(`/events/${props.event.slug}`, queryParams({ per_page: perPage.value, page: 1 }), {
+        preserveState: true,
+        preserveScroll: true,
+    });
+}
+
 function applyFilter(type) {
-    router.get(`/events/${props.event.slug}`, { ...props.filters, type }, { preserveState: true, preserveScroll: true });
+    router.get(`/events/${props.event.slug}`, queryParams({ type, page: 1 }), { preserveState: true, preserveScroll: true });
 }
 
 // Fejlett idopont-navigacio (EPIC-17): HH:MM kereses +-2 perc ablakban + hisztogram.
@@ -60,18 +102,20 @@ function searchTime() {
     const from = Math.max(0, base - 2);
     const to = Math.min(1439, base + 2);
     const fmt = (mins) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
-    router.get(`/events/${props.event.slug}`, { ...props.filters, shot_from: fmt(from), shot_to: fmt(to) }, { preserveState: true, preserveScroll: true });
+    router.get(`/events/${props.event.slug}`, queryParams({ shot_from: fmt(from), shot_to: fmt(to), page: 1 }), { preserveState: true, preserveScroll: true });
 }
 
 function pickHour(hour) {
     const h = String(hour).padStart(2, '0');
-    router.get(`/events/${props.event.slug}`, { ...props.filters, shot_from: `${h}:00`, shot_to: `${h}:59` }, { preserveState: true, preserveScroll: true });
+    router.get(`/events/${props.event.slug}`, queryParams({ shot_from: `${h}:00`, shot_to: `${h}:59`, page: 1 }), { preserveState: true, preserveScroll: true });
 }
 
 function clearTimeFilter() {
     timeQuery.value = '';
-    const { shot_from, shot_to, ...rest } = props.filters;
-    router.get(`/events/${props.event.slug}`, rest, { preserveState: true, preserveScroll: true });
+    const p = queryParams({ page: 1 });
+    delete p.shot_from;
+    delete p.shot_to;
+    router.get(`/events/${props.event.slug}`, p, { preserveState: true, preserveScroll: true });
 }
 
 const hasTimeFilter = computed(() => Boolean(props.filters.shot_from || props.filters.shot_to));
@@ -100,30 +144,14 @@ async function subscribe() {
     }
 }
 
-async function loadMore() {
-    if (!nextPage.value || loadingMore.value) return;
-    loadingMore.value = true;
-
-    try {
-        const params = new URLSearchParams({ ...props.filters, page: nextPage.value });
-        const res = await fetch(`/api/events/${props.event.id}/media?${params.toString()}`);
-        const json = await res.json();
-
-        items.value.push(...json.data);
-        nextPage.value = json.next_page_url ? nextPage.value + 1 : null;
-    } finally {
-        loadingMore.value = false;
-    }
+// A lightbox szélső képénél a nyíl a szomszéd oldalra lép, és ott nyitja újra.
+function lightboxNextPage() {
+    goToPage(props.media.next_page_url, 'first');
 }
 
-onMounted(() => {
-    observer = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) loadMore();
-    });
-    if (sentinel.value) observer.observe(sentinel.value);
-});
-
-onBeforeUnmount(() => observer?.disconnect());
+function lightboxPrevPage() {
+    goToPage(props.media.prev_page_url, 'last');
+}
 </script>
 
 <template>
@@ -211,24 +239,46 @@ onBeforeUnmount(() => observer?.disconnect());
                     {{ t('gallery.empty') }}
                 </div>
 
-                <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <MediaCard v-for="item in items" :key="item.id" :media="item" :event-name="event.name" @select="openLightbox" />
-                </div>
-
-                <div ref="sentinel" class="h-4"></div>
-                <div v-if="loadingMore" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-hidden="true">
-                    <div
-                        v-for="n in 4"
-                        :key="n"
-                        class="animate-pulse overflow-hidden rounded-[var(--radius-base)] border border-border bg-surface-1"
-                    >
-                        <div class="aspect-[4/3] bg-surface-2"></div>
-                        <div class="flex items-center justify-between gap-2 p-3">
-                            <span class="h-4 w-16 rounded bg-surface-2"></span>
-                            <span class="h-6 w-20 rounded bg-surface-2"></span>
-                        </div>
+                <template v-else>
+                    <div id="gallery-top" class="mb-4 flex flex-wrap items-center justify-between gap-3 scroll-mt-24">
+                        <p class="text-xs text-muted">
+                            {{ t('gallery.showing', { from: nf.format(media.from), to: nf.format(media.to), total: nf.format(media.total) }) }}
+                        </p>
+                        <label class="flex items-center gap-2 text-xs text-muted">
+                            {{ t('gallery.per_page') }}
+                            <select
+                                v-model.number="perPage"
+                                class="rounded-[var(--radius-base)] border border-border bg-surface-1 px-2.5 py-1.5 text-xs text-content focus:border-accent focus:outline-none"
+                                @change="changePerPage"
+                            >
+                                <option v-for="opt in perPageOptions" :key="opt" :value="opt">{{ opt }}</option>
+                            </select>
+                        </label>
                     </div>
-                </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <MediaCard v-for="item in items" :key="item.id" :media="item" :event-name="event.name" @select="openLightbox" />
+                    </div>
+
+                    <nav v-if="media.last_page > 1" class="mt-8 flex flex-col items-center gap-3">
+                        <div class="flex flex-wrap items-center justify-center gap-1">
+                            <button
+                                v-for="(link, i) in media.links"
+                                :key="i"
+                                type="button"
+                                :disabled="!link.url || link.active"
+                                v-html="link.label"
+                                class="rounded-[var(--radius-base)] border px-3 py-1.5 text-xs disabled:cursor-default"
+                                :class="[
+                                    link.active ? 'border-accent text-accent' : 'border-border text-muted hover:text-content',
+                                    !link.url && 'opacity-40',
+                                ]"
+                                @click="goToPage(link.url)"
+                            />
+                        </div>
+                        <p class="text-[11px] text-muted">{{ t('gallery.page_of', { current: media.current_page, last: media.last_page }) }}</p>
+                    </nav>
+                </template>
             </div>
         </section>
 
@@ -238,9 +288,12 @@ onBeforeUnmount(() => observer?.disconnect());
                 :items="items"
                 :index="lightboxIndex"
                 :event="event"
+                :has-prev-page="hasPrevPage"
+                :has-next-page="hasNextPage"
                 @update:index="lightboxIndex = $event"
                 @close="lightboxIndex = null"
-                @load-more="loadMore"
+                @prev-page="lightboxPrevPage"
+                @next-page="lightboxNextPage"
             />
         </Transition>
     </PublicLayout>

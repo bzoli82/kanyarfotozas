@@ -107,6 +107,33 @@ class EventGalleryTest extends TestCase
         $this->assertSame([$photo->id], $ids->all());
     }
 
+    public function test_event_gallery_paginates_with_selectable_page_size(): void
+    {
+        $event = Event::factory()->create(['status' => Event::STATUS_LIVE]);
+        Media::factory()->count(30)->create(['event_id' => $event->id, 'status' => Media::STATUS_READY, 'type' => 'photo']);
+
+        // Alap: 50 / oldal → mind a 30 egy oldalon, de a total kiírva.
+        $default = $this->get("/events/{$event->slug}")->viewData('page')['props']['media'];
+        $this->assertSame(30, $default['total']);
+        $this->assertCount(30, $default['data']);
+
+        // 10 / oldal → 3 oldal, from/to helyes.
+        $small = $this->get("/events/{$event->slug}?per_page=10")->viewData('page')['props']['media'];
+        $this->assertCount(10, $small['data']);
+        $this->assertSame(3, $small['last_page']);
+        $this->assertSame(1, $small['from']);
+        $this->assertSame(10, $small['to']);
+
+        $page2 = $this->get("/events/{$event->slug}?per_page=10&page=2")->viewData('page')['props']['media'];
+        $this->assertSame(11, $page2['from']);
+        $this->assertSame(20, $page2['to']);
+
+        // Érvénytelen méret → alapértelmezés (50).
+        $invalid = $this->get("/events/{$event->slug}?per_page=7")->viewData('page')['props'];
+        $this->assertSame(50, $invalid['perPage']);
+        $this->assertCount(30, $invalid['media']['data']);
+    }
+
     public function test_api_events_media_endpoint_paginates_for_infinite_scroll(): void
     {
         $event = Event::factory()->create(['status' => Event::STATUS_LIVE]);
