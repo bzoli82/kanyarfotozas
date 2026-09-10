@@ -118,12 +118,12 @@ async function submit() {
 
                     <div class="grid gap-4 sm:grid-cols-2">
                         <label class="block">
-                            <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">{{ t('apply.region') }}</span>
-                            <input v-model="form.region" type="text" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
+                            <span class="mb-1.5 block truncate text-[11px] font-semibold uppercase tracking-wide text-muted">{{ t('apply.region') }}</span>
+                            <input v-model="form.region" type="text" :placeholder="t('apply.region_ph')" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
                         </label>
                         <label class="block">
-                            <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">{{ t('apply.shoots') }}</span>
-                            <input v-model="form.shoots" type="text" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
+                            <span class="mb-1.5 block truncate text-[11px] font-semibold uppercase tracking-wide text-muted">{{ t('apply.shoots') }}</span>
+                            <input v-model="form.shoots" type="text" :placeholder="t('apply.shoots_ph')" class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-content focus:border-accent focus:outline-none" />
                         </label>
                     </div>
 
