@@ -357,7 +357,7 @@ class DataSync
                 ]);
             }
 
-            foreach (['purchase_otps', 'failed_login_attempts', 'download_fingerprints', 'data_requests', 'sessions', 'jobs', 'failed_jobs'] as $table) {
+            foreach (['purchase_otps', 'failed_login_attempts', 'download_fingerprints', 'data_requests', 'sessions', 'jobs', 'failed_jobs', 'sent_emails'] as $table) {
                 if (Schema::hasTable($table)) {
                     DB::table($table)->delete();
                 }

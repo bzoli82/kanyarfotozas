@@ -136,6 +136,8 @@ class AdminNavigation
             ]];
 
             $sections[] = ['title' => 'Napló & adatvédelem', 'items' => [
+                ['label' => 'E-mail napló', 'href' => '/admin/mail-log', 'icon' => 'mail',
+                    'hint' => 'A sikeresen elküldött e-mailek (címzett + tárgy). „A vevő megkapta-e a letöltő linket."'],
                 ['label' => 'Hibanapló', 'href' => '/admin/errors', 'icon' => 'bug',
                     'hint' => 'A kezeletlen kivételek csoportosítva (előfordulás-szám, első/utolsó). Lezárás/újranyitás.'],
                 ['label' => 'GDPR kérelmek', 'href' => '/admin/data-requests', 'icon' => 'privacy',

@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\GuideController;
 use App\Http\Controllers\Admin\HeroSlideController;
 use App\Http\Controllers\Admin\LegalSettingsController;
 use App\Http\Controllers\Admin\LocationSearchController;
+use App\Http\Controllers\Admin\MailLogController;
 use App\Http\Controllers\Admin\MailTemplateController;
 use App\Http\Controllers\Admin\MaintenanceModeController;
 use App\Http\Controllers\Admin\MediaController;
@@ -293,6 +294,8 @@ Route::middleware(['auth', 'role:superadmin', '2fa'])->prefix('admin')->name('ad
     Route::post('/settings/data-sync/pull-media', [DataSyncController::class, 'pullMedia'])->middleware('throttle:30,1')->name('settings.data-sync.pull-media');
 
     // Hibanapló + monitoring/mentés
+    Route::get('/mail-log', [MailLogController::class, 'index'])->name('mail-log');
+
     Route::get('/errors', [ErrorEventController::class, 'index'])->name('errors.index');
     Route::post('/errors/resolve-all', [ErrorEventController::class, 'resolveAll'])->name('errors.resolve-all');
     Route::post('/errors/{errorEvent}/resolve', [ErrorEventController::class, 'resolve'])->name('errors.resolve');

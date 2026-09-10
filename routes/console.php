@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\SentEmail;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -36,3 +37,7 @@ Schedule::command('roadsidephoto:purge-import-uploads')->dailyAt('04:10');
 
 // Tevekenyseg-naplo: a config('activitylog.clean_after_days')-nel (35) regebbi sorok torlese.
 Schedule::command('activitylog:clean')->dailyAt('04:20');
+
+// Kimeno e-mail naplo: 30 napnal regebbi sorok torlese.
+Schedule::call(fn () => SentEmail::query()->where('created_at', '<', now()->subDays(30))->delete())
+    ->name('purge-sent-emails')->dailyAt('04:25');
